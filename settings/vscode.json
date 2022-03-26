@@ -1,0 +1,39 @@
+{
+  "cSpell.userWords": [
+    "Durand",
+    "Ezequiel",
+    "Gastón",
+    "gdurandvadas",
+    "hashicorp",
+    "nats",
+    "Vadas"
+  ],
+  "editor.cursorBlinking": "smooth",
+  "editor.fontFamily": "JetBrainsMono Nerd Font",
+  "editor.fontLigatures": true,
+  "editor.fontSize": 13,
+  "editor.tabSize": 2,
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.startupEditor": "none",
+  "[terraform]": {
+    "editor.defaultFormatter": "hashicorp.terraform"
+  },
+  "gopls": {
+    "experimentalWorkspaceModule": true
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "redhat.telemetry.enabled": false,
+  "[dockerfile]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "vscode-kubernetes.helm-path.mac": "/Users/gdurandvadas/.asdf/shims/helm",
+  "files.insertFinalNewline": true
+}

@@ -1,0 +1,55 @@
+import:
+  - ~/.config/alacritty/config/theme.yaml
+  - ~/.config/alacritty/config/tmux.yaml
+
+window:
+  dimensions:
+    columns: 170
+    lines: 50
+  padding:
+    x: 5
+    y: 7
+  decorations: buttonless
+  dynamic_title: true
+  opacity : 1
+
+scrolling:
+  history: 100000
+  multiplier: 3
+
+font:
+  normal:
+    family: JetBrainsMono Nerd Font
+    style: Regular
+  bold:
+    family: JetBrainsMono Nerd Font
+    style: Bold
+  italic:
+    family: JetBrainsMono Nerd Font
+    style: Italic
+  bold_italic:
+    family: JetBrainsMono Nerd Font
+    style: Bold Italic
+
+selection:
+  save_to_clipboard: true
+
+cursor:
+  style:
+    shape: Block
+    blinking: On
+  unfocused_hollow: true
+
+key_bindings:
+  - { key: D, mods: Command, chars: "\x01\x76" }
+  - { key: D, mods: Command|Shift, chars: "\x01\x5f" }
+  - { key: W, mods: Command, chars: "\x01\x78" }
+  - { key: H, mods: Command, chars: "\x01\x68" }
+  - { key: J, mods: Command, chars: "\x01\x6a" }
+  - { key: K, mods: Command, chars: "\x01\x6b" }
+  - { key: L, mods: Command, chars: "\x01\x6c" }
+  - { key: T, mods: Command, chars: "\x01\x63" }
+  - { key: Left, mods: Command, chars: "\x01\x48" }
+  - { key: Down, mods: Command, chars: "\x01\x4a" }
+  - { key: Up, mods: Command, chars: "\x01\x4b" }
+  - { key: Right, mods: Command, chars: "\x01\x4c" }

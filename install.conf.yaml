@@ -1,0 +1,63 @@
+- defaults:
+    link:
+      relink: true
+
+- clean:
+    ~/:
+      force: true
+    ~/.config:
+      force: true
+      recursive: true
+
+- shell:
+  - [git pull, Updating dotfiles]
+  - [git submodule update --init --recursive, Updating dotbot]
+  - command: ./scripts/bootstrap.bash
+    description: Running bootstrap actions
+    quiet: false
+    stderr: true
+    stdin: true
+    stdout: true
+  - command: ./scripts/asdf.bash
+    description: Configure asdf and tools
+    quiet: false
+    stderr: true
+    stdin: true
+    stdout: true
+
+- create:
+    - ~/.ssh/config.d
+    - ~/codebase
+
+- link:
+    ~/.ssh/config: home/ssh/config
+    ~/.config: home/config
+    ~/.tmux.conf: home/tmux.conf
+    ~/.asdfrc: home/asdfrc
+    ~/Library/Application Support/Code/User/settings.json: settings/vscode.json
+
+- shell:
+  - command: ./scripts/brew.bash
+    description: installing/Updating brew apps
+    quiet: false
+    stderr: true
+    stdin: true
+    stdout: true
+  - command: ./scripts/fish.bash
+    description: configure fish shell
+    quiet: false
+    stderr: true
+    stdin: true
+    stdout: true
+  - command: asdf install
+    description: install all tools
+    quiet: false
+    stderr: true
+    stdin: true
+    stdout: true
+  - command: ./scripts/vscode.bash
+    description: configure vscode and extensions
+    quiet: false
+    stderr: true
+    stdin: true
+    stdout: true

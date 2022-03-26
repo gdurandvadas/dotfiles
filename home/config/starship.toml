@@ -1,0 +1,54 @@
+add_newline = true
+command_timeout = 2000
+
+[character]
+success_symbol = "[➤](bold green)"
+error_symbol = "[✖](bold red)"
+
+[package]
+disabled = true
+
+[directory]
+style = "bold bright-blue"
+
+[git_branch]
+style = "bold bright-white"
+
+[git_status]
+ahead = "[](purple)[$count](white)"
+behind = "[](cyan)[$count](white)"
+conflicted = '[=$count](yellow)'
+deleted = '[✘$count](black)'
+diverged = "[](cyan)[$ahead_count](white)[](purple)[$behind_count](white)"
+modified = '[*$count](red)'
+renamed = "[»$count](purple)"
+staged = "[+$count](green)"
+stashed = "[\\$$count](yellow)"
+style = "bold bright-white"
+untracked = "[?$count](cyan)"
+
+[git_commit]
+only_detached = true
+style = "bold black"
+format = "[$hash]($style) "
+
+[nodejs]
+symbol = " "
+
+[python]
+symbol = " "
+
+[golang]
+symbol = " "
+
+[aws]
+symbol = " "
+
+[gcloud]
+symbol = " "
+
+[docker_context]
+symbol = " "
+
+[memory_usage]
+symbol = " "

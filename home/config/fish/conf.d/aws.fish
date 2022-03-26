@@ -1,0 +1,2 @@
+set -gx AWS_PAGER ""
+set -gx AWS_SESSION_TOKEN_TTL 12h
