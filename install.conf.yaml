@@ -1,19 +1,37 @@
+# dotbot configurations
 - defaults:
     link:
       relink: true
 
+# Clean
 - clean:
     ~/:
       force: true
     ~/.config:
       force: true
       recursive: true
+    ~/.ssh:
+      force: true
+      recursive: true
 
+# Installation phase
 - shell:
   - [git pull, Updating dotfiles]
   - [git submodule update --init --recursive, Updating dotbot]
   - command: ./scripts/bootstrap.bash
     description: Running bootstrap actions
+    quiet: false
+    stderr: true
+    stdin: true
+    stdout: true
+  - command: ./scripts/brew.bash
+    description: installing/Updating brew apps
+    quiet: false
+    stderr: true
+    stdin: true
+    stdout: true
+  - command: ./scripts/templates.bash
+    description: Populate templates
     quiet: false
     stderr: true
     stdin: true
@@ -24,33 +42,37 @@
     stderr: true
     stdin: true
     stdout: true
+  - command: rm -rfv ~/.config
+    description: Cleanup config path
+    quiet: false
+    stderr: true
+    stdin: true
+    stdout: true
 
+# Create required directories
 - create:
     - ~/.ssh/config.d
     - ~/codebase
 
+# Link files
 - link:
     ~/.ssh/config: home/ssh/config
     ~/.config: home/config
     ~/.tmux.conf: home/tmux.conf
+    ~/.tool-versions: home/tool-versions
     ~/.asdfrc: home/asdfrc
     ~/Library/Application Support/Code/User/settings.json: settings/vscode.json
 
+# Configure local env
 - shell:
-  - command: ./scripts/brew.bash
-    description: installing/Updating brew apps
+  - command: asdf install
+    description: install all tools
     quiet: false
     stderr: true
     stdin: true
     stdout: true
   - command: ./scripts/fish.bash
     description: configure fish shell
-    quiet: false
-    stderr: true
-    stdin: true
-    stdout: true
-  - command: asdf install
-    description: install all tools
     quiet: false
     stderr: true
     stdin: true

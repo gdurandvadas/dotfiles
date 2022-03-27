@@ -4,3 +4,6 @@ home/tmux.conf
 home/config/dlv*
 home/config/gcloud*
 home/config/helm*
+
+# Ignore done checks
+*_done
