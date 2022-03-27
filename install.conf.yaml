@@ -57,6 +57,7 @@
 # Link files
 - link:
     ~/.ssh/config: home/ssh/config
+    ~/.ssh/config.d/custom: home/ssh/config.d/custom
     ~/.config: home/config
     ~/.tmux.conf: home/tmux.conf
     ~/.tool-versions: home/tool-versions
