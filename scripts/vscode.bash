@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ------------------------------------------------+
-#             configures fish shell
+#             configures vscode
 # ------------------------------------------------+
 
 set -o errexit

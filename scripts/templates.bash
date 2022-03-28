@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ------------------------------------------------+
-#             configures fish shell
+#            populate template files
 # ------------------------------------------------+
 
 set -o errexit
