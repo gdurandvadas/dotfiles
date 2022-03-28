@@ -35,5 +35,6 @@
     "editor.defaultFormatter": "vscode.json-language-features"
   },
   "vscode-kubernetes.helm-path.mac": "/Users/gdurandvadas/.asdf/shims/helm",
-  "files.insertFinalNewline": true
+  "files.insertFinalNewline": true,
+  "extensions.ignoreRecommendations": true
 }

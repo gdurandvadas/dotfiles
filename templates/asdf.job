@@ -1,0 +1,5 @@
+aws-vault 6.3.1
+awscli 2.4.6
+packer 1.6.5
+promtool v2.31.1 https://github.com/looztra/asdf-promtool
+terragrunt 0.35.13

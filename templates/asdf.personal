@@ -1,5 +1,5 @@
 gcloud 378.0.0
-golang 1.17.8
+golang 1.18
 helm 3.8.1
 helmfile 0.143.1
 kubectl 1.22.4

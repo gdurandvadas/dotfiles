@@ -1,9 +1,19 @@
+# Templates
 home/config/alacritty/config/tmux.yaml
 home/config/fish/fish_variables
 home/tmux.conf
+home/tool-versions
+
+# Auto-generated home dirs
 home/config/dlv*
 home/config/gcloud*
 home/config/helm*
 
 # Ignore done checks
 *_done
+
+# Is job computer
+is_job
+
+# Brewfile
+Brewfile.lock.json
