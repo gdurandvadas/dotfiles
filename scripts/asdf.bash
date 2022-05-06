@@ -7,9 +7,11 @@
 set -o errexit
 set -o pipefail
 
-TOOL_VERSIONS="home/tool-versions"
 source "scripts/commons.bash"
+
+TOOL_VERSIONS="home/tool-versions"
 ALL_TOOLS="${SOURCE}/all-tools"
+eval "$(${HOMEBREW_PREFIX}/bin/brew shellenv)"
 
 cat templates/asdf.personal > "${ALL_TOOLS}"
 if test -f "is_job"; then

@@ -20,7 +20,7 @@ if ! test -f "${SOURCE}/${DONE}"; then
     if /usr/bin/pgrep oahd >/dev/null 2>&1; then
       echo "Rosetta is already installed and running. Nothing to do."
     else
-      /usr/sbin/softwareupdate –install-rosetta –agree-to-license
+      /usr/sbin/softwareupdate --install-rosetta --agree-to-license
       wait
     fi
   fi

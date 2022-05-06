@@ -10,7 +10,6 @@ set -o pipefail
 source "scripts/commons.bash"
 
 if [[ "${SHELL}" != *"bin/fish"* ]]; then
-  local shell_path
   shell_path="$(command -v fish)"
   echo $shell_path
   if ! grep "$shell_path" /etc/shells >/dev/null 2>&1; then

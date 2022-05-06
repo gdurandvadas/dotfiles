@@ -3,10 +3,11 @@ golang 1.18
 helm 3.8.1
 helmfile 0.143.1
 jq 1.6
-kubectl 1.22.4
+kubectl 1.23.6
 nodejs 17.1.0
 protoc 3.20.0 https://github.com/gdurandvadas/asdf-protoc
-python 3.9.9
 sops 3.7.2
 terraform 1.1.7
 yarn 1.22.17
+python 3.10.4
+kind 0.12.0
