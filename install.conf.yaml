@@ -63,6 +63,7 @@
     ~/.tmux.conf: home/tmux.conf
     ~/.tool-versions: home/tool-versions
     ~/.asdfrc: home/asdfrc
+    ~/.gitconfig: home/gitconfig
     ~/Library/Application Support/Code/User/settings.json: settings/vscode.json
     ~/.1password/agent.sock: ~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock
 
