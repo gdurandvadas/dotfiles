@@ -2,4 +2,4 @@ Include config.d/custom
 
 Host *
   UseKeychain yes
-  IdentityAgent "~/.1password/agent.sock"
+  IdentityAgent ~/.1password/agent.sock

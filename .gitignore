@@ -8,6 +8,8 @@ home/tool-versions
 home/config/dlv*
 home/config/gcloud*
 home/config/helm*
+home/config/op*
+home/ssh/config.d/custom
 
 # Ignore done checks
 *_done
@@ -17,3 +19,5 @@ is_job
 
 # Brewfile
 Brewfile.lock.json
+
+.DS_Store
