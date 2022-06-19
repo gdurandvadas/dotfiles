@@ -15,4 +15,8 @@ fi
 
 eval "$(${HOMEBREW_PREFIX}/bin/brew shellenv)"
 
-brew bundle install
+if test -f "is_job"; then
+  brew bundle install --file templates/Brewfile.job
+else
+  brew bundle install --file templates/Brewfile.personal
+fi

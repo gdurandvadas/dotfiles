@@ -1,5 +1,9 @@
-aws-vault 6.3.1
-awscli 2.4.6
-packer 1.6.5
-promtool v2.31.1 https://github.com/looztra/asdf-promtool
-terragrunt 0.35.13
+gcloud 378.0.0
+golang 1.18
+helm 3.8.1
+jq 1.6
+kubectl 1.23.6
+nodejs 17.1.0
+terraform 1.1.7
+yarn 1.22.17
+python 3.10.4

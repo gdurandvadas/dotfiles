@@ -1,0 +1,19 @@
+# frozen_string_literal: true
+
+tap "homebrew/bundle"
+tap "homebrew/cask-fonts"
+tap "homebrew/cask"
+tap "homebrew/core"
+
+brew "asdf"
+brew "fish"
+brew "gettext"
+brew "gnupg"
+brew "starship"
+brew "tmux"
+
+cask "alacritty"
+cask "brave-browser"
+cask "docker"
+cask "font-jetbrains-mono-nerd-font"
+cask "visual-studio-code"

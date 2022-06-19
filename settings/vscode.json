@@ -37,5 +37,8 @@
   },
   "vscode-kubernetes.helm-path.mac": "/Users/gdurandvadas/.asdf/shims/helm",
   "files.insertFinalNewline": true,
-  "extensions.ignoreRecommendations": true
+  "extensions.ignoreRecommendations": true,
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
