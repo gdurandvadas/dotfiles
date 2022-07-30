@@ -1,3 +1,3 @@
 function gbrm
-  git branch --merged | egrep -v "(^\*|master)" | xargs git branch -d
+  git remote prune origin && git branch --merged | egrep -v "(^\*|master)" | xargs git branch -d
 end

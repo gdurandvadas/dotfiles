@@ -11,6 +11,7 @@ brew "gettext"
 brew "gnupg"
 brew "starship"
 brew "tmux"
+brew "golangci-lint"
 
 cask "alacritty"
 cask "brave-browser"

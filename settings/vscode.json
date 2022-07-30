@@ -1,9 +1,11 @@
 {
   "cSpell.userWords": [
+    "Cashflows",
     "Durand",
     "Ezequiel",
     "Gastón",
     "gdurandvadas",
+    "gorm",
     "hashicorp",
     "Msgf",
     "nats",
@@ -44,5 +46,9 @@
   "go.toolsManagement.autoUpdate": true,
   "[html]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "go.lintTool": "revive"
 }
