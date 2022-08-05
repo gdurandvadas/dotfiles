@@ -9,19 +9,17 @@ set -o pipefail
 
 EXTENSIONS=(
   "aaron-bond.better-comments"
-  "alefragnani.project-manager"
-  "dbaeumer.vscode-eslint"
-  "esbenp.prettier-vscode"
-  "foxundermoon.shell-format"
+  "donjayamanne.githistory"
+  "eamodio.gitlens"
+  "GitHub.github-vscode-theme"
   "golang.go"
   "hashicorp.terraform"
   "jock.svg"
   "ms-azuretools.vscode-docker"
   "ms-kubernetes-tools.vscode-kubernetes-tools"
   "naumovs.color-highlight"
-  "PKief.material-icon-theme"
-  "redhat.vscode-yaml"
   "streetsidesoftware.code-spell-checker"
+  "tal7aouy.icons"
 )
 source "scripts/commons.bash"
 
