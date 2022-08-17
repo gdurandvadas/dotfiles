@@ -4,6 +4,7 @@ home/config/fish/fish_variables
 home/tmux.conf
 home/tool-versions
 home/gitconfig
+home/ssh/config
 Brewfile
 
 # Auto-generated home dirs
