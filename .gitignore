@@ -20,6 +20,5 @@ home/ssh/config.d/custom
 is_job
 
 # Brewfile
-**Brewfile.*.lock.json
-
+Brewfile.lock.json
 .DS_Store
