@@ -3,6 +3,7 @@ home/config/alacritty/config/tmux.yaml
 home/config/fish/fish_variables
 home/tmux.conf
 home/tool-versions
+home/gitconfig
 
 # Auto-generated home dirs
 home/config/dlv*
