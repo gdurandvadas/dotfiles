@@ -6,6 +6,7 @@
 
 set -o errexit
 set -o pipefail
+set -x
 
 source "scripts/commons.bash"
 
@@ -19,6 +20,6 @@ if test -f "is_job"; then
 else
   export EMAIL="contact@gedv.me"
   ${HOMEBREW_PREFIX}/bin/envsubst '$EMAIL' < templates/gitconfig > home/gitconfig
-  export ONE_PASSWORD_SSH_CONFIG="Host *\n  UseKeychain yes\n  IdentityAgent ~/.1password/agent.sock"
+  export ONE_PASSWORD_SSH_CONFIG=$(echo -e "Host *\n  UseKeychain yes\n  IdentityAgent ~/.1password/agent.sock")
   ${HOMEBREW_PREFIX}/bin/envsubst '$ONE_PASSWORD_SSH_CONFIG' < templates/ssh-config > home/ssh/config
 fi
