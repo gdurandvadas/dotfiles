@@ -4,6 +4,7 @@ home/config/fish/fish_variables
 home/tmux.conf
 home/tool-versions
 home/gitconfig
+Brewfile
 
 # Auto-generated home dirs
 home/config/dlv*

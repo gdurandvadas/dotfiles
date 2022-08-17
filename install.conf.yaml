@@ -2,6 +2,9 @@
 - defaults:
     link:
       relink: true
+    brewfile:
+      stdout: true
+      stderr: true
 
 # Clean
 - clean:
@@ -16,38 +19,24 @@
 
 # Installation phase
 - shell:
-  - [git pull, Updating dotfiles]
-  - [git submodule update --init --recursive, Updating dotbot]
-  - command: ./scripts/bootstrap.bash
-    description: Running bootstrap actions
-    quiet: false
-    stderr: true
-    stdin: true
-    stdout: true
-  - command: ./scripts/brew.bash
-    description: installing/Updating brew apps
-    quiet: false
-    stderr: true
-    stdin: true
-    stdout: true
-  - command: ./scripts/templates.bash
-    description: Populate templates
-    quiet: false
-    stderr: true
-    stdin: true
-    stdout: true
-  - command: ./scripts/asdf.bash
-    description: Configure asdf and tools
-    quiet: false
-    stderr: true
-    stdin: true
-    stdout: true
-  - command: rm -rfv ~/.config
-    description: Cleanup config path
-    quiet: false
-    stderr: true
-    stdin: true
-    stdout: true
+    - command: ./scripts/bootstrap.bash
+      description: Running bootstrap actions
+      quiet: false
+      stderr: true
+      stdin: true
+      stdout: true
+    - command: ./scripts/templates.bash
+      description: Populate templates
+      quiet: false
+      stderr: true
+      stdin: true
+      stdout: true
+    - command: rm -rfv ~/.config
+      description: Cleanup config path
+      quiet: false
+      stderr: true
+      stdin: true
+      stdout: true
 
 # Create required directories
 - create:
@@ -61,29 +50,61 @@
     ~/.ssh/config.d/custom: home/ssh/config.d/custom
     ~/.config: home/config
     ~/.tmux.conf: home/tmux.conf
-    ~/.tool-versions: home/tool-versions
     ~/.asdfrc: home/asdfrc
     ~/.gitconfig: home/gitconfig
     ~/Library/Application Support/Code/User/settings.json: settings/vscode.json
-    ~/.1password/agent.sock: ~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock
+    ~/.1password/agent.sock:
+      if: "[! test -f is_job]"
+      path: ~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock
+
+# Install brew tools
+- brewfile:
+    file: Brewfile
+
+# Install asdf tools
+- asdf:
+    - plugin: gcloud
+      url: https://github.com/jthegedus/asdf-gcloud.git
+      global: 378.0.0
+    - plugin: golang
+      url: https://github.com/kennyp/asdf-golang.git
+      global: 1.19
+    - plugin: helm
+      url: https://github.com/Antiarchitect/asdf-helm.git
+      global: 3.8.1
+    - plugin: jq
+      url: https://github.com/AZMCode/asdf-jq.git
+      global: 1.6
+    - plugin: kubectl
+      url: https://github.com/asdf-community/asdf-kubectl.git
+      global: 1.23.6
+    - plugin: nodejs
+      url: https://github.com/asdf-vm/asdf-nodejs.git
+      global: 17.1.0
+    - plugin: sops
+      url: https://github.com/feniix/asdf-sops.git
+      global: 3.7.2
+    - plugin: terraform
+      url: https://github.com/asdf-community/asdf-hashicorp.git
+      global: 1.1.7
+    - plugin: yarn
+      url: https://github.com/twuni/asdf-yarn.git
+      global: 1.22.17
+    - plugin: python
+      url: https://github.com/danhper/asdf-python.git
+      global: 3.10.4
 
 # Configure local env
 - shell:
-  - command: asdf install
-    description: install all tools
-    quiet: false
-    stderr: true
-    stdin: true
-    stdout: true
-  - command: ./scripts/fish.bash
-    description: configure fish shell
-    quiet: false
-    stderr: true
-    stdin: true
-    stdout: true
-  - command: ./scripts/vscode.bash
-    description: configure vscode and extensions
-    quiet: false
-    stderr: true
-    stdin: true
-    stdout: true
+    - command: ./scripts/fish.bash
+      description: configure fish shell
+      quiet: false
+      stderr: true
+      stdin: true
+      stdout: true
+    - command: ./scripts/vscode.bash
+      description: configure vscode and extensions
+      quiet: false
+      stderr: true
+      stdin: true
+      stdout: true

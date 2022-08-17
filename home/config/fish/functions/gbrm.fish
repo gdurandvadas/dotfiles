@@ -1,3 +1,3 @@
 function gbrm
-  git remote prune origin && git branch --merged | egrep -v "(^\*|master)" | xargs git branch -d
+  git fetch -p && for b in (git branch -vv | grep ': gone]' | awk '{print $1}'); git branch -D $b; end
 end

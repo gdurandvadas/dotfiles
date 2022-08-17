@@ -1,0 +1,5 @@
+[user]
+    name = Gastón Durand Vadas
+    email = ${EMAIL}
+[pull]
+	rebase = true
