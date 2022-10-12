@@ -8,21 +8,22 @@
       "gdurandvadas",
       "Vadas"
     ],
-    "editor.cursorBlinking": "smooth",
-    "editor.fontFamily": "JetBrainsMono Nerd Font",
-    "editor.fontLigatures": true,
-    "editor.fontSize": 13,
-    "editor.tabSize": 2,
-    "workbench.iconTheme": "icons",
-    "redhat.telemetry.enabled": false,
-    "git.autofetch": true,
-    "workbench.startupEditor": "none",
-    "git.confirmSync": false,
-    "extensions.ignoreRecommendations": true,
-    "go.toolsManagement.autoUpdate": true,
-    "go.lintTool": "golangci-lint",
-    "go.lintFlags": [
-      "--fast"
-    ],
-    "git.enableSmartCommit": true
+  "editor.cursorBlinking": "smooth",
+  "editor.fontFamily": "JetBrainsMono Nerd Font",
+  "editor.fontLigatures": true,
+  "editor.fontSize": 13,
+  "editor.tabSize": 2,
+  "workbench.iconTheme": "icons",
+  "redhat.telemetry.enabled": false,
+  "git.autofetch": true,
+  "workbench.startupEditor": "none",
+  "git.confirmSync": false,
+  "extensions.ignoreRecommendations": true,
+  "go.toolsManagement.autoUpdate": true,
+  "go.lintTool": "golangci-lint",
+  "go.lintFlags": [
+    "--fast"
+  ],
+  "git.enableSmartCommit": true,
+  "files.insertFinalNewline": true
 }
