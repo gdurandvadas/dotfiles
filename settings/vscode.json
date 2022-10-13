@@ -1,29 +1,31 @@
 {
-  "workbench.colorTheme": "GitHub Dark Dimmed",
-  "window.commandCenter": true,
-  "cSpell.userWords": [
-      "Durand",
-      "Ezequiel",
-      "Gastón",
-      "gdurandvadas",
-      "Vadas"
-    ],
+  "cSpell.userWords": ["Durand","Ezequiel","Gastón","gdurandvadas","Vadas"],
   "editor.cursorBlinking": "smooth",
   "editor.fontFamily": "JetBrainsMono Nerd Font",
   "editor.fontLigatures": true,
   "editor.fontSize": 13,
   "editor.tabSize": 2,
-  "workbench.iconTheme": "icons",
-  "redhat.telemetry.enabled": false,
-  "git.autofetch": true,
-  "workbench.startupEditor": "none",
-  "git.confirmSync": false,
   "extensions.ignoreRecommendations": true,
-  "go.toolsManagement.autoUpdate": true,
-  "go.lintTool": "golangci-lint",
-  "go.lintFlags": [
-    "--fast"
-  ],
+  "files.insertFinalNewline": true,
+  "git.autofetch": true,
+  "git.confirmSync": false,
   "git.enableSmartCommit": true,
-  "files.insertFinalNewline": true
+  "go.lintFlags": ["--fast"],
+  "go.lintTool": "golangci-lint",
+  "go.toolsManagement.autoUpdate": true,
+  "redhat.telemetry.enabled": false,
+  "window.commandCenter": true,
+  "workbench.colorTheme": "GitHub Dark Dimmed",
+  "workbench.iconTheme": "icons",
+  "workbench.startupEditor": "none",
+  
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

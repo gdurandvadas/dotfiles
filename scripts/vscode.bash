@@ -11,6 +11,7 @@ EXTENSIONS=(
   "aaron-bond.better-comments"
   "donjayamanne.githistory"
   "eamodio.gitlens"
+  "esbenp.prettier-vscode"
   "GitHub.github-vscode-theme"
   "golang.go"
   "hashicorp.terraform"
