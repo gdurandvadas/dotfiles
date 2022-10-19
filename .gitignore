@@ -13,6 +13,7 @@ home/config/gcloud*
 home/config/helm*
 home/config/op*
 home/ssh/config.d/custom
+home/config/configstore*
 
 # Ignore done checks
 *_done
