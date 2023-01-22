@@ -19,3 +19,8 @@ if status is-interactive
     source $XDG_CONFIG_HOME/conf.d/config.fish.local
   end
 end
+
+# pnpm
+set -gx PNPM_HOME "/Users/gdurandvadas/.local/share/pnpm"
+set -gx PATH "$PNPM_HOME" $PATH
+# pnpm end

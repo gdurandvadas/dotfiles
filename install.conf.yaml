@@ -80,7 +80,7 @@
       global: 1.23.6
     - plugin: nodejs
       url: https://github.com/asdf-vm/asdf-nodejs.git
-      global: 18.8.0
+      global: 18
     - plugin: sops
       url: https://github.com/feniix/asdf-sops.git
       global: 3.7.2
@@ -96,6 +96,10 @@
     - plugin: helmfile
       url: https://github.com/feniix/asdf-helmfile.git
       global: 0.144.0
+    - plugin: rust
+      url: https://github.com/code-lever/asdf-rust.git
+      global: 1.66.1
+
 
 
 # Configure local env

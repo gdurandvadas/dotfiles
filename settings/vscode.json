@@ -36,5 +36,17 @@
   },
   "[yaml]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "editor.accessibilitySupport": "off",
+  "audioCues.lineHasError": "off",
+  "audioCues.lineHasFoldedArea": "off",
+  "audioCues.lineHasBreakpoint": "off",
+  "editor.unicodeHighlight.ambiguousCharacters": false,
+  "diffEditor.ignoreTrimWhitespace": false,
+  "[dockercompose]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-docker"
   }
 }

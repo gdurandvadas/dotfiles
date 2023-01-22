@@ -19,6 +19,7 @@ EXTENSIONS=(
   "ms-azuretools.vscode-docker"
   "ms-kubernetes-tools.vscode-kubernetes-tools"
   "naumovs.color-highlight"
+  "rust-lang.rust-analyzer"
   "streetsidesoftware.code-spell-checker"
   "tal7aouy.icons"
 )
