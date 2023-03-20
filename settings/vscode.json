@@ -1,5 +1,12 @@
 {
-  "cSpell.userWords": ["Durand","Ezequiel","Gastón","gdurandvadas","Vadas"],
+  "cSpell.userWords": [
+    "brohard",
+    "Durand",
+    "Ezequiel",
+    "Gastón",
+    "gdurandvadas",
+    "Vadas"
+  ],
   "editor.cursorBlinking": "smooth",
   "editor.fontFamily": "JetBrainsMono Nerd Font",
   "editor.fontLigatures": true,
@@ -48,5 +55,18 @@
   "diffEditor.ignoreTrimWhitespace": false,
   "[dockercompose]": {
     "editor.defaultFormatter": "ms-azuretools.vscode-docker"
-  }
+  },
+  "editor.minimap.enabled": false,
+  "explorer.confirmDelete": false,
+  "evenBetterToml.formatter.allowedBlankLines": 1,
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  "git.ignoreRebaseWarning": true,
+  "[python]": {
+    "editor.formatOnType": true
+  },
+  "files.associations": {
+    "*.yaml": "yaml"
+  },
 }
