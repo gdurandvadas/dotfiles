@@ -1,0 +1,14 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+
+{{ range .tools -}}
+printf "Installing {{ .name }}...\n"
+asdf plugin add {{ .name | quote }} {{ .url | quote }}
+asdf install {{ .name | quote }} {{ .version | quote }}
+asdf global {{ .name | quote }} {{ .version | quote }}
+{{ end -}}
+
+{{- end }}

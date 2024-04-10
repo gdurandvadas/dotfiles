@@ -1,0 +1,13 @@
+extensions:
+  - "aaron-bond.better-comments"
+  - "GitHub.github-vscode-theme"
+  - "golang.go"
+  - "hashicorp.terraform"
+  - "ms-azuretools.vscode-docker"
+  - "ms-kubernetes-tools.vscode-kubernetes-tools"
+  - "redhat.vscode-yaml"
+  - "rust-lang.rust-analyzer"
+  - "tal7aouy.icons"
+  - "tamasfe.even-better-toml"
+  - "github.copilot"
+  - "davidanson.vscode-markdownlint"

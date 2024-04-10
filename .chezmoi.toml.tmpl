@@ -1,0 +1,10 @@
+{{- $email := promptStringOnce . "email" "Email address" -}}
+{{- $name := promptStringOnce . "name" "User name and lastname" "Gastón Ezequiel Durand Vadas" -}}
+
+{{- $workspaceOptions := list "work" "personal" -}}
+{{- $workspace := promptChoice "The computer workspace" $workspaceOptions -}}
+
+[data]
+    email = {{ $email | quote }}
+    name = {{ $name | quote }}
+    workspace = {{ $workspace | quote }}

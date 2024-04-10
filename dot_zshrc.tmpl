@@ -1,0 +1,25 @@
+# Homebrew
+{{ if eq .chezmoi.arch "arm64" -}}
+HOMEBREW_PREFIX="/opt/homebrew"
+{{ else -}}
+HOMEBREW_PREFIX="/usr/local"
+{{ end -}}
+HOMEBREW_BIN="$HOMEBREW_PREFIX/bin"
+
+# PATHs
+USER_BIN="$HOME/.local/bin"
+export PATH="$USER_BIN:$HOMEBREW_BIN:$PATH"
+
+# ZSH Plugins
+source $(brew --prefix)/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# Enable starship prompt
+eval "$(starship init zsh)"
+
+# History substring search
+bindkey '^[[1;3A' history-substring-search-up
+bindkey '^[[1;3B' history-substring-search-down
+
+# asdf
+source $HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh

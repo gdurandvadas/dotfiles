@@ -1,0 +1,19 @@
+tools:
+  - name: gcloud
+    url: https://github.com/jthegedus/asdf-gcloud.git
+    version: 471.0.0
+  - name: golang
+    url: https://github.com/kennyp/asdf-golang.git
+    version: 1.22.0
+  - name: terraform
+    url: https://github.com/asdf-community/asdf-hashicorp.git
+    version: 1.7.5
+  - name: nodejs
+    url: https://github.com/asdf-vm/asdf-nodejs.git
+    version: 20.12.1
+  - name: python
+    url: https://github.com/danhper/asdf-python.git
+    version: 3.12.2
+  - name: rust
+    url: https://github.com/code-lever/asdf-rust.git
+    version: 1.77

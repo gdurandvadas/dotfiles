@@ -1,0 +1,7 @@
+[shell]
+{{ if eq .chezmoi.arch "arm64" -}}
+program="/opt/homebrew/bin/tmux"
+{{ else -}}
+program="/usr/local/bin/tmux"
+{{ end -}}
+args = ["new-session", "-A", "-D", "-s", "main"]

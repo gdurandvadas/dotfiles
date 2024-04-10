@@ -1,0 +1,15 @@
+{
+  "editor.cursorBlinking": "smooth",
+  "editor.fontFamily": "JetBrainsMono Nerd Font",
+  "editor.fontLigatures": true,
+  "editor.fontSize": 13,
+  "editor.tabSize": 2,
+  "files.insertFinalNewline": true,
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "workbench.colorTheme": "GitHub Dark",
+  "go.formatTool": "gofmt",
+  "docker.composeCommand": "docker-compose",
+  "workbench.iconTheme": "icons"
+}

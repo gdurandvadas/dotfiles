@@ -1,0 +1,25 @@
+bundles:
+  common:
+    brews:
+      - "asdf"
+      - "jq"
+      - "starship"
+      - "tmux"
+      - "tree"
+      - "yq"
+      - "zsh-history-substring-search"
+      - "zsh-syntax-highlighting"
+    casks:
+      - "alacritty"
+      - "docker"
+      - "font-jetbrains-mono-nerd-font"
+      - "visual-studio-code"
+  work:
+    brews:
+      - "helm"
+      - "helmfile"
+      - "kubernetes-cli"
+      - "k9s"
+      - "pnpm"
+      - "yarn"
+    casks: []

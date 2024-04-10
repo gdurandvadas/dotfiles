@@ -1,0 +1,44 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+
+{{ if eq .chezmoi.arch "arm64" -}}
+HOMEBREW_PREFIX="/opt/homebrew/bin"
+{{ else -}}
+HOMEBREW_PREFIX="/usr/local/bin"
+{{ end -}}
+
+${HOMEBREW_PREFIX}/brew tap "homebrew/cask-fonts"
+
+# Common bundle is always installed
+${HOMEBREW_PREFIX}/brew bundle --no-lock --file=/dev/stdin <<EOF
+{{ range .bundles.common.brews -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ range .bundles.common.casks -}}
+cask {{ . | quote }}
+{{ end -}}
+
+# Work bundle is installed based on the workspace config
+{{ if eq .workspace "work" -}}
+{{ range .bundles.work.brews -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ range .bundles.work.casks -}}
+cask {{ . | quote }}
+{{ end -}}
+{{ end -}}
+
+# Personal bundle is installed based on the workspace config
+{{ if eq .workspace "personal" -}}
+{{ range .bundles.personal.brews -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ range .bundles.personal.casks -}}
+cask {{ . | quote }}
+{{ end -}}
+{{ end -}}
+EOF
+{{ end -}}

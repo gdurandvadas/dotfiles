@@ -1,0 +1,45 @@
+[keyboard]
+bindings = [
+  #+------+#
+  # System #
+  #+------+#
+  # Reload tmux
+  { key = "R", mods = "Command|Shift", chars = "\u0001\u0072" },
+  # Jump word
+  { key = "Right", mods = "Alt", chars = "\u001BF" },
+  { key = "Left", mods = "Alt", chars = "\u001BB" },
+
+  #+-----+#
+  # Panes #
+  #+-----+#
+  # Split horizontally
+  { key = "D", mods = "Command", chars = "\u0001\u0025" },
+  # Split vertically
+  { key = "D", mods = "Command|Shift", chars = "\u0001\u0022" },
+  # Navigate
+  { key = "Up", mods = "Command|Shift", chars = "\u0001\u006B" },
+  { key = "Left", mods = "Command|Shift", chars = "\u0001\u0068" },
+  { key = "Right", mods = "Command|Shift", chars = "\u0001\u006C" },
+  { key = "Down", mods = "Command|Shift", chars = "\u0001\u006A" },
+  # Synchronize
+  { key = "S", mods = "Command", chars = "\u0001\u0067" },
+
+  #+------------+#
+  # Tabs/Windows #
+  #+------------+#
+  # New
+  { key = "T", mods = "Command", chars = "\u0001\u0063" },
+  # Close
+  { key = "W", mods = "Command", chars = "\u0001\u0078" },
+  # Select
+  { key = "1", mods = "Command", chars = "\u0001\u0031" },
+  { key = "2", mods = "Command", chars = "\u0001\u0032" },
+  { key = "3", mods = "Command", chars = "\u0001\u0033" },
+  { key = "4", mods = "Command", chars = "\u0001\u0034" },
+  { key = "5", mods = "Command", chars = "\u0001\u0035" },
+  { key = "6", mods = "Command", chars = "\u0001\u0036" },
+  { key = "7", mods = "Command", chars = "\u0001\u0037" },
+  { key = "8", mods = "Command", chars = "\u0001\u0038" },
+  { key = "9", mods = "Command", chars = "\u0001\u0039" },
+  { key = "0", mods = "Command", chars = "\u0001\u0030" },
+]
