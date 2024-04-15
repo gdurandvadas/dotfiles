@@ -10,14 +10,11 @@ $directory\
 $git_branch\
 $git_status\
 [](fg:color_aqua bg:color_blue)\
-$c\
 $rust\
 $golang\
 $nodejs\
 $php\
 $java\
-$kotlin\
-$haskell\
 $python\
 [](fg:color_blue bg:color_bg3)\
 $docker_context\
@@ -47,31 +44,13 @@ disabled = false
 style = "bg:color_orange fg:color_fg0"
 
 [os.symbols]
-Windows = "󰍲"
-Ubuntu = "󰕈"
-SUSE = ""
-Raspbian = "󰐿"
-Mint = "󰣭"
-Macos = "󰀵"
-Manjaro = ""
-Linux = "󰌽"
-Gentoo = "󰣨"
-Fedora = "󰣛"
-Alpine = ""
-Amazon = ""
-Android = ""
-Arch = "󰣇"
-Artix = "󰣇"
-CentOS = ""
-Debian = "󰣚"
-Redhat = "󱄛"
-RedHatEnterprise = "󱄛"
+Macos = "󰀵 "
 
 [username]
 show_always = true
+format = '[ $user ]($style)'
 style_user = "bg:color_orange fg:color_fg0"
 style_root = "bg:color_orange fg:color_fg0"
-format = '[ $user ]($style)'
 
 [directory]
 style = "fg:color_fg0 bg:color_yellow"
@@ -113,11 +92,6 @@ style = "bg:color_blue"
 format = '[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)'
 
 # Support Languages
-[c]
-symbol = " "
-style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)'
-
 [php]
 symbol = ""
 style = "bg:color_blue"
@@ -125,16 +99,6 @@ format = '[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)'
 
 [java]
 symbol = " "
-style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)'
-
-[kotlin]
-symbol = ""
-style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)'
-
-[haskell]
-symbol = ""
 style = "bg:color_blue"
 format = '[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)'
 
@@ -159,12 +123,10 @@ format = '[[ $symbol( $context) ](fg:#83a598 bg:color_bg3)]($style)'
 style = "bg:color_bg1"
 format = '[ $symbol$profile:($region)]($style)'
 symbol = ' '
-[aws.region_aliases]
-eu-west-1 = "ie"
 
 [gcloud]
 style = "bg:color_bg1"
-format = '[ $symbol$account(@$domain):$project($region)]($style)'
+format = '[ ($symbol)$account(@$domain)(:$project)($region)]($style)'
 symbol = '󱇶 '
 
 [line_break]
@@ -174,7 +136,3 @@ disabled = false
 disabled = false
 success_symbol = '[](bold fg:color_green)'
 error_symbol = '[](bold fg:color_red)'
-vimcmd_symbol = '[](bold fg:color_green)'
-vimcmd_replace_one_symbol = '[](bold fg:color_purple)'
-vimcmd_replace_symbol = '[](bold fg:color_purple)'
-vimcmd_visual_symbol = '[](bold fg:color_yellow)'

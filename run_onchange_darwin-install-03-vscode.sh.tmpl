@@ -6,7 +6,7 @@ set -o pipefail
 
 printf "Installing VSCode extensions...\n"
 {{ range .extensions -}}
-code --install-extension {{ . | quote }} --force
+${HOMEBREW_BIN}/code --install-extension {{ . | quote }} --force
 {{ end -}}
 
 {{- end }}

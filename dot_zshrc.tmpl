@@ -1,25 +1,34 @@
-# Homebrew
-{{ if eq .chezmoi.arch "arm64" -}}
+# Set Homebrew path
 HOMEBREW_PREFIX="/opt/homebrew"
-{{ else -}}
-HOMEBREW_PREFIX="/usr/local"
-{{ end -}}
-HOMEBREW_BIN="$HOMEBREW_PREFIX/bin"
+export PATH="$HOMEBREW_PREFIX/bin:$PATH"
 
-# PATHs
-USER_BIN="$HOME/.local/bin"
-export PATH="$USER_BIN:$HOMEBREW_BIN:$PATH"
+# Function to conditionally execute a command if a certain path exists
+try_exec() {
+    local path="$1"
+    local command="$2"
+    if [[ -e $path ]]; then
+        eval "$command"
+    fi
+}
 
-# ZSH Plugins
-source $(brew --prefix)/share/zsh-history-substring-search/zsh-history-substring-search.zsh
-source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# Initialize starship prompt if available
+try_exec "$(command -v starship)" "$(starship init zsh)"
 
-# Enable starship prompt
-eval "$(starship init zsh)"
+# Source asdf if available
+try_exec "$HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh" "source $HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh"
 
-# History substring search
-bindkey '^[[1;3A' history-substring-search-up
-bindkey '^[[1;3B' history-substring-search-down
+# Plugins path
+PLUGIN_PATH="$HOME/.zsh/plugins"
 
-# asdf
-source $HOMEBREW_PREFIX/opt/asdf/libexec/asdf.sh
+# Source ZSH plugins if directory exists
+if [ -d "$PLUGIN_PATH" ]; then
+    for plugin in zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search; do
+        try_exec "$PLUGIN_PATH/$plugin/$plugin.zsh" "source $PLUGIN_PATH/$plugin/$plugin.zsh"
+    done
+fi
+
+# Setup keybindings for history substring search
+try_exec "$PLUGIN_PATH/zsh-history-substring-search/zsh-history-substring-search.zsh" "
+    bindkey '^[[1;3A' history-substring-search-up
+    bindkey '^[[1;3B' history-substring-search-down
+"

@@ -8,3 +8,8 @@
     email = {{ $email | quote }}
     name = {{ $name | quote }}
     workspace = {{ $workspace | quote }}
+
+{{ if eq .chezmoi.os "darwin" -}}
+[scriptEnv]
+    HOMEBREW_BIN="/opt/homebrew/bin"
+{{- end }}

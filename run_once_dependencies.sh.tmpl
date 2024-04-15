@@ -10,13 +10,11 @@ if ! xcode-select -p >/dev/null; then
   wait
 fi
 
-{{ if eq .chezmoi.arch "arm64" -}}
 printf "Checking for Rosetta...\n"
 if ! /usr/bin/pgrep oahd >/dev/null 2>&1; then
   /usr/sbin/softwareupdate --install-rosetta --agree-to-license
   wait
 fi
-{{ end -}}
 
 printf "Checking for Homebrew...\n"
 if ! brew --version >/dev/null 2>&1; then

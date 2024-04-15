@@ -4,11 +4,11 @@
 set -o errexit
 set -o pipefail
 
-{{ range .tools -}}
+{{ range .languages -}}
 printf "Installing {{ .name }}...\n"
-asdf plugin add {{ .name | quote }} {{ .url | quote }}
-asdf install {{ .name | quote }} {{ .version | quote }}
-asdf global {{ .name | quote }} {{ .version | quote }}
+${HOMEBREW_BIN}/asdf plugin add {{ .name | quote }} {{ .url | quote }}
+${HOMEBREW_BIN}/asdf install {{ .name | quote }} {{ .version | quote }}
+${HOMEBREW_BIN}/asdf global {{ .name | quote }} {{ .version | quote }}
 {{ end -}}
 
 {{- end }}

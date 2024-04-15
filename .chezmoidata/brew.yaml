@@ -7,8 +7,6 @@ bundles:
       - "tmux"
       - "tree"
       - "yq"
-      - "zsh-history-substring-search"
-      - "zsh-syntax-highlighting"
     casks:
       - "alacritty"
       - "docker"
@@ -22,4 +20,5 @@ bundles:
       - "k9s"
       - "pnpm"
       - "yarn"
-    casks: []
+    casks:
+      - "google-cloud-sdk"

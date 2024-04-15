@@ -4,16 +4,10 @@
 set -o errexit
 set -o pipefail
 
-{{ if eq .chezmoi.arch "arm64" -}}
-HOMEBREW_PREFIX="/opt/homebrew/bin"
-{{ else -}}
-HOMEBREW_PREFIX="/usr/local/bin"
-{{ end -}}
-
-${HOMEBREW_PREFIX}/brew tap "homebrew/cask-fonts"
+${HOMEBREW_BIN}/brew tap "homebrew/cask-fonts"
 
 # Common bundle is always installed
-${HOMEBREW_PREFIX}/brew bundle --no-lock --file=/dev/stdin <<EOF
+${HOMEBREW_BIN}/brew bundle --no-lock --file=/dev/stdin <<EOF
 {{ range .bundles.common.brews -}}
 brew {{ . | quote }}
 {{ end -}}
