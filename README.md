@@ -2,6 +2,12 @@
 
 Welcome to the documentation of my dotfiles configuration tailored for macOS Darwin ARM environments. This guide assists you in setting up and understanding the configurations managed via [chezmoi](https://www.chezmoi.io/), which synchronizes and secures your setup across machines efficiently.
 
+Use this configuration by running
+
+```sh
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply gdurandvadas
+```
+
 ## Platform Requirements
 
 This configuration is designed to run on macOS with the following dependencies managed by the dotfiles themselves:
