@@ -11,5 +11,8 @@
   "workbench.colorTheme": "GitHub Dark",
   "go.formatTool": "gofmt",
   "docker.composeCommand": "docker-compose",
-  "workbench.iconTheme": "icons"
+  "workbench.iconTheme": "icons",
+  "[markdown]": {
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+  }
 }

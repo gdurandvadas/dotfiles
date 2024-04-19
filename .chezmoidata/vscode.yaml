@@ -1,5 +1,7 @@
 extensions:
   - "aaron-bond.better-comments"
+  - "davidanson.vscode-markdownlint"
+  - "github.copilot"
   - "GitHub.github-vscode-theme"
   - "golang.go"
   - "hashicorp.terraform"
@@ -9,5 +11,4 @@ extensions:
   - "rust-lang.rust-analyzer"
   - "tal7aouy.icons"
   - "tamasfe.even-better-toml"
-  - "github.copilot"
-  - "davidanson.vscode-markdownlint"
+  - "yzhang.markdown-all-in-one"

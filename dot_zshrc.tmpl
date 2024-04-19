@@ -4,10 +4,8 @@ export PATH="$HOMEBREW_PREFIX/bin:$PATH"
 
 # Function to conditionally execute a command if a certain path exists
 try_exec() {
-    local path="$1"
-    local command="$2"
-    if [[ -e $path ]]; then
-        eval "$command"
+    if [[ -e $1 ]]; then
+        eval $2
     fi
 }
 
