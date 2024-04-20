@@ -14,5 +14,6 @@
   "workbench.iconTheme": "icons",
   "[markdown]": {
     "editor.defaultFormatter": "yzhang.markdown-all-in-one"
-  }
+  },
+  "workbench.startupEditor": "none"
 }

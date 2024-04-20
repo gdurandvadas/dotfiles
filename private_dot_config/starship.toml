@@ -25,6 +25,8 @@ $gcloud\
 [ ](fg:color_bg1)\
 $line_break$character"""
 
+command_timeout=500
+
 palette = 'gruvbox_dark'
 
 [palettes.gruvbox_dark]
