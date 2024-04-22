@@ -1,4 +1,4 @@
-"$schema" = 'https://starship.rs/config-schema.json'
+"$schema" = "https://starship.rs/config-schema.json"
 
 format = """
 [](color_orange)\
@@ -10,12 +10,13 @@ $directory\
 $git_branch\
 $git_status\
 [](fg:color_aqua bg:color_blue)\
-$rust\
 $golang\
+$java\
 $nodejs\
 $php\
-$java\
 $python\
+$ruby\
+$rust\
 [](fg:color_blue bg:color_bg3)\
 $docker_context\
 $kubernetes\
@@ -27,30 +28,30 @@ $line_break$character"""
 
 command_timeout=500
 
-palette = 'gruvbox_dark'
+palette = "gruvbox_dark"
 
 [palettes.gruvbox_dark]
-color_fg0 = '#fbf1c7'
-color_bg1 = '#3c3836'
-color_bg3 = '#665c54'
-color_blue = '#458588'
-color_aqua = '#689d6a'
-color_green = '#98971a'
-color_orange = '#d65d0e'
-color_purple = '#b16286'
-color_red = '#cc241d'
-color_yellow = '#d79921'
+color_fg0 = "#fbf1c7"
+color_bg1 = "#3c3836"
+color_bg3 = "#665c54"
+color_blue = "#458588"
+color_aqua = "#689d6a"
+color_green = "#98971a"
+color_orange = "#d65d0e"
+color_purple = "#b16286"
+color_red = "#cc241d"
+color_yellow = "#d79921"
 
 [os]
 disabled = false
 style = "bg:color_orange fg:color_fg0"
 
 [os.symbols]
-Macos = "󰀵 "
+Macos = "󰀵"
 
 [username]
 show_always = true
-format = '[ $user ]($style)'
+format = "[ $user ]($style)"
 style_user = "bg:color_orange fg:color_fg0"
 style_root = "bg:color_orange fg:color_fg0"
 
@@ -61,80 +62,85 @@ truncation_length = 3
 truncation_symbol = "…/"
 
 [directory.substitutions]
-"Documents" = "󰈙 "
-"Downloads" = " "
-"Music" = "󰝚 "
-"Pictures" = " "
-"Developer" = "󰲋 "
+"Documents" = "󰈙"
+"Downloads" = ""
+"Music" = "󰝚"
+"Pictures" = ""
+"Developer" = "󰲋"
 
 # Git
 [git_branch]
 symbol = ""
 style = "bg:color_aqua"
-format = '[[ $symbol $branch ](fg:color_fg0 bg:color_aqua)]($style)'
+format = "[[ $symbol $branch ](fg:color_fg0 bg:color_aqua)]($style)"
 
 [git_status]
 style = "bg:color_aqua"
-format = '[[($all_status$ahead_behind )](fg:color_fg0 bg:color_aqua)]($style)'
+format = "[[($all_status$ahead_behind )](fg:color_fg0 bg:color_aqua)]($style)"
 
 # Languages I Use
 [nodejs]
 symbol = ""
 style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)'
+format = "[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)"
 
 [rust]
 symbol = ""
 style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)'
+format = "[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)"
 
 [golang]
 symbol = ""
 style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)'
+format = "[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)"
 
 # Support Languages
 [php]
 symbol = ""
 style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)'
+format = "[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)"
 
 [java]
-symbol = " "
+symbol = ""
 style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)'
+format = "[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)"
 
 [python]
 symbol = ""
 style = "bg:color_blue"
-format = '[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)'
+format = "[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)"
 
-# Infrastucture Local
+[ruby]
+symbol = ""
+style = "bg:color_blue"
+format = "[[ $symbol( $version) ](fg:color_fg0 bg:color_blue)]($style)"
+
+# Infrastucture Containers
 [docker_context]
 symbol = ""
 style = "bg:color_bg3"
-format = '[[ $symbol( $context) ](fg:#83a598 bg:color_bg3)]($style)'
+format = "[[ $symbol( $context) ](fg:#83a598 bg:color_bg3)]($style)"
 
 [kubernetes]
 symbol = "󱃾"
 style = "bg:color_bg3"
-format = '[[ $symbol( $context) ](fg:#83a598 bg:color_bg3)]($style)'
+format = "[[ $symbol( $context) ](fg:#83a598 bg:color_bg3)]($style)"
 
 # Infrastucture Cloud
 [aws]
 style = "bg:color_bg1"
-format = '[ $symbol$profile:($region)]($style)'
-symbol = ' '
+format = "[ $symbol$profile:($region)]($style)"
+symbol = " "
 
 [gcloud]
 style = "bg:color_bg1"
-format = '[ ($symbol)$account(@$domain)(:$project)($region)]($style)'
-symbol = '󱇶 '
+format = "[ ($symbol)$account(@$domain)(:$project)($region)]($style)"
+symbol = "󱇶"
 
 [line_break]
 disabled = false
 
 [character]
 disabled = false
-success_symbol = '[](bold fg:color_green)'
-error_symbol = '[](bold fg:color_red)'
+success_symbol = "[](bold fg:color_green)"
+error_symbol = "[](bold fg:color_red)"

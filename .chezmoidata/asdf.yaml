@@ -14,3 +14,6 @@ languages:
   - name: rust
     url: https://github.com/code-lever/asdf-rust.git
     version: 1.77
+  - name: ruby
+    url: https://github.com/asdf-vm/asdf-ruby.git
+    version: 3.2.3
