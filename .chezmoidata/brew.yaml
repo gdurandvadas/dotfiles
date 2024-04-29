@@ -2,6 +2,7 @@ bundles:
   common:
     brews:
       - "asdf"
+      - "buf"
       - "jq"
       - "starship"
       - "tmux"
