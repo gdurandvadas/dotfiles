@@ -3,11 +3,13 @@ bundles:
     brews:
       - "asdf"
       - "buf"
+      - "oven-sh/bun/bun"
       - "jq"
       - "starship"
       - "tmux"
       - "tree"
       - "yq"
+      - "mkdocs"
     casks:
       - "alacritty"
       - "docker"
