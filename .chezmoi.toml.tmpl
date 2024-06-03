@@ -1,5 +1,6 @@
 {{- $email := promptStringOnce . "email" "Email address" -}}
 {{- $name := promptStringOnce . "name" "User name and lastname" "Gastón Ezequiel Durand Vadas" -}}
+{{- $ssh_key_pub := promptStringOnce . "ssh_key_pub" "Your SSH public key for signing git commits" -}}
 
 {{- $workspaceOptions := list "work" "personal" -}}
 {{- $workspace := promptChoice "The computer workspace" $workspaceOptions -}}
@@ -7,6 +8,7 @@
 [data]
     email = {{ $email | quote }}
     name = {{ $name | quote }}
+    ssh_key_pub = {{ $ssh_key_pub | quote }}
     workspace = {{ $workspace | quote }}
 
 {{ if eq .chezmoi.os "darwin" -}}

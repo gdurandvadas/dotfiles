@@ -21,7 +21,6 @@ bundles:
       - "helmfile"
       - "kubernetes-cli"
       - "k9s"
-      - "pnpm"
       - "yarn"
+      - "awscli"
     casks:
-      - "google-cloud-sdk"
