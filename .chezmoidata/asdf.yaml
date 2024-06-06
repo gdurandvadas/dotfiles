@@ -4,7 +4,7 @@ languages:
     version: 1.22.2
   - name: terraform
     url: https://github.com/asdf-community/asdf-hashicorp.git
-    version: 1.7.5
+    version: 1.0.11
   - name: nodejs
     url: https://github.com/asdf-vm/asdf-nodejs.git
     version: 20.12.1

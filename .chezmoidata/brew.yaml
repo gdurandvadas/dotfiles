@@ -17,10 +17,13 @@ bundles:
       - "visual-studio-code"
   work:
     brews:
+      - "awscli"
       - "helm"
       - "helmfile"
-      - "kubernetes-cli"
       - "k9s"
+      - "kubernetes-cli"
+      - "terraform-docs"
+      - "tflint"
+      - "tfsec"
       - "yarn"
-      - "awscli"
     casks:

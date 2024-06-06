@@ -15,5 +15,6 @@
   "[markdown]": {
     "editor.defaultFormatter": "yzhang.markdown-all-in-one"
   },
-  "workbench.startupEditor": "none"
+  "workbench.startupEditor": "none",
+  "explorer.confirmDelete": false
 }
