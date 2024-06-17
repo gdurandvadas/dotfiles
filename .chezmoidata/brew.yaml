@@ -17,6 +17,7 @@ bundles:
       - "visual-studio-code"
   work:
     brews:
+      - "act"
       - "awscli"
       - "helm"
       - "helmfile"
