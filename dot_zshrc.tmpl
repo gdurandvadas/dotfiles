@@ -23,10 +23,14 @@ if [ -d "$PLUGIN_PATH" ]; then
     for plugin in zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search; do
         try_exec "$PLUGIN_PATH/$plugin/$plugin.zsh" "source $PLUGIN_PATH/$plugin/$plugin.zsh"
     done
+
+    # Setup keybindings for history substring search
+    try_exec "$PLUGIN_PATH/zsh-history-substring-search/zsh-history-substring-search.zsh" "
+        bindkey '^[[1;3A' history-substring-search-up
+        bindkey '^[[1;3B' history-substring-search-down
+    "
 fi
 
-# Setup keybindings for history substring search
-try_exec "$PLUGIN_PATH/zsh-history-substring-search/zsh-history-substring-search.zsh" "
-    bindkey '^[[1;3A' history-substring-search-up
-    bindkey '^[[1;3B' history-substring-search-down
-"
+# Load custom aliases
+try_exec "$HOME/.zsh/aw.zsh" "source $HOME/.zsh/aw.zsh"
+try_exec "$HOME/.zsh/gt.zsh" "source $HOME/.zsh/gt.zsh"
