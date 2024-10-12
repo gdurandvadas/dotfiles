@@ -2,6 +2,10 @@
 HOMEBREW_PREFIX="/opt/homebrew"
 export PATH="$HOMEBREW_PREFIX/bin:$PATH"
 
+# Set local bin path
+LOCAL_BIN="$HOME/.local/bin"
+export PATH="$LOCAL_BIN:$PATH"
+
 # Function to conditionally execute a command if a certain path exists
 try_exec() {
     if [[ -e $1 ]]; then
