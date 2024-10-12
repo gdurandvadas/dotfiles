@@ -1,5 +1,5 @@
 import = [
-  "~/.config/alacritty/anysphere_dark.toml",
+  "~/.config/alacritty/gruvbox_dark.toml",
   "~/.config/alacritty/keybindings.toml",
   "~/.config/alacritty/tmux.toml",
 ]
