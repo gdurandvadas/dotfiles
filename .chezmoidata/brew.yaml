@@ -10,11 +10,11 @@ bundles:
       - "tmux"
       - "tree"
       - "yq"
+      - "ca-certificates"
     casks:
       - "alacritty"
       - "docker"
-      - "font-jetbrains-mono-nerd-font"
-      - "visual-studio-code"
+      - "cursor"
   work:
     brews:
       - "act"
