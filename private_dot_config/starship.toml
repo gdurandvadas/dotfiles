@@ -28,7 +28,7 @@ $line_break$character"""
 
 command_timeout=500
 
-palette = "gruvbox_dark"
+palette = "anysphere_dark"
 
 [palettes.gruvbox_dark]
 color_fg0 = "#fbf1c7"
@@ -41,6 +41,20 @@ color_orange = "#d65d0e"
 color_purple = "#b16286"
 color_red = "#cc241d"
 color_yellow = "#d79921"
+
+[palettes.anysphere_dark]
+color_fg0 = "#D6D6DD"
+color_bg0 = "#181818"
+color_bg1 = "#292929"
+color_bg2 = "#3A3A3A"
+color_blue = "#3A6DA0"
+color_aqua = "#72D6D6"
+color_green = "#73AD2B"
+color_orange = "#BE9117"
+color_purple = "#D3869B"
+color_red = "#D64D5B"
+color_yellow = "#EBC88D"
+
 
 [os]
 disabled = false

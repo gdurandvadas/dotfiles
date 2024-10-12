@@ -1,5 +1,5 @@
 import = [
-  "~/.config/alacritty/gruvbox_dark.toml",
+  "~/.config/alacritty/anysphere_dark.toml",
   "~/.config/alacritty/keybindings.toml",
   "~/.config/alacritty/tmux.toml",
 ]
@@ -22,19 +22,19 @@ history = 100000
 multiplier = 3
 
 [font.normal]
-family = "JetBrainsMono Nerd Font"
+family = "Ellograph CF"
 style = "Regular"
 
 [font.bold]
-family = "JetBrainsMono Nerd Font"
+family = "Ellograph CF"
 style = "Bold"
 
 [font.italic]
-family = "JetBrainsMono Nerd Font"
+family = "Ellograph CF"
 style = "Italic"
 
 [font.bold_italic]
-family = "JetBrainsMono Nerd Font"
+family = "Ellograph CF"
 style = "Bold Italic"
 
 [font]

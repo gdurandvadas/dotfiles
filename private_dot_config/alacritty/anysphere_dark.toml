@@ -1,0 +1,8 @@
+[colors]
+primary = { background = '0x181818', foreground = '0xD6D6DD' }
+cursor = { text = '0x181818', cursor = '0xD6D6DD' }
+
+normal = { black = '0x181818', red = '0xD64D5B', green = '0x73AD2B', yellow = '0xBE9117', blue = '0x3A6DA0', magenta = '0xD3869B', cyan = '0x72D6D6', white = '0xD6D6DD' }
+bright = { black = '0x6D6D6D', red = '0xFF6767', green = '0x83D6C5', yellow = '0xEBC88D', blue = '0x94C1FA', magenta = '0xE394DC', cyan = '0x82D2CE', white = '0xFFFFFF' }
+
+selection = { text = '0x181818', background = '0x163761' }
