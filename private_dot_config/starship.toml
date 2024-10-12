@@ -30,6 +30,7 @@ command_timeout = 500
 # Palettes
 [palettes.gruvbox_dark]
 color_fg0 = "#fbf1c7"
+color_fg1 = "#181818"
 color_bg1 = "#3c3836"
 color_bg3 = "#665c54"
 color_blue = "#458588"
@@ -57,12 +58,12 @@ color_yellow = "#EBC88D"
 [username]
 show_always = true
 format = "[ $user ]($style)"
-style_user = "bg:color_orange fg:color_fg0"
+style_user = "bg:color_orange fg:color_fg1"
 style_root = "bg:color_orange fg:color_fg0"
 
 # Directory
 [directory]
-style = "fg:color_fg0 bg:color_yellow"
+style = "fg:color_fg1 bg:color_yellow"
 format = "[ $path ]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
@@ -71,56 +72,56 @@ truncation_symbol = "…/"
 [git_branch]
 symbol = "git。"
 style = "bg:color_aqua"
-format = "[[ $symbol $branch ](fg:color_fg0 bg:color_aqua)]($style)"
+format = "[[ $symbol $branch ](fg:color_fg1 bg:color_aqua)]($style)"
 
 [git_status]
 style = "bg:color_aqua"
-format = "[[($all_status$ahead_behind )](fg:color_fg0 bg:color_aqua)]($style)"
+format = "[[($all_status$ahead_behind )](fg:color_fg1 bg:color_aqua)]($style)"
 
 # Cloud Config
 [aws]
 symbol = "aws。"
 style = "bg:color_blue"
-format = "[ $symbol$profile:($region) ](fg:color_fg0 bg:color_blue)"
+format = "[ $symbol$profile:($region) ](fg:color_fg1 bg:color_blue)"
 
 [gcloud]
 symbol = "gcp。"
 style = "bg:color_blue"
-format = "[ $symbol$account(@$domain)(:$project)($region) ](fg:color_fg0 bg:color_blue)"
+format = "[ $symbol$account(@$domain)(:$project)($region) ](fg:color_fg1 bg:color_blue)"
 
 # Cluster Config
 [kubernetes]
 symbol = "k8s。"
 style = "bg:color_purple"
-format = "[ $symbol$context ](fg:color_fg0 bg:color_purple)"
+format = "[ $symbol$context ](fg:color_fg1 bg:color_purple)"
 
 [nodejs]
 symbol = "js。"
-format = "[ $symbol($version) ](fg:color_fg0 bg:color_green)"
+format = "[ $symbol($version) ](fg:color_fg1 bg:color_green)"
 
 [python]
 symbol = "py。"
-format = "[ $symbol($version) ](fg:color_fg0 bg:color_green)"
+format = "[ $symbol($version) ](fg:color_fg1 bg:color_green)"
 
 [rust]
 symbol = "rs。"
-format = "[ $symbol($version) ](fg:color_fg0 bg:color_green)"
+format = "[ $symbol($version) ](fg:color_fg1 bg:color_green)"
 
 [golang]
 symbol = "go。"
-format = "[ $symbol($version) ](fg:color_fg0 bg:color_green)"
+format = "[ $symbol($version) ](fg:color_fg1 bg:color_green)"
 
 [java]
 symbol = "java。"
-format = "[ $symbol($version) ](fg:color_fg0 bg:color_green)"
+format = "[ $symbol($version) ](fg:color_fg1 bg:color_green)"
 
 [ruby]
 symbol = "rb。"
-format = "[ $symbol($version) ](fg:color_fg0 bg:color_green)"
+format = "[ $symbol($version) ](fg:color_fg1 bg:color_green)"
 
 [php]
 symbol = "php。"
-format = "[ $symbol($version) ](fg:color_fg0 bg:color_green)"
+format = "[ $symbol($version) ](fg:color_fg1 bg:color_green)"
 
 # Character
 [character]
