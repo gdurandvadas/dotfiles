@@ -13,8 +13,9 @@ bundles:
       - "ca-certificates"
     casks:
       - "alacritty"
-      - "docker"
       - "cursor"
+      - "docker"
+      - "postman"
   work:
     brews:
       - "act"
