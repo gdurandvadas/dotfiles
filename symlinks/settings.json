@@ -12,5 +12,8 @@
   "git.autofetch": true,
   "git.confirmSync": false,
   "git.enableSmartCommit": true,
-  "workbench.iconTheme": "file-icons"
+  "workbench.iconTheme": "file-icons",
+  "[github-actions-workflow]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  }
 }
