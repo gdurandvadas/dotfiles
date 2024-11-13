@@ -41,7 +41,7 @@ select_aws_profile() {
 # This function supports two subcommands: 'login' and 'set-region'.
 # 'login' allows the user to log in to AWS SSO with a specified profile or choose from a list.
 # 'set-region' sets the default AWS region for commands.
-aws_cli() {
+aws_cli_alias() {
   local subcommand=$1
   shift # Remove the first argument, leaving any additional arguments for processing
 
@@ -73,4 +73,4 @@ aws_cli() {
 }
 
 # Alias to call the main function, allowing users to simply type 'aw' to use this utility.
-alias aw="aws_cli"
+alias aw="aws_cli_alias"

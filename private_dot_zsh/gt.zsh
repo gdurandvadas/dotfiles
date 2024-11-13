@@ -53,7 +53,7 @@ conventional_commit() {
 # This function supports two subcommands: 'clean' and 'commit'.
 # 'clean' allows the user to clean up merged branches.
 # 'commit' facilitates creating conventional commits.
-gt() {
+git_alias() {
   local subcommand=$1
   shift # Remove the first argument, leaving any additional arguments for processing
 
@@ -82,4 +82,4 @@ gt() {
 }
 
 # Alias to call the main function, allowing users to simply type 'gt' to use this utility.
-alias gt="gt"
+alias gt="git_alias"
