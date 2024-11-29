@@ -10,7 +10,7 @@ cursor_alias() {
         cursor "$1"
     elif [[ $# -eq 2 ]]; then
         # Two arguments: group and directory
-        cursor "$HOME/Development/$1/$2"
+        cursor "$HOME/Development/$1/$2" && cd "$HOME/Development/$1/$2"
     else
         echo "Usage: c [group] [directory]"
         echo "  c          - Open current directory"

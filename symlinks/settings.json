@@ -14,5 +14,14 @@
   "git.enableSmartCommit": true,
   "workbench.iconTheme": "file-icons",
   "extensions.ignoreRecommendations": true,
-  "git.replaceTagsWhenPull": true
+  "git.replaceTagsWhenPull": true,
+  "[markdown]": {
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+  },
+  "cursor.cpp.disabledLanguages": [
+    "dotenv"
+  ],
+  "editor.codeActionsOnSave": {
+    "source.organizeimports": "always"
+  }
 }
