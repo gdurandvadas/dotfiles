@@ -14,3 +14,6 @@ languages:
   - name: rust
     url: https://github.com/code-lever/asdf-rust.git
     version: 1.81.0
+  - name: poetry
+    url: https://github.com/asdf-community/asdf-poetry.git
+    version: 2.0.1

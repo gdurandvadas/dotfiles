@@ -5,7 +5,6 @@ bundles:
       - "buf"
       - "jq"
       - "mkdocs"
-      - "oven-sh/bun/bun"
       - "starship"
       - "tmux"
       - "tree"
@@ -15,7 +14,7 @@ bundles:
       - "alacritty"
       - "cursor"
       - "docker"
-      - "postman"
+      - "librewolf"
   work:
     brews:
       - "act"
