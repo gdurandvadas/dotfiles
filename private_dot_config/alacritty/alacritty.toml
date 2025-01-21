@@ -1,3 +1,4 @@
+[general]
 import = [
   "~/.config/alacritty/gruvbox_dark.toml",
   "~/.config/alacritty/keybindings.toml",
