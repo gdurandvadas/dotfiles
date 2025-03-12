@@ -1,0 +1,13 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+
+printf "Installing IDE extensions...\n"
+{{ range .extensions -}}
+#${HOMEBREW_BIN}/cursor --install-extension {{ . | quote }} --force/
+${HOMEBREW_BIN}/code --install-extension {{ . | quote }} --force
+{{ end -}}
+
+{{- end }}

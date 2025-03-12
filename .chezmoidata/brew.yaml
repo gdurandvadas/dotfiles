@@ -13,8 +13,9 @@ bundles:
     casks:
       - "alacritty"
       - "cursor"
+      - "visual-studio-code"
       - "docker"
-      - "librewolf"
+      - "brave-browser"
   work:
     brews:
       - "act"

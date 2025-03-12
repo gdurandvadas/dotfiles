@@ -1,6 +1,7 @@
 # Set Homebrew path
 HOMEBREW_PREFIX="/opt/homebrew"
 export PATH="$HOMEBREW_PREFIX/bin:$PATH"
+export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
 
 # Set local bin path
 LOCAL_BIN="$HOME/.local/bin"
@@ -39,3 +40,4 @@ fi
 try_exec "$HOME/.zsh/aw.zsh" "source $HOME/.zsh/aw.zsh"
 try_exec "$HOME/.zsh/gt.zsh" "source $HOME/.zsh/gt.zsh"
 try_exec "$HOME/.zsh/c.zsh" "source $HOME/.zsh/c.zsh"
+try_exec "$HOME/.zsh/v.zsh" "source $HOME/.zsh/v.zsh"

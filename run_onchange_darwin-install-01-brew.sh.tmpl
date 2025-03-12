@@ -5,7 +5,7 @@ set -o errexit
 set -o pipefail
 
 # Common bundle is always installed
-${HOMEBREW_BIN}/brew bundle --no-lock --file=/dev/stdin <<EOF
+${HOMEBREW_BIN}/brew bundle --file=/dev/stdin <<EOF
 {{ range .bundles.common.brews -}}
 brew {{ . | quote }}
 {{ end -}}

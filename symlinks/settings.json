@@ -23,5 +23,7 @@
   ],
   "editor.codeActionsOnSave": {
     "source.organizeimports": "always"
-  }
+  },
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "git.ignoreRebaseWarning": true
 }

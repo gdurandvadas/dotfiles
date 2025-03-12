@@ -1,0 +1,30 @@
+{
+    "editor.cursorBlinking": "phase",
+    "editor.cursorSmoothCaretAnimation": "explicit",
+    "editor.cursorStyle": "block",
+    "editor.fontFamily": "Ellograph CF",
+    "editor.fontLigatures": true,
+    "editor.fontSize": 13,
+    "editor.minimap.autohide": true,
+    "editor.minimap.enabled": true,
+    "editor.tabSize": 2,
+    "files.insertFinalNewline": true,
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+    "workbench.iconTheme": "file-icons",
+    "extensions.ignoreRecommendations": true,
+    "git.replaceTagsWhenPull": true,
+    "[markdown]": {
+      "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+    },
+    "cursor.cpp.disabledLanguages": [
+      "dotenv"
+    ],
+    "editor.codeActionsOnSave": {
+      "source.organizeimports": "always"
+    },
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    "git.ignoreRebaseWarning": true
+  }
+  
