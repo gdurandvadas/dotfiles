@@ -25,5 +25,32 @@
     "source.organizeimports": "always"
   },
   "terminal.integrated.defaultProfile.osx": "zsh",
-  "git.ignoreRebaseWarning": true
+  "git.ignoreRebaseWarning": true,
+  "sqltools.useNodeRuntime": true,
+  "javascript.updateImportsOnFileMove.enabled": "never",
+  "svelte.enable-ts-plugin": true,
+  "[yaml]": {
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.autoIndent": "keep",
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.defaultColorDecorators": "never",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "diffEditor.ignoreTrimWhitespace": false,
+  "vs-kubernetes": {
+    "vs-kubernetes.crd-code-completion": "disabled"
+  },
+  "terraform.languageServer.enable": true,
+  "[svelte]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

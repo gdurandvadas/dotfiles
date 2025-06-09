@@ -8,7 +8,7 @@ set -o pipefail
 printf "Installing {{ .name }}...\n"
 ${HOMEBREW_BIN}/asdf plugin add {{ .name | quote }} {{ .url | quote }}
 ${HOMEBREW_BIN}/asdf install {{ .name | quote }} {{ .version | quote }}
-${HOMEBREW_BIN}/asdf global {{ .name | quote }} {{ .version | quote }}
+${HOMEBREW_BIN}/asdf set {{ .name | quote }} {{ .version | quote }} --home
 {{ end -}}
 
 {{- end }}

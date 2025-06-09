@@ -3,13 +3,14 @@ bundles:
     brews:
       - "asdf"
       - "buf"
+      - "ca-certificates"
       - "jq"
       - "mkdocs"
+      - "pulumi"
       - "starship"
       - "tmux"
       - "tree"
       - "yq"
-      - "ca-certificates"
     casks:
       - "alacritty"
       - "cursor"
