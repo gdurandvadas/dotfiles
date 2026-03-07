@@ -1,5 +1,7 @@
 import = [
-    "~/.config/alacritty/keybindings.toml"
+    "~/.config/alacritty/keybindings.toml",
+    # "~/.config/alacritty/catppuccin_mocha.toml",
+    # "~/.config/alacritty/catppuccin_macchiato.toml",
 ]
 
 [window]
@@ -23,19 +25,19 @@ multiplier = 3
 size = 13.0
 
 [font.normal]
-family = "Ellograph CF"
+family = "ZedMono Nerd Font"
 style = "Regular"
 
 [font.bold]
-family = "Ellograph CF"
+family = "ZedMono Nerd Font"
 style = "Bold"
 
 [font.italic]
-family = "Ellograph CF"
+family = "ZedMono Nerd Font"
 style = "Italic"
 
 [font.bold_italic]
-family = "Ellograph CF"
+family = "ZedMono Nerd Font"
 style = "Bold Italic"
 
 [selection]
@@ -47,27 +49,3 @@ unfocused_hollow = true
 [cursor.style]
 shape = "Block"
 blinking = "On"
-
-[colors.primary]
-background = "#1d2021"
-foreground = "#d4be98"
-
-[colors.normal]
-black   = "#32302f"
-red     = "#ea6962"
-green   = "#a9b665"
-yellow  = "#d8a657"
-blue    = "#7daea3"
-magenta = "#d3869b"
-cyan    = "#89b482"
-white   = "#d4be98"
-
-[colors.bright]
-black   = "#32302f"
-red     = "#ea6962"
-green   = "#a9b665"
-yellow  = "#d8a657"
-blue    = "#7daea3"
-magenta = "#d3869b"
-cyan    = "#89b482"
-white   = "#d4be98"

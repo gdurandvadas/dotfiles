@@ -23,6 +23,11 @@
   # The platform the configuration will be used on.
   nixpkgs.hostPlatform = "aarch64-darwin";
 
+  # Install fonts
+  fonts.packages = [
+    pkgs.nerd-fonts.zed-mono
+  ];
+
   # Define the user
   system.primaryUser = "gedv";
   users.users.gedv = {
