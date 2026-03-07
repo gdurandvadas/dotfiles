@@ -23,7 +23,8 @@
     pkgs = nixpkgs.legacyPackages.${system};
     # local.nix is gitignored — referenced via absolute path so Nix doesn't
     # require it to be Git-tracked. Requires --impure at evaluation time.
-    localModule = "${builtins.getEnv "HOME"}/.config/dotfiles/hosts/local.nix";
+    # When running as root (sudo), HOME is /var/root, so we hardcode the user path
+    localModule = "/Users/gedv/.config/dotfiles/hosts/local.nix";
   in {
     homeConfigurations = {
       "personal" = home-manager.lib.homeManagerConfiguration {
