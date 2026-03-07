@@ -23,7 +23,7 @@
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
 
-    initContent = ''
+    initExtra = ''
       # Load custom scripts (using (N) to avoid errors if no files exist)
       for f in $HOME/.zsh/*.zsh(N); do source $f; done
     '';

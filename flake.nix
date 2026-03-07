@@ -23,12 +23,7 @@
     pkgs = nixpkgs.legacyPackages.${system};
     # local.nix is gitignored — referenced via absolute path so Nix doesn't
     # require it to be Git-tracked. Requires --impure at evaluation time.
-    # We use builtins.getEnv "USER" to determine the home directory dynamically,
-    # but fallback to "gedv" if running under sudo (where USER might be root)
-    localModule = let
-      user = builtins.getEnv "USER";
-      homeDir = if user == "root" then "/Users/gedv" else builtins.getEnv "HOME";
-    in "${homeDir}/.config/dotfiles/hosts/local.nix";
+    localModule = "${builtins.getEnv "HOME"}/.config/dotfiles/hosts/local.nix";
   in {
     homeConfigurations = {
       "personal" = home-manager.lib.homeManagerConfiguration {

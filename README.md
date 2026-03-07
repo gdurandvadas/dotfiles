@@ -11,8 +11,9 @@ Powered by **Nix Flakes** + **Home Manager** + **OpenCode**.
 ├── flake.nix              # Entry point — pins all dependencies
 ├── default.nix            # Aggregates all modules
 ├── hosts/
-│   ├── workstation.nix    # Personal profile host config
+│   ├── personal.nix       # Personal profile host config
 │   ├── work.nix           # Work profile host config
+│   ├── darwin.nix         # Optional nix-darwin system config (workstation flake)
 │   ├── local.nix          # GITIGNORED — your identity (copy from example)
 │   └── local.nix.example  # Template for local.nix
 ├── modules/

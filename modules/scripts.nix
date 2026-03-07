@@ -12,18 +12,14 @@ let
     zed .
   '';
 
-  # Switch to latest home-manager configuration
+  # Switch to latest nix-darwin + home-manager configuration
   # Usage: dotfiles-switch [work]
   dotfiles-switch = pkgs.writeShellScriptBin "dotfiles-switch" ''
     set -e
     DOTFILES="$HOME/.config/dotfiles"
-    PROFILE="personal"
-    if [ "$1" = "work" ]; then
-      PROFILE="work"
-      shift
-    fi
-    echo "Switching to dotfiles profile: $PROFILE"
-    home-manager switch --flake "$DOTFILES#$PROFILE" --impure "$@"
+    echo "Switching to dotfiles (darwin + home-manager)"
+    # sudo -E preserves $HOME so builtins.getEnv "HOME" resolves correctly in the flake
+    sudo -E darwin-rebuild switch --flake "$DOTFILES#workstation" --impure "$@"
   '';
 in {
   home.packages = [ ai-init dotfiles-switch ];
