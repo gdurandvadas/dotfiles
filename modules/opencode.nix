@@ -3,6 +3,9 @@
     opencode
   ];
 
-  xdg.configFile."opencode/config.json".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/opencode/config.json";
+  xdg.configFile."opencode/config.json" = {
+    source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/opencode/config.json";
+    force = true;
+  };
 }

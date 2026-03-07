@@ -18,12 +18,10 @@
   outputs = { self, nixpkgs, home-manager, darwin, ... }:
   let
     system = "aarch64-darwin";
+    unfree = import ./unfree-packages.nix;
     pkgs = import nixpkgs {
       inherit system;
-      config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) [
-        "1password-cli"
-        "brave"
-      ];
+      config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfree.base;
     };
     # local.nix is gitignored — referenced via absolute path so Nix doesn't
     # require it to be Git-tracked. Requires --impure at evaluation time.
@@ -33,7 +31,24 @@
       let d = builtins.getEnv "DOTFILES_DIR"; in
       if d != "" then d else "${builtins.getEnv "HOME"}/.config/dotfiles";
     localModule = "${dotfilesDir}/hosts/local.nix";
+
+    # Home-manager switch apps: use flake's home-manager so version stays in one place.
+    hmPkg = home-manager.packages.${system}.default;
+    hmSwitch = profile: self.lib.mkApp (pkgs.writeShellScriptBin "hm-switch" ''
+      set -e
+      export DOTFILES_DIR="''${DOTFILES_DIR:-$HOME/.config/dotfiles}"
+      exec "${hmPkg}/bin/home-manager" switch --flake "$DOTFILES_DIR#${profile}" --impure "$@"
+    '');
   in {
+    lib = {
+      mkApp = drv: { type = "app"; program = "${drv}/bin/${drv.pname or (builtins.parseDrvName drv.name).name}"; };
+    };
+
+    apps.${system} = {
+      switch-personal = hmSwitch "personal";
+      switch-work = hmSwitch "work";
+    };
+
     homeConfigurations = {
       "personal" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;

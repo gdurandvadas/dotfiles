@@ -50,7 +50,7 @@ unfocused_hollow = true
 shape = "Block"
 blinking = "On"
 
-# Launch Zellij on startup: attach to "main" or create it
+# Launch Zellij on startup (full path so Nix profile need not be in PATH); on exit, drop to shell
 [terminal.shell]
-program = "zellij"
-args = ["attach", "-c", "main"]
+program = "sh"
+args = ["-c", "\"$HOME/.nix-profile/bin/zellij\" attach -c main; exec \"${SHELL:-/bin/zsh}\""]

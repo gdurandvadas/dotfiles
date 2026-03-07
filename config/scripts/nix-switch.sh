@@ -12,8 +12,8 @@ usage() {
   echo "Usage: nix-switch profile <work|personal>"
   echo "       nix-switch workstation rebuild"
   echo ""
-  echo "  profile work       - home-manager switch --flake $DOTFILES#work --impure"
-  echo "  profile personal   - home-manager switch --flake $DOTFILES#personal --impure"
+  echo "  profile work       - nix run \$DOTFILES#switch-work (uses flake's home-manager)"
+  echo "  profile personal   - nix run \$DOTFILES#switch-personal (uses flake's home-manager)"
   echo "  workstation rebuild - darwin-rebuild switch --flake $DOTFILES#workstation --impure"
   exit 1
 }
@@ -22,10 +22,10 @@ case "${1:-}" in
   profile)
     case "${2:-}" in
       work)
-        exec nix run home-manager/release-25.11 -- switch --flake "$DOTFILES#work" --impure "${@:3}"
+        exec nix run "$DOTFILES#switch-work" -- "${@:3}"
         ;;
       personal)
-        exec nix run home-manager/release-25.11 -- switch --flake "$DOTFILES#personal" --impure "${@:3}"
+        exec nix run "$DOTFILES#switch-personal" -- "${@:3}"
         ;;
       *)
         echo "Expected: work or personal"
