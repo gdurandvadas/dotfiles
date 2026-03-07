@@ -12,6 +12,7 @@
     bat
     eza
     jq
+    yq
     gh
     git
   ];
