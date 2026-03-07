@@ -1,5 +1,10 @@
 {
   // Theme
+  "agent_servers": {
+    "opencode": {
+      "type": "registry"
+    }
+  },
   "theme": {
     "mode": "system",
     "light": "Catppuccin Frappé",

@@ -79,7 +79,7 @@ These lived in `old/private_dot_zsh/` and are currently sourced via a glob (`for
 
 **Option A — `programs.zsh.shellAliases` + inline functions** (simple):
 ```nix
-programs.zsh.initExtra = ''
+programs.zsh.initContent = ''
   # paste function body here
 '';
 ```
