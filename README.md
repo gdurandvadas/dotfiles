@@ -11,18 +11,24 @@ Powered by **Nix Flakes** + **Home Manager** + **OpenCode**.
 ├── flake.nix              # Entry point — pins all dependencies
 ├── default.nix            # Aggregates all modules
 ├── hosts/
-│   └── workstation.nix    # Machine identity (username, homeDirectory)
+│   ├── workstation.nix    # Personal profile host config
+│   ├── work.nix           # Work profile host config
+│   ├── local.nix          # GITIGNORED — your identity (copy from example)
+│   └── local.nix.example  # Template for local.nix
 ├── modules/
+│   ├── user.nix           # Defines options.my.user.* (identity contract)
 │   ├── zed.nix            # Zed editor + language servers
 │   ├── opencode.nix       # OpenCode AI orchestrator
 │   ├── terminal.nix       # Zsh, Starship, direnv, git, CLI tools
-│   └── scripts.nix        # Custom scripts as Nix packages
+│   ├── scripts.nix        # Custom scripts as Nix packages
+│   └── work.nix           # Work profile overrides (git email, opencode config)
 └── config/
     ├── zed/
-    │   ├── settings.json  # Zed behavior, LSP config, theme
-    │   └── keymap.json    # Custom keybindings
+    │   ├── settings.json     # Zed behavior, LSP config, theme
+    │   └── keymap.json       # Custom keybindings
     └── opencode/
-        ├── config.json    # OpenCode model + MCP servers
+        ├── config.json       # Personal OpenCode model + MCP servers
+        ├── work-config.json  # Work OpenCode config
         └── skills/
             └── research.md
 ```
@@ -57,25 +63,50 @@ git clone https://github.com/gedv/dotfiles ~/.config/dotfiles
 cd ~/.config/dotfiles
 ```
 
-### 3. Apply the configuration
+### 3. Create your local identity file
 
 ```sh
-nix run home-manager/master -- switch --flake .#gedv
+cp hosts/local.nix.example hosts/local.nix
+```
+
+Edit `hosts/local.nix` and fill in your name, emails, username, and GitHub handle. This file is gitignored and never committed.
+
+### 4. Apply a profile
+
+**Personal:**
+```sh
+nix run home-manager/master -- switch --flake .#personal
+```
+
+**Work:**
+```sh
+nix run home-manager/master -- switch --flake .#work
 ```
 
 On subsequent updates, use the helper script installed by the flake:
 
 ```sh
-dotfiles-switch
+dotfiles-switch         # personal profile
+dotfiles-switch work    # work profile
 ```
 
 ## Daily use
 
 | Command | Description |
 |---|---|
-| `dotfiles-switch` | Apply latest configuration changes |
+| `dotfiles-switch` | Apply latest personal configuration |
+| `dotfiles-switch work` | Apply latest work configuration |
 | `ai-init <topic>` | Start an AI research loop, then open Zed |
 | `direnv allow` | Activate a project-local Nix environment (`.envrc`) |
+
+## Profiles
+
+| Profile | Flake key | Git identity | OpenCode config |
+|---|---|---|---|
+| Personal | `personal` | `my.user.email` | `config/opencode/config.json` |
+| Work | `work` | `my.user.workEmail` | `config/opencode/work-config.json` |
+
+Both profiles share the same tools (Zed, OpenCode, CLI stack). The work profile only overrides git email and OpenCode settings.
 
 ## Per-project environments
 
@@ -93,3 +124,9 @@ Or write a `flake.nix` in the project root with a `devShell` output. `direnv` wi
 Edit `modules/terminal.nix` (or create a new module) and add the package to `home.packages`. Then run `dotfiles-switch`.
 
 Search packages at [search.nixos.org](https://search.nixos.org/packages).
+
+## Adding a new module
+
+1. Create `modules/<name>.nix`
+2. Add it to the `imports` list in `default.nix` (all profiles), or only in a specific host file if profile-specific
+3. Reference identity via `config.my.user.*` — never hardcode strings
