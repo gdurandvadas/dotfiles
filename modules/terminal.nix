@@ -1,4 +1,4 @@
-{ config, pkgs, alacrittyConfigPath, ... }: {
+{ config, pkgs, ... }: {
   home.sessionVariables = {
     XDG_CONFIG_HOME = "$HOME/.config";
   };
@@ -15,6 +15,10 @@
     git
   ];
 
+
+  #####################
+  # ZSH               #
+  #####################
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -27,6 +31,12 @@
     '';
   };
 
+  # Custom scripts sourced by .zsh; theme-switch symlinks Alacritty theme + Starship config by dark/light
+  home.file.".zsh/theme-switch.zsh".source = ../config/scripts/theme-switch.zsh;
+
+  #####################
+  # Starship          #
+  #####################
   programs.starship = {
     enable = true;
     enableZshIntegration = true;
@@ -36,12 +46,47 @@
   xdg.configFile."starship/starship_dark.toml".source = ../config/starship/starship_dark.toml;
   xdg.configFile."starship/starship_light.toml".source = ../config/starship/starship_light.toml;
 
+  #####################
+  # Alacritty         #
+  #####################
+  programs.alacritty = {
+    enable = true;
+  };
+
+  # Symlinks into dotfiles repo (edit there, changes apply without rebuild).
+  xdg.configFile."alacritty/alacritty.toml" = {
+    source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/alacritty/alacritty.toml";
+    force = true;
+  };
+  xdg.configFile."alacritty/keybindings.toml" = {
+    source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/alacritty/keybindings.toml";
+    force = true;
+  };
+  xdg.configFile."alacritty/themes/alacritty_dark.toml" = {
+    source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/alacritty/themes/alacritty_dark.toml";
+    force = true;
+  };
+  xdg.configFile."alacritty/themes/alacritty_light.toml" = {
+    source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/alacritty/themes/alacritty_light.toml";
+    force = true;
+  };
+
+  #####################
+  # Direnv          #
+  #####################
   programs.direnv = {
     enable = true;
     enableZshIntegration = true;
     nix-direnv.enable = true;
   };
 
+  #####################
+  # Git               #
+  #####################
   programs.git = {
     enable = true;
     settings = {
@@ -58,33 +103,4 @@
       fetch.pruneTags = true;
     };
   };
-
-  programs.alacritty = {
-    enable = true;
-  };
-
-  # Generated from config/alacritty/alacritty.nix (path from flake).
-  xdg.configFile."alacritty/alacritty.toml" = {
-    source = pkgs.writeText "alacritty.toml" (import alacrittyConfigPath);
-    force = true;
-  };
-
-  # Alacritty keybindings managed as a store file (tmux-integrated shortcuts)
-  xdg.configFile."alacritty/keybindings.toml"= {
-    source = ../config/alacritty/keybindings.toml;
-    force = true;
-  };
-
-  # Alacritty: dark (mocha) / light (frappe); script symlinks themes/theme.toml to one
-  xdg.configFile."alacritty/themes/alacritty_dark.toml" = {
-    source = ../config/alacritty/themes/alacritty_dark.toml;
-    force = true;
-  };
-  xdg.configFile."alacritty/themes/alacritty_light.toml" = {
-    source = ../config/alacritty/themes/alacritty_light.toml;
-    force = true;
-  };
-
-  # Custom scripts sourced by .zsh; theme-switch symlinks Alacritty theme + Starship config by dark/light
-  home.file.".zsh/theme-switch.zsh".source = ../config/scripts/theme-switch.zsh;
 }

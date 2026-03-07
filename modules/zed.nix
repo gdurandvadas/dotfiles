@@ -1,4 +1,4 @@
-{ pkgs, config, zedSettingsPath, ... }: {
+{ pkgs, config, ... }: {
   home.packages = with pkgs; [
     # Editor
     zed-editor
@@ -11,10 +11,15 @@
     sqls            # SQL
   ];
 
-  # Generated from config/zed/settings.nix (path from flake).
-  xdg.configFile."zed/settings.json".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/zed/settings.json";
-
-  xdg.configFile."zed/keymap.json".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/zed/keymap.json";
+  # Symlinks into dotfiles repo (edit there, changes apply without rebuild).
+  xdg.configFile."zed/settings.json" = {
+    source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/zed/settings.json";
+    force = true;
+  };
+  xdg.configFile."zed/keymap.json" = {
+    source =
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/zed/keymap.json";
+    force = true;
+  };
 }
