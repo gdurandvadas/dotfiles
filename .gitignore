@@ -1,2 +1,2 @@
-.DS_Store
-bin/
+result
+hosts/local.nix

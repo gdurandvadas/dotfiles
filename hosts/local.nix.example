@@ -1,0 +1,12 @@
+# Copy this file to hosts/local.nix and fill in your details.
+# hosts/local.nix is gitignored and must never be committed.
+{ ... }: {
+  my.user = {
+    name           = "Your Name";
+    email          = "you@personal.com";
+    workEmail      = "you@company.com";
+    username       = "yourusername";
+    githubUsername = "yourgithub";
+    sshSigningKey  = "ssh-ed25519 AAAA...your-public-key";
+  };
+}

@@ -1,0 +1,56 @@
+[general]
+import = [
+    "~/.config/alacritty/keybindings.toml",
+    "~/.config/alacritty/themes/theme.toml",
+]
+
+[window]
+decorations = "buttonless"
+dynamic_title = true
+opacity = 0.98
+
+[window.dimensions]
+columns = 170
+lines = 50
+
+[window.padding]
+x = 5
+y = 7
+
+[scrolling]
+history = 100000
+multiplier = 3
+
+[font]
+size = 13.0
+
+[font.normal]
+family = "FiraCode Nerd Font"
+style = "Regular"
+
+[font.bold]
+family = "FiraCode Nerd Font"
+style = "Bold"
+
+[font.italic]
+family = "FiraCode Nerd Font"
+style = "Light"
+
+[font.bold_italic]
+family = "FiraCode Nerd Font"
+style = "Bold"
+
+[selection]
+save_to_clipboard = true
+
+[cursor]
+unfocused_hollow = true
+
+[cursor.style]
+shape = "Block"
+blinking = "On"
+
+# Launch Zellij on startup (full path so Nix profile need not be in PATH); on exit, drop to shell
+[terminal.shell]
+program = "sh"
+args = ["-c", "\"$HOME/.nix-profile/bin/zellij\" attach -c main; exec \"${SHELL:-/bin/zsh}\""]
