@@ -24,8 +24,8 @@
     syntaxHighlighting.enable = true;
 
     initExtra = ''
-      # Load custom scripts (using (N) to avoid errors if no files exist)
-      for f in $HOME/.zsh/*.zsh(N); do source $f; done
+      # Load custom scripts from dotfiles config directory
+      for f in ${config.home.homeDirectory}/.config/dotfiles/config/zsh/*.zsh(N); do source $f; done
     '';
   };
 
