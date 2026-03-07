@@ -54,14 +54,18 @@
       "workstation" = darwin.lib.darwinSystem {
         inherit system;
         modules = [
+          ./modules/user.nix
+          localModule
           ./hosts/darwin.nix
           mac-app-util.darwinModules.default
           home-manager.darwinModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.users."gedv" = {
-              imports = [ ./hosts/personal.nix localModule ];
+            home-manager.users = let u = (import localModule { }).my.user or {}; username = u.username or "gedv"; in {
+              ${username} = {
+                imports = [ ./hosts/personal.nix localModule ];
+              };
             };
             home-manager.sharedModules = [
               mac-app-util.homeManagerModules.default

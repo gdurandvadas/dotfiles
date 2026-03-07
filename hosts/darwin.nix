@@ -1,6 +1,6 @@
-{ pkgs, ... }: {
+{ pkgs, config, ... }: {
   # Auto upgrade nix package and the daemon service.
-  nix.enable = true;
+  nix.enable = false;
   nix.package = pkgs.nix;
 
   # Necessary for using flakes on this system.
@@ -25,13 +25,13 @@
 
   # Install fonts
   fonts.packages = [
-    pkgs.nerd-fonts.zed-mono
+    pkgs.nerd-fonts.fira-code
   ];
 
   # Define the user
-  system.primaryUser = "gedv";
-  users.users.gedv = {
-    name = "gedv";
-    home = "/Users/gedv";
+  system.primaryUser = config.my.user.username;
+  users.users.${config.my.user.username} = {
+    name = config.my.user.username;
+    home = "/Users/${config.my.user.username}";
   };
 }
