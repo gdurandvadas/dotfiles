@@ -13,13 +13,14 @@ let
   '';
 
   # Switch to latest nix-darwin + home-manager configuration
-  # Usage: dotfiles-switch [work]
+  # Usage: dotfiles-switch
   dotfiles-switch = pkgs.writeShellScriptBin "dotfiles-switch" ''
     set -e
     DOTFILES="$HOME/.config/dotfiles"
     echo "Switching to dotfiles (darwin + home-manager)"
-    # sudo -E preserves $HOME so builtins.getEnv "HOME" resolves correctly in the flake
-    sudo -E darwin-rebuild switch --flake "$DOTFILES#workstation" --impure "$@"
+    # Pass DOTFILES_DIR explicitly so builtins.getEnv resolves correctly even
+    # when nix-darwin activation runs as root and nix resets HOME to /var/root.
+    sudo DOTFILES_DIR="$DOTFILES" darwin-rebuild switch --flake "$DOTFILES#workstation" --impure "$@"
   '';
 in {
   home.packages = [ ai-init dotfiles-switch ];

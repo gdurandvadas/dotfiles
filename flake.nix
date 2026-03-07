@@ -23,7 +23,12 @@
     pkgs = nixpkgs.legacyPackages.${system};
     # local.nix is gitignored — referenced via absolute path so Nix doesn't
     # require it to be Git-tracked. Requires --impure at evaluation time.
-    localModule = "${builtins.getEnv "HOME"}/.config/dotfiles/hosts/local.nix";
+    # Uses DOTFILES_DIR env var so the path resolves correctly even when
+    # nix-darwin activation runs as root and nix resets HOME to /var/root.
+    dotfilesDir =
+      let d = builtins.getEnv "DOTFILES_DIR"; in
+      if d != "" then d else "${builtins.getEnv "HOME"}/.config/dotfiles";
+    localModule = "${dotfilesDir}/hosts/local.nix";
   in {
     homeConfigurations = {
       "personal" = home-manager.lib.homeManagerConfiguration {
