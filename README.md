@@ -74,22 +74,36 @@ Edit `hosts/local.nix` and fill in your name, emails, username, and GitHub handl
 
 ### 4. Apply a profile
 
-**Personal:**
+There are two ways to use these dotfiles:
+
+**Option A — Home Manager only** (no nix-darwin). Apply with:
+
 ```sh
-nix run home-manager/master -- switch --flake .#personal
+# Personal
+home-manager switch --flake .#personal
+# or without home-manager installed: nix run home-manager# -- switch --flake .#personal
+
+# Work
+home-manager switch --flake .#work
 ```
 
-**Work:**
+Use the same commands for subsequent updates.
+
+**Option B — nix-darwin (workstation)**. One-time bootstrap (run from this repo; requires `--impure` because of `local.nix` path):
+
 ```sh
-nix run home-manager/master -- switch --flake .#work
+export DOTFILES_DIR="$HOME/.config/dotfiles"   # or your clone path
+nix run nix-darwin# -- switch --flake "$DOTFILES_DIR#workstation" --impure
 ```
 
-On subsequent updates, use the helper script installed by the flake:
+After that, the flake installs a helper script. For updates:
 
 ```sh
-dotfiles-switch         # personal profile
+dotfiles-switch         # personal profile (darwin + home-manager)
 dotfiles-switch work    # work profile
 ```
+
+`dotfiles-switch` runs `darwin-rebuild` and applies both system and home-manager config; it is only for the darwin workflow.
 
 ## Daily use
 
@@ -122,7 +136,7 @@ Or write a `flake.nix` in the project root with a `devShell` output. `direnv` wi
 
 ## Adding tools
 
-Edit `modules/terminal.nix` (or create a new module) and add the package to `home.packages`. Then run `dotfiles-switch`.
+Edit `modules/terminal.nix` (or create a new module) and add the package to `home.packages`. Then run `dotfiles-switch` (darwin) or `home-manager switch --flake .#<profile>` (home-manager only).
 
 Search packages at [search.nixos.org](https://search.nixos.org/packages).
 
@@ -131,3 +145,8 @@ Search packages at [search.nixos.org](https://search.nixos.org/packages).
 1. Create `modules/<name>.nix`
 2. Add it to the `imports` list in `default.nix` (all profiles), or only in a specific host file if profile-specific
 3. Reference identity via `config.my.user.*` — never hardcode strings
+4. Apply: `dotfiles-switch` (darwin) or `home-manager switch --flake .#<profile>` (home-manager only)
+
+## Secrets (1Password)
+
+API keys, tokens, and passwords are not stored in this repo. Git SSH signing uses 1Password (`op-ssh-sign`). For other secrets, use 1Password CLI and inject at runtime. See [docs/secrets-1password.md](docs/secrets-1password.md).

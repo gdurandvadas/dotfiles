@@ -22,6 +22,10 @@ let
     # when nix-darwin activation runs as root and nix resets HOME to /var/root.
     sudo DOTFILES_DIR="$DOTFILES" darwin-rebuild switch --flake "$DOTFILES#workstation" --impure "$@"
   '';
+
+  # Install nix-switch from config/scripts (profile work|personal, workstation rebuild).
+  # Script must be tracked (git add) so the flake store copy includes it.
+  nix-switch = pkgs.writeShellScriptBin "nix-switch" (builtins.readFile ../config/scripts/nix-switch.sh);
 in {
-  home.packages = [ ai-init dotfiles-switch ];
+  home.packages = [ ai-init dotfiles-switch nix-switch ];
 }

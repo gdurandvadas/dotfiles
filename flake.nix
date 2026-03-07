@@ -52,9 +52,12 @@
       };
     };
 
+    # Note: Building may show a warning about 'options.json' and store path context.
+    # This comes from nix-darwin/nixpkgs option docs and is safe to ignore for now.
     darwinConfigurations = {
       "workstation" = darwin.lib.darwinSystem {
         inherit system;
+        specialArgs = { inherit self; };
         modules = [
           ./modules/user.nix
           localModule

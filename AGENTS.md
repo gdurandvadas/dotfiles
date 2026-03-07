@@ -11,8 +11,9 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 ├── flake.nix              # Entry point — defines personal and work profiles
 ├── default.nix            # Shared module imports (all profiles)
 ├── hosts/
-│   ├── workstation.nix    # Personal profile host config
+│   ├── personal.nix       # Personal profile host config
 │   ├── work.nix           # Work profile host config
+│   ├── darwin.nix         # nix-darwin system config (workstation flake)
 │   ├── local.nix          # GITIGNORED — machine identity (see below)
 │   └── local.nix.example  # Template for local.nix
 ├── modules/
@@ -21,12 +22,13 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 │   ├── zed.nix            # Zed editor + language servers
 │   ├── opencode.nix       # OpenCode AI tool
 │   ├── scripts.nix        # Custom shell scripts (dotfiles-switch, ai-init)
+│   ├── tools.nix          # Unfree CLI tools (1Password, Brave, mise, gh)
 │   └── work.nix           # Work-profile overrides (git email, opencode config)
 ├── config/
 │   ├── zed/               # Mutable Zed config (symlinked out-of-store)
 │   └── opencode/          # OpenCode config per profile
 └── docs/
-    └── idea.md            # Architecture reference
+    └── secrets-1password.md # 1Password CLI usage for secrets (no secrets in repo/store)
 ```
 
 ---
@@ -218,7 +220,8 @@ let inherit (lib) mkOption types mkIf; in
 
 - No emails, usernames, tokens, API keys, or absolute paths in committed files
 - `config/` files (zed, opencode) are symlinked out-of-store so tools can mutate them — they may contain non-sensitive config like themes or model names, but never credentials
-- Secrets (API keys, tokens) belong in environment variables or a secrets manager, not in this repo
+- Secrets (API keys, tokens) belong in environment variables or a secrets manager (e.g. 1Password CLI); see [docs/secrets-1password.md](docs/secrets-1password.md)
+- Home Manager config and the Nix store must not contain secrets; use 1Password + `op run` / wrapper scripts
 - `hosts/local.nix` is the only sanctioned location for personal identity values
 
 ---
