@@ -1,0 +1,13 @@
+[tools]
+awscli    = "latest"
+argo      = "latest"
+helm      = "latest"
+kubectl   = "latest"
+terraform = "latest"
+tfsec     = "latest"
+rust      = "latest"
+go        = "latest"
+pnpm      = "latest"
+node      = "lts"
+python    = "latest"
+uv        = "latest"

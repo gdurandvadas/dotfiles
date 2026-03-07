@@ -1,4 +1,10 @@
-{ pkgs, config, ... }: {
+{ pkgs, config, lib, ... }: {
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "1password-cli"
+    "1password-gui"
+    "brave"
+  ];
+
   # Auto upgrade nix package and the daemon service.
   nix.enable = false;
   nix.package = pkgs.nix;

@@ -20,7 +20,13 @@
   outputs = { self, nixpkgs, home-manager, darwin, mac-app-util, ... }:
   let
     system = "aarch64-darwin";
-    pkgs = nixpkgs.legacyPackages.${system};
+    pkgs = import nixpkgs {
+      inherit system;
+      config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) [
+        "1password-cli"
+        "brave"
+      ];
+    };
     # local.nix is gitignored — referenced via absolute path so Nix doesn't
     # require it to be Git-tracked. Requires --impure at evaluation time.
     # Uses DOTFILES_DIR env var so the path resolves correctly even when
