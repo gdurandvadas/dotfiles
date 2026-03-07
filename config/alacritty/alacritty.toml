@@ -2,6 +2,7 @@
 import = [
     "~/.config/alacritty/keybindings.toml",
     "~/.config/alacritty/themes/catppuccin_frappe.toml",
+    "~/.config/alacritty/themes/catppuccin_mocha.toml",
 ]
 
 [window]

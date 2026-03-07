@@ -13,11 +13,9 @@
       url = "github:LnL7/nix-darwin/nix-darwin-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    mac-app-util.url = "github:hraban/mac-app-util";
   };
 
-  outputs = { self, nixpkgs, home-manager, darwin, mac-app-util, ... }:
+  outputs = { self, nixpkgs, home-manager, darwin, ... }:
   let
     system = "aarch64-darwin";
     pkgs = import nixpkgs {
@@ -42,7 +40,6 @@
         modules = [ 
           ./hosts/personal.nix 
           localModule 
-          mac-app-util.homeManagerModules.default
         ];
       };
 
@@ -51,7 +48,6 @@
         modules = [ 
           ./hosts/work.nix 
           localModule 
-          mac-app-util.homeManagerModules.default
         ];
       };
     };
@@ -63,7 +59,6 @@
           ./modules/user.nix
           localModule
           ./hosts/darwin.nix
-          mac-app-util.darwinModules.default
           home-manager.darwinModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
@@ -73,9 +68,7 @@
                 imports = [ ./hosts/personal.nix localModule ];
               };
             };
-            home-manager.sharedModules = [
-              mac-app-util.homeManagerModules.default
-            ];
+            home-manager.sharedModules = [ ];
           }
         ];
       };

@@ -78,4 +78,10 @@
     source = ../config/alacritty/themes/catppuccin_frappe.toml;
     force = true;
   };
+
+  # Alacritty theme managed as a store file
+  xdg.configFile."alacritty/themes/catppuccin_mocha.toml" = {
+    source = ../config/alacritty/themes/catppuccin_mocha.toml;
+    force = true;
+  };
 }
