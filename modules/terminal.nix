@@ -1,5 +1,4 @@
-{ config, pkgs, ... }: {
-  # Ensure XDG_CONFIG_HOME is set so apps like Zed resolve ~/.config/zed/ on macOS
+{ config, pkgs, alacrittyConfigPath, ... }: {
   home.sessionVariables = {
     XDG_CONFIG_HOME = "$HOME/.config";
   };
@@ -33,7 +32,9 @@
     enableZshIntegration = true;
   };
 
-  xdg.configFile."starship.toml".source = ../config/starship/starship.toml;
+  # Starship: dark (mocha) / light (frappe); script symlinks ~/.config/starship.toml to one
+  xdg.configFile."starship/starship_dark.toml".source = ../config/starship/starship_dark.toml;
+  xdg.configFile."starship/starship_light.toml".source = ../config/starship/starship_light.toml;
 
   programs.direnv = {
     enable = true;
@@ -62,8 +63,9 @@
     enable = true;
   };
 
+  # Generated from config/alacritty/alacritty.nix (path from flake).
   xdg.configFile."alacritty/alacritty.toml" = {
-    source = ../config/alacritty/alacritty.toml;
+    source = pkgs.writeText "alacritty.toml" (import alacrittyConfigPath);
     force = true;
   };
 
@@ -73,15 +75,16 @@
     force = true;
   };
 
-  # Alacritty theme managed as a store file
-  xdg.configFile."alacritty/themes/catppuccin_frappe.toml" = {
-    source = ../config/alacritty/themes/catppuccin_frappe.toml;
+  # Alacritty: dark (mocha) / light (frappe); script symlinks themes/theme.toml to one
+  xdg.configFile."alacritty/themes/alacritty_dark.toml" = {
+    source = ../config/alacritty/themes/alacritty_dark.toml;
+    force = true;
+  };
+  xdg.configFile."alacritty/themes/alacritty_light.toml" = {
+    source = ../config/alacritty/themes/alacritty_light.toml;
     force = true;
   };
 
-  # Alacritty theme managed as a store file
-  xdg.configFile."alacritty/themes/catppuccin_mocha.toml" = {
-    source = ../config/alacritty/themes/catppuccin_mocha.toml;
-    force = true;
-  };
+  # Custom scripts sourced by .zsh; theme-switch symlinks Alacritty theme + Starship config by dark/light
+  home.file.".zsh/theme-switch.zsh".source = ../config/scripts/theme-switch.zsh;
 }
