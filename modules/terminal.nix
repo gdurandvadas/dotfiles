@@ -4,6 +4,10 @@
   };
 
   home.packages = with pkgs; [
+    # Fira Code Nerd Font (Alacritty)
+    nerd-fonts.fira-code
+    # Terminal multiplexer (tabs, panes); Alacritty launches it on startup
+    zellij
     # Shell utilities
     fzf
     ripgrep
@@ -47,13 +51,6 @@
   xdg.configFile."starship/starship_light.toml".source = ../config/starship/starship_light.toml;
 
   #####################
-  # Fonts (Alacritty) #
-  #####################
-  fonts.packages = with pkgs; [
-    (nerdfonts.override { fonts = [ "FiraCode" ]; })
-  ];
-
-  #####################
   # Alacritty         #
   #####################
   programs.alacritty = {
@@ -81,6 +78,12 @@
     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/alacritty/themes/alacritty_light.toml";
     force = true;
   };
+
+  #####################
+  # Zellij           #
+  #####################
+  xdg.configFile."zellij/config.kdl".source = ../config/zellij/config.kdl;
+  xdg.configFile."zellij/layouts/default.kdl".source = ../config/zellij/layouts/default.kdl;
 
   #####################
   # Direnv          #

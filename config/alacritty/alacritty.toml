@@ -49,3 +49,8 @@ unfocused_hollow = true
 [cursor.style]
 shape = "Block"
 blinking = "On"
+
+# Launch Zellij on startup: attach to "main" or create it
+[terminal.shell]
+program = "zellij"
+args = ["attach", "-c", "main"]
