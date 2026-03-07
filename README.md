@@ -1,65 +1,95 @@
-# My Dotfiles Configuration Guide
+# dotfiles
 
-Welcome to the documentation of my dotfiles configuration tailored for macOS Darwin ARM environments. This guide assists you in setting up and understanding the configurations managed via [chezmoi](https://www.chezmoi.io/), which synchronizes and secures your setup across machines efficiently.
+Deterministic, AI-orchestrated development environment for a polyglot stack (Go, Rust, TypeScript, SQL).
 
-Use this configuration by running
+Powered by **Nix Flakes** + **Home Manager** + **OpenCode**.
 
-```sh
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply gdurandvadas
+## Structure
+
+```
+.
+├── flake.nix              # Entry point — pins all dependencies
+├── default.nix            # Aggregates all modules
+├── hosts/
+│   └── workstation.nix    # Machine identity (username, homeDirectory)
+├── modules/
+│   ├── zed.nix            # Zed editor + language servers
+│   ├── opencode.nix       # OpenCode AI orchestrator
+│   ├── terminal.nix       # Zsh, Starship, direnv, git, CLI tools
+│   └── scripts.nix        # Custom scripts as Nix packages
+└── config/
+    ├── zed/
+    │   ├── settings.json  # Zed behavior, LSP config, theme
+    │   └── keymap.json    # Custom keybindings
+    └── opencode/
+        ├── config.json    # OpenCode model + MCP servers
+        └── skills/
+            └── research.md
 ```
 
-## Platform Requirements
+## Requirements
 
-This configuration is designed to run on macOS with the following dependencies managed by the dotfiles themselves:
+Bare minimum to bootstrap from a fresh macOS machine:
 
-- **Xcode**: Provides a comprehensive suite of development tools by Apple.
-- **Rosetta**: Enables applications built for Intel chips to run on Apple Silicon.
-- **Homebrew**: A package manager essential for installing and managing software.
+| Requirement | Why |
+|---|---|
+| `curl` | Ships with macOS — used to install Nix |
+| **Nix** (with flakes) | Installs and manages everything else |
 
-## Brew Installation
+No Homebrew. No asdf. No manual tool installs.
 
-Software packages are managed through Homebrew using a [`brew.yaml`](./.chezmoidata/brew.yaml) file, ensuring easy updates and synchronization across different machines. The specific software packages installed can be found within this file.
+## Bootstrap
 
-## Programming Languages Management with asdf
+### 1. Install Nix
 
-The `asdf` tool is used for managing multiple versions of programming languages on a per-project basis. This setup allows for easy switching between different versions as required by different projects. The configuration for `asdf` and its managed languages is detailed in the [`asdf.yaml`](./.chezmoidata/asdf.yaml) file.
+```sh
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+```
 
-## Visual Studio Code Configuration
+This uses the [Determinate Nix Installer](https://github.com/DeterminateSystems/nix-installer), which enables flakes by default and supports macOS cleanly.
 
-Visual Studio Code is configured to enhance the development experience with specific extensions that cater to various programming needs. The extensions are installed automatically through chezmoi, and this setup is defined in the [`vscode.yaml`](./.chezmoidata/vscode.yaml) file. Note that only the extensions are managed by chezmoi.
+After install, restart your terminal (or `source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh`).
 
-## Cleaning Script Warning
+### 2. Clone this repository
 
-⚠️ **Warning**: A script named `clean_darwin.sh` is included to remove all Homebrew packages. This script should be used with caution as it will completely uninstall all packages installed through Homebrew, potentially disrupting your setup.
+```sh
+git clone https://github.com/gedv/dotfiles ~/.config/dotfiles
+cd ~/.config/dotfiles
+```
 
-> **Note**: It's up to the user's discretion to run this script. Ensure you understand the implications of executing it.
+### 3. Apply the configuration
 
-## Terminal Configuration
+```sh
+nix run home-manager/master -- switch --flake .#gedv
+```
 
-The terminal setup enhances both the functionality and aesthetics of your command line interface:
+On subsequent updates, use the helper script installed by the flake:
 
-- **Zsh**: An advanced shell offering numerous improvements over its predecessors. [More about Zsh](https://support.apple.com/en-gb/102360).
-- **Alacritty**: A GPU-accelerated terminal emulator known for its performance and simplicity. [Learn about Alacritty](https://alacritty.org/).
-- **Tmux**: Allows for managing multiple terminal sessions within a single window, increasing productivity. [Explore Tmux](https://github.com/tmux/tmux/wiki).
-- **Starship**: A fast, customizable prompt for any shell that keeps you productive at the command line. [Discover Starship](https://starship.rs/).
+```sh
+dotfiles-switch
+```
 
-![Terminal](./docs/terminal.png)
+## Daily use
 
-## Terminal Shortcuts
+| Command | Description |
+|---|---|
+| `dotfiles-switch` | Apply latest configuration changes |
+| `ai-init <topic>` | Start an AI research loop, then open Zed |
+| `direnv allow` | Activate a project-local Nix environment (`.envrc`) |
 
-To enhance your workflow, we've included a series of keyboard shortcuts, particularly useful when working within tmux. Below is a table detailing these shortcuts:
+## Per-project environments
 
-| Key Combination               | Action                                          |
-| ----------------------------- | ----------------------------------------------- |
-| `Cmd` + `Shift` + `R`         | Reload tmux configuration                       |
-| `Alt` + `Right`               | Jump to the next word                           |
-| `Alt` + `Left`                | Jump to the previous word                       |
-| `Cmd` + `D`                   | Split tmux pane horizontally                    |
-| `Cmd` + `Shift` + `D`         | Split tmux pane vertically                      |
-| `Cmd` + `Shift` + `Arrow Key` | Navigate between tmux panes                     |
-| `Cmd` + `S`                   | Synchronize command input across all tmux panes |
-| `Cmd` + `T`                   | Create a new tmux window                        |
-| `Cmd` + `W`                   | Close the current tmux window                   |
-| `Cmd` + `1` to `Cmd` + `0`    | Select tmux window by number                    |
-| `Cmd` + `Arrow Up`            | Search up for substring in the terminal         |
-| `Cmd` + `Arrow Down`          | Search down for substring in the terminal       |
+Add a `.envrc` to any project to pin its toolchain:
+
+```sh
+# .envrc
+use flake "github:numtide/flake-utils#devShell.aarch64-darwin"
+```
+
+Or write a `flake.nix` in the project root with a `devShell` output. `direnv` will activate it automatically when you `cd` into the directory.
+
+## Adding tools
+
+Edit `modules/terminal.nix` (or create a new module) and add the package to `home.packages`. Then run `dotfiles-switch`.
+
+Search packages at [search.nixos.org](https://search.nixos.org/packages).

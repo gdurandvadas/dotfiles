@@ -1,0 +1,90 @@
+{
+  // Theme
+  "theme": {
+    "mode": "system",
+    "light": "Catppuccin Frappé",
+    "dark": "Catppuccin Mocha",
+  },
+  "icon_theme": {
+    "mode": "system",
+    "light": "Catppuccin Frappé",
+    "dark": "Catppuccin Mocha",
+  },
+
+  // Typography
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+
+  // AI agent
+  "agent": {
+    "default_model": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-5",
+    },
+  },
+
+  // Extensions — auto-installed on first launch
+  "auto_install_extensions": {
+    "catppuccin": true,
+    "catppuccin-icons": true,
+    "html": true,
+    "make": true,
+    "nix": true,
+    "proto": true,
+    "sql": true,
+    "toml": true,
+  },
+
+  // Language-specific settings
+  "languages": {
+    "Go": {
+      "language_servers": ["gopls"],
+      "format_on_save": "on",
+      "tab_size": 4,
+    },
+    "Rust": {
+      "language_servers": ["rust-analyzer"],
+      "format_on_save": "on",
+    },
+    "TypeScript": {
+      "language_servers": ["vtsls"],
+      "format_on_save": "on",
+      "tab_size": 2,
+    },
+    "JavaScript": {
+      "language_servers": ["vtsls"],
+      "format_on_save": "on",
+      "tab_size": 2,
+    },
+    "Nix": {
+      "language_servers": ["nixd"],
+      "format_on_save": "on",
+      "tab_size": 2,
+    },
+  },
+
+  // LSP overrides
+  "lsp": {
+    "rust-analyzer": {
+      "initialization_options": {
+        "checkOnSave": true,
+        "check": {
+          "command": "clippy",
+        },
+        "inlayHints": {
+          "lifetimeElisionHints": {
+            "enable": "skip_trivial",
+          },
+        },
+      },
+    },
+    "gopls": {
+      "initialization_options": {
+        "hints": {
+          "parameterNames": true,
+          "rangeVariableTypes": true,
+        },
+      },
+    },
+  },
+}
