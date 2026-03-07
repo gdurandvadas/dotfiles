@@ -1,5 +1,6 @@
 { ... }: {
   imports = [
+    ./modules/user.nix
     ./modules/terminal.nix
     ./modules/zed.nix
     ./modules/opencode.nix

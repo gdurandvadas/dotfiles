@@ -13,11 +13,17 @@ let
   '';
 
   # Switch to latest home-manager configuration
+  # Usage: dotfiles-switch [work]
   dotfiles-switch = pkgs.writeShellScriptBin "dotfiles-switch" ''
     set -e
     DOTFILES="$HOME/.config/dotfiles"
-    echo "Switching to latest dotfiles configuration..."
-    home-manager switch --flake "$DOTFILES#gedv" "$@"
+    PROFILE="personal"
+    if [ "$1" = "work" ]; then
+      PROFILE="work"
+      shift
+    fi
+    echo "Switching to dotfiles profile: $PROFILE"
+    home-manager switch --flake "$DOTFILES#$PROFILE" "$@"
   '';
 in {
   home.packages = [ ai-init dotfiles-switch ];

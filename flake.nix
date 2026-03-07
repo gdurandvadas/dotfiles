@@ -15,9 +15,16 @@
     system = "aarch64-darwin";
     pkgs = nixpkgs.legacyPackages.${system};
   in {
-    homeConfigurations."gedv" = home-manager.lib.homeManagerConfiguration {
-      inherit pkgs;
-      modules = [ ./hosts/workstation.nix ];
+    homeConfigurations = {
+      "personal" = home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        modules = [ ./hosts/workstation.nix ];
+      };
+
+      "work" = home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        modules = [ ./hosts/work.nix ];
+      };
     };
   };
 }

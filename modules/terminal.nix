@@ -1,4 +1,9 @@
-{ pkgs, ... }: {
+{ config, pkgs, ... }: {
+  # Ensure XDG_CONFIG_HOME is set so apps like Zed resolve ~/.config/zed/ on macOS
+  home.sessionVariables = {
+    XDG_CONFIG_HOME = "$HOME/.config";
+  };
+
   home.packages = with pkgs; [
     # Shell utilities
     fzf
@@ -35,7 +40,8 @@
   };
 
   programs.git = {
-    enable = true;
-    userName = "gedv";
+    enable    = true;
+    userName  = config.my.user.name;
+    userEmail = config.my.user.email;
   };
 }
