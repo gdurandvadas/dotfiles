@@ -47,6 +47,13 @@
   xdg.configFile."starship/starship_light.toml".source = ../config/starship/starship_light.toml;
 
   #####################
+  # Fonts (Alacritty) #
+  #####################
+  fonts.packages = with pkgs; [
+    (nerdfonts.override { fonts = [ "FiraCode" ]; })
+  ];
+
+  #####################
   # Alacritty         #
   #####################
   programs.alacritty = {

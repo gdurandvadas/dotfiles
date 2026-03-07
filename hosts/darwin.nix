@@ -29,8 +29,6 @@
   # The platform the configuration will be used on.
   nixpkgs.hostPlatform = "aarch64-darwin";
 
-  # Font package is set in flake.nix (fonts.packages in darwin module).
-
   # Define the user
   system.primaryUser = config.my.user.username;
   users.users.${config.my.user.username} = {
