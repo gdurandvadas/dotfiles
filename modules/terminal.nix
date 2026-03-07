@@ -24,8 +24,8 @@
     syntaxHighlighting.enable = true;
 
     initExtra = ''
-      # Load custom scripts
-      for f in $HOME/.zsh/*.zsh; do source $f; done
+      # Load custom scripts (using (N) to avoid errors if no files exist)
+      for f in $HOME/.zsh/*.zsh(N); do source $f; done
     '';
   };
 
