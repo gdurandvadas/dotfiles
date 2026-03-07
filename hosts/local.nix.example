@@ -7,5 +7,6 @@
     workEmail      = "you@company.com";
     username       = "yourusername";
     githubUsername = "yourgithub";
+    sshSigningKey  = "ssh-ed25519 AAAA...your-public-key";
   };
 }

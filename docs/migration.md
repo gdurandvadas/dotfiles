@@ -104,10 +104,10 @@ The `aw.zsh` aliases are work-specific; add them to `modules/work.nix`.
 | `user.name` | `dot_gitconfig.tmpl` templated | `modules/terminal.nix` | ✅ |
 | `user.email` (personal) | `dot_gitconfig.tmpl` templated | `modules/terminal.nix` | ✅ |
 | `user.email` (work) | `workspace=work` branch | `modules/work.nix` with `lib.mkForce` | ✅ |
-| `pull.rebase = true` | `dot_gitconfig.tmpl` | Not set | ❌ |
-| `fetch.prune = true` | `dot_gitconfig.tmpl` | Not set | ❌ |
-| `fetch.pruneTags = true` | `dot_gitconfig.tmpl` | Not set | ❌ |
-| SSH commit signing | `dot_gitconfig.tmpl` | Not configured | ❌ |
+| `pull.rebase = true` | `dot_gitconfig.tmpl` | `modules/terminal.nix` | ✅ |
+| `fetch.prune = true` | `dot_gitconfig.tmpl` | `modules/terminal.nix` | ✅ |
+| `fetch.pruneTags = true` | `dot_gitconfig.tmpl` | `modules/terminal.nix` | ✅ |
+| SSH commit signing (1Password) | `dot_gitconfig.tmpl` | `modules/terminal.nix` | ✅ |
 
 See the **Identity** section above for the full `programs.git` block to add.
 
@@ -119,10 +119,10 @@ Alacritty was fully configured by chezmoi under `private_dot_config/alacritty/`.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Main config (`alacritty.toml`) | ❌ | Font, window size, opacity, scroll history |
-| Gruvbox dark theme | ❌ | Color palette |
-| Keybindings (`keybindings.toml`) | ❌ | tmux-integrated shortcuts |
-| Shell launch into tmux | ❌ | `tmux new-session -A -D -s main` |
+| Main config (`alacritty.toml`) | ✅ | `programs.alacritty` in `modules/terminal.nix` |
+| Gruvbox dark theme | ✅ | Inline in `programs.alacritty.settings.colors` |
+| Keybindings (`keybindings.toml`) | ✅ | `config/alacritty/keybindings.toml` via `xdg.configFile` |
+| Shell launch into tmux | 🗑️ | Skipped — tmux not yet migrated |
 
 **Action needed:** Either:
 - Add `programs.alacritty` in `modules/terminal.nix` using Home Manager's Alacritty module, or
@@ -162,7 +162,7 @@ The existing config is at `old/private_dot_config/tmux/tmux.conf`.
 | Item | Old (Chezmoi) | Nix Equivalent | Status |
 |------|---------------|----------------|--------|
 | Starship enabled | `run_onchange_brew.sh` installs it | `modules/terminal.nix` → `programs.starship.enable` | ✅ |
-| Custom config (`starship.toml`) | `private_dot_config/starship.toml` | No config file managed | ❌ |
+| Custom config (`starship.toml`) | `private_dot_config/starship.toml` | `programs.starship.settings` — catppuccin-powerline mocha | ✅ |
 
 **Action needed:** The old `starship.toml` has a full gruvbox-dark palette with AWS, Kubernetes, and language segments. Port it via:
 

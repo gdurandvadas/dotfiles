@@ -23,5 +23,9 @@ let inherit (lib) mkOption types; in
       type = types.str;
       description = "GitHub username used by gh CLI and git config.";
     };
+    sshSigningKey = mkOption {
+      type = types.str;
+      description = "SSH public key used for signing git commits (via 1Password).";
+    };
   };
 }
