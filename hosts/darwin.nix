@@ -1,6 +1,7 @@
 { pkgs, ... }: {
   # Auto upgrade nix package and the daemon service.
-  nix.enable = true;
+  # We set this to false because Determinate Systems installer manages the Nix daemon
+  nix.enable = false;
   nix.package = pkgs.nix;
 
   # Necessary for using flakes on this system.
