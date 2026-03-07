@@ -14,16 +14,19 @@
   let
     system = "aarch64-darwin";
     pkgs = nixpkgs.legacyPackages.${system};
+    # local.nix is gitignored — referenced via absolute path so Nix doesn't
+    # require it to be Git-tracked. Requires --impure at evaluation time.
+    localModule = "${builtins.getEnv "HOME"}/.config/dotfiles/hosts/local.nix";
   in {
     homeConfigurations = {
       "personal" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
-        modules = [ ./hosts/workstation.nix ];
+        modules = [ ./hosts/workstation.nix localModule ];
       };
 
       "work" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
-        modules = [ ./hosts/work.nix ];
+        modules = [ ./hosts/work.nix localModule ];
       };
     };
   };

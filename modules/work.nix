@@ -1,6 +1,6 @@
 { config, lib, ... }: {
   # Override git email for work context (name stays the same)
-  programs.git.userEmail = lib.mkForce config.my.user.workEmail;
+  programs.git.settings.user.email = lib.mkForce config.my.user.workEmail;
 
   # Point opencode to a work-specific config (separate model/MCP settings)
   xdg.configFile."opencode/config.json".source = lib.mkForce

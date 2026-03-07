@@ -23,7 +23,7 @@ let
       shift
     fi
     echo "Switching to dotfiles profile: $PROFILE"
-    home-manager switch --flake "$DOTFILES#$PROFILE" "$@"
+    home-manager switch --flake "$DOTFILES#$PROFILE" --impure "$@"
   '';
 in {
   home.packages = [ ai-init dotfiles-switch ];

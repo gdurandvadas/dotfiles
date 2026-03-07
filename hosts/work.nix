@@ -1,5 +1,5 @@
 { config, ... }: {
-  imports = [ ../default.nix ../modules/work.nix ./local.nix ];
+  imports = [ ../default.nix ../modules/work.nix ];
 
   home = {
     username      = config.my.user.username;

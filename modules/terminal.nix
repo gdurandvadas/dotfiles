@@ -40,8 +40,10 @@
   };
 
   programs.git = {
-    enable    = true;
-    userName  = config.my.user.name;
-    userEmail = config.my.user.email;
+    enable = true;
+    settings.user = {
+      name  = config.my.user.name;
+      email = config.my.user.email;
+    };
   };
 }
