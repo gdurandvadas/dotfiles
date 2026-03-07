@@ -21,7 +21,7 @@
     homeConfigurations = {
       "personal" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
-        modules = [ ./hosts/workstation.nix localModule ];
+        modules = [ ./hosts/personal.nix localModule ];
       };
 
       "work" = home-manager.lib.homeManagerConfiguration {
