@@ -1,5 +1,6 @@
 // Default Zellij layout: compact bar + Code tab + Terminal tab (split).
 // Used when creating a new session (e.g. "main" from Alacritty).
+// denmo
 
 layout {
     default_tab_template {
