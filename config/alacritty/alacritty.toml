@@ -1,7 +1,7 @@
 [general]
 import = [
     "~/.config/alacritty/keybindings.toml",
-    "~/.config/alacritty/catppuccin_macchiato.toml",
+    "~/.config/alacritty/themes/catppuccin_frappe.toml",
 ]
 
 [window]

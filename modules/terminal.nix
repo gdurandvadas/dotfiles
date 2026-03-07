@@ -13,7 +13,6 @@
     eza
     jq
     yq
-    gh
     git
   ];
 
@@ -63,8 +62,20 @@
     enable = true;
   };
 
-  xdg.configFile."alacritty/alacritty.toml".source = ../config/alacritty/alacritty.toml;
+  xdg.configFile."alacritty/alacritty.toml" = {
+    source = ../config/alacritty/alacritty.toml;
+    force = true;
+  };
 
   # Alacritty keybindings managed as a store file (tmux-integrated shortcuts)
-  xdg.configFile."alacritty/keybindings.toml".source = ../config/alacritty/keybindings.toml;
+  xdg.configFile."alacritty/keybindings.toml"= {
+    source = ../config/alacritty/keybindings.toml;
+    force = true;
+  };
+
+  # Alacritty theme managed as a store file
+  xdg.configFile."alacritty/themes/catppuccin_frappe.toml" = {
+    source = ../config/alacritty/themes/catppuccin_frappe.toml;
+    force = true;
+  };
 }

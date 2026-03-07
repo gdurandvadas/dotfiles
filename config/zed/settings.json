@@ -1,6 +1,12 @@
 {
   // Theme
   "agent_servers": {
+    "cursor": {
+      "type": "registry"
+    },
+    "github-copilot-cli": {
+      "type": "registry"
+    },
     "opencode": {
       "type": "registry"
     }
