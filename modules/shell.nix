@@ -32,6 +32,7 @@
 
   # Custom scripts sourced by .zsh; theme-switch symlinks Alacritty theme + Starship config by dark/light
   home.file.".zsh/theme-switch.zsh".source = ../config/scripts/theme-switch.zsh;
+  home.file.".zsh/mise.zsh".source = ../config/scripts/mise.zsh;
 
   #####################
   # Starship          #

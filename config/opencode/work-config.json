@@ -1,4 +1,208 @@
 {
-  "$schema": "https://opencode.ai/config.schema.json",
-  "autoshare": false
+  "$schema": "https://opencode.ai/config.json",
+  "server": {
+    "hostname": "127.0.0.1",
+    "mdns": false
+  },
+  "default_agent": "planner",
+  "provider": {
+    "github-copilot": {
+      "models": {
+        "gpt-5.3-codex": {
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 272000,
+            "output": 128000
+          }
+        }
+      }
+    }
+  },
+  "agent": {
+    "build": { "disable": true },
+    "plan": { "disable": true },
+    "explore": { "disable": true },
+    "general": { "disable": true },
+    "planner": {
+      "model": "github-copilot/gpt-5.2",
+      "temperature": 0.4
+    },
+    "orchestrator": {
+      "model": "github-copilot/claude-sonnet-4.6",
+      "description": "Execution orchestrator that delegates to subagents, enforces quality gates, and drives tasks to completion. Can execute plans from planner or handle direct requests.",
+      "temperature": 0.3,
+      "prompt": "{file:./agents/universal.md}",
+      "tools": {
+        "Playwright*": true
+      },
+      "permission": {
+        "task": "allow",
+        "read": "deny",
+        "edit": "deny",
+        "bash": "deny"
+      }
+    },
+    "universal": {
+      "model": "github-copilot/claude-sonnet-4.6",
+      "temperature": 0.3
+    },
+    "explorer": {
+      "model": "github-copilot/gpt-5-mini",
+      "temperature": 0.1
+    },
+    "fast": {
+      "model": "github-copilot/gpt-5.1-codex-mini",
+      "prompt": "{file:./agents/prompts/implementer.md}",
+      "description": "Small-scope engineering agent for docs, tests, and bounded edits. Use for quick, low-risk changes with minimal coordination.",
+      "temperature": 0.2,
+      "permission": {
+        "task": "deny",
+        "todoread": "deny",
+        "todowrite": "deny",
+        "Playwright*": "allow"
+      }
+    },
+    "balanced": {
+      "model": "github-copilot/claude-sonnet-4.6",
+      "prompt": "{file:./agents/prompts/implementer.md}",
+      "description": "Implementation agent for standard multi-file features, refactors, and non-trivial bugfixes.",
+      "temperature": 0.3,
+      "permission": {
+        "task": "deny",
+        "todoread": "deny",
+        "todowrite": "deny",
+        "Playwright*": "allow"
+      }
+    },
+    "deep": {
+      "model": "github-copilot/claude-opus-4.6",
+      "prompt": "{file:./agents/prompts/implementer.md}",
+      "description": "Implementation agent for complex, multi-file work and debugging. Use when scope is uncertain, cross-cutting, or requires careful design and verification.",
+      "temperature": 0.3,
+      "permission": {
+        "task": "deny",
+        "todoread": "deny",
+        "todowrite": "deny",
+        "Playwright*": "allow"
+      }
+    },
+    "deep-l": {
+      "disable": false,
+      "model": "github-copilot/gpt-5.3-codex",
+      "prompt": "{file:./agents/prompts/implementer.md}",
+      "description": "Implementation agent with large context (272k) for broad-scope work spanning many files or requiring extended analysis.",
+      "temperature": 0.3,
+      "permission": {
+        "todoread": "deny",
+        "todowrite": "deny",
+        "task": "deny",
+        "Playwright*": "allow"
+      }
+    },
+    "deep-xl": {
+      "disable": false,
+      "model": "openai/gpt-5.3-codex",
+      "prompt": "{file:./agents/prompts/implementer.md}",
+      "description": "Implementation agent with extra-large context (400k) for the broadest-scope work. Requires direct OpenAI API access.",
+      "temperature": 0.3,
+      "permission": {
+        "todoread": "deny",
+        "todowrite": "deny",
+        "task": "deny",
+        "Playwright*": "allow"
+      }
+    },
+    "thinker": {
+      "model": "github-copilot/gpt-5.3-codex",
+      "temperature": 0.5,
+      "reasoningEffort": "high"
+    }
+  },
+  "plugin": ["./plugins/skill-preservation.ts"],
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+  "permission": {
+    "*": "ask",
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow",
+      "~/.config/opencode/**/*": "allow"
+    },
+    "list": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "edit": "allow",
+    "skill": "allow",
+    "task": "deny",
+    "lsp": "allow",
+    "question": "allow",
+    "todoread": "allow",
+    "todowrite": "allow",
+    "storeread": "allow",
+    "storewrite": "allow",
+    "webfetch": "allow",
+    "websearch": "allow",
+    "bash": {
+      "*": "ask",
+      "cat *": "allow",
+      "cp *": "allow",
+      "rg *": "allow",
+      "find *": "allow",
+      "wc *": "allow",
+      "git *": "allow",
+      "git push *": "ask",
+      "go build *": "allow",
+      "go doc *": "allow",
+      "go test *": "allow",
+      "go mod *": "allow",
+      "go docs *": "allow",
+      "go list *": "allow",
+      "grep *": "allow",
+      "head *": "allow",
+      "uniq *": "allow",
+      "ls *": "allow",
+      "mv *": "ask",
+      "rm *": "ask",
+      "sort *": "allow",
+      "sudo *": "ask",
+      "tail *": "allow",
+      "timeout *": "allow",
+      "task *": "allow",
+      "tee *": "allow"
+    },
+    "external_directory": {
+      "*": "ask",
+      "/tmp": "allow"
+    },
+    "doom_loop": "ask",
+    "Playwright*": "deny"
+  },
+  "mcp": {
+    "GitHub Grep": {
+      "type": "remote",
+      "url": "https://mcp.grep.app"
+    },
+    "Deep Wiki": {
+      "type": "remote",
+      "url": "https://mcp.deepwiki.com/mcp"
+    },
+    "Playwright": {
+      "type": "local",
+      "command": [
+        "npx",
+        "@playwright/mcp@latest",
+        "--allowed-origins",
+        "http://localhost:*;https://localhost:*;http://127.0.0.1:*;https://127.0.0.1:*"
+      ]
+    }
+  },
+  "autoupdate": true,
+  "share": "disabled"
 }
