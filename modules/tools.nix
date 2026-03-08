@@ -2,12 +2,13 @@
 # listed in unfree-packages.nix so the flake's allowUnfreePredicate allows them.
 { pkgs, ... }: {
   home.packages = with pkgs; [
-    _1password-cli
-    brave
-    mise
     gh
+    mise
+    brave
     protobuf
     wasm-pack
+    claude-code
+    _1password-cli
   ];
 
   xdg.configFile."mise/config.toml".source = ../config/mise/config.toml;

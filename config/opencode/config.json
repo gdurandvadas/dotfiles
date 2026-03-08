@@ -5,6 +5,7 @@
     "mdns": false
   },
   "default_agent": "planner",
+  "model": "github-copilot/claude-haiku-4.5",
   "provider": {
     "github-copilot": {
       "models": {
@@ -46,7 +47,7 @@
       }
     },
     "universal": {
-      "model": "github-copilot/claude-sonnet-4.6",
+      "model": "github-copilot/claude-sonnet-4.5",
       "temperature": 0.3
     },
     "explorer": {
@@ -54,7 +55,7 @@
       "temperature": 0.1
     },
     "fast": {
-      "model": "github-copilot/gpt-5.1-codex-mini",
+      "model": "github-copilot/gemini-3-flash-preview",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Small-scope engineering agent for docs, tests, and bounded edits. Use for quick, low-risk changes with minimal coordination.",
       "temperature": 0.2,
@@ -66,7 +67,7 @@
       }
     },
     "balanced": {
-      "model": "github-copilot/claude-sonnet-4.6",
+      "model": "github-copilot/gemini-3-pro-preview",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Implementation agent for standard multi-file features, refactors, and non-trivial bugfixes.",
       "temperature": 0.3,
@@ -104,7 +105,7 @@
     },
     "deep-xl": {
       "disable": false,
-      "model": "openai/gpt-5.3-codex",
+      "model": "github-copilot/gemini-3.1-pro-preview",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Implementation agent with extra-large context (400k) for the broadest-scope work. Requires direct OpenAI API access.",
       "temperature": 0.3,

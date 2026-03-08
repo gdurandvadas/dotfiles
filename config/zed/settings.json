@@ -1,16 +1,26 @@
 {
-  // Theme
-  "agent_servers": {
-    "cursor": {
-      "type": "Registry",
-    },
-    "github-copilot-cli": {
-      "type": "Registry",
-    },
-    "opencode": {
-      "type": "Registry",
-    },
+  "format_on_save": "on",
+  "auto_install_extensions": {
+    "nix": true,
+    "sql": true,
+    "glsl": true,
+    "helm": true,
+    "html": true,
+    "make": true,
+    "toml": true,
+    "biome": true,
+    "proto": true,
+    "direnv": true,
+    "kotlin": true,
+    "clojure": true,
+    "gdscript": true,
+    "surrealql": true,
+    "terraform": true,
+    "catppuccin": true,
+    "dockerfile": true,
+    "catppuccin-icons": true,
   },
+  // Theming
   "theme": {
     "mode": "system",
     "light": "Catppuccin Frappé",
@@ -21,32 +31,19 @@
     "light": "Catppuccin Frappé",
     "dark": "Catppuccin Mocha",
   },
-
   // Typography
   "ui_font_size": 13,
   "buffer_font_size": 12.0,
   "agent_ui_font_size": 12,
   "agent_buffer_font_size": 12.0,
 
-  // AI agent
-  "agent": {
-    "default_model": {
-      "provider": "anthropic",
-      "model": "claude-sonnet-4-5",
+  // Agents
+  "agent_servers": {
+    "OpenCode": {
+      "type": "custom",
+      "command": "opencode",
+      "args": ["acp"],
     },
-  },
-
-  // Extensions — auto-installed on first launch
-  "auto_install_extensions": {
-    "catppuccin": true,
-    "catppuccin-icons": true,
-    "html": true,
-    "make": true,
-    "nix": true,
-    "proto": true,
-    "sql": true,
-    "toml": true,
-    "direnv": true
   },
 
   // Language-specific settings
@@ -76,29 +73,17 @@
       "tab_size": 2,
     },
   },
-
   // LSP overrides
   "lsp": {
     "rust-analyzer": {
-      "binary": {
-        "path_lookup": true
-      },
       "initialization_options": {
         "checkOnSave": true,
         "check": {
           "command": "clippy",
         },
-        "inlayHints": {
-          "lifetimeElisionHints": {
-            "enable": "skip_trivial",
-          },
-        },
       },
     },
     "gopls": {
-      "binary": {
-        "path_lookup": true
-      },
       "initialization_options": {
         "hints": {
           "parameterNames": true,
