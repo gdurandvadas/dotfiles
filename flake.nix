@@ -49,6 +49,11 @@
       switch-work = hmSwitch "work";
     };
 
+    # Shell with 1Password CLI for bootstrap (uses flake's allowUnfree).
+    devShells.${system}.bootstrap = pkgs.mkShell {
+      buildInputs = [ pkgs._1password-cli ];
+    };
+
     homeConfigurations = {
       "personal" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;

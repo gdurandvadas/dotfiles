@@ -38,33 +38,42 @@ Edit `hosts/local.nix` and fill in your name, emails, username, and GitHub handl
 
 ### 4. Apply a profile
 
-**Option A — Home Manager only** (no nix-darwin). From the repo directory:
+**Option A — Makefile bootstrap (recommended for first-time)**. From the repo directory:
+
+```sh
+make bootstrap
+```
+
+This checks that Nix is installed, ensures `hosts/local.nix` exists (copies from example if not), ensures you are signed in to 1Password (prompts `op signin` if needed), then runs `nix run .#switch-personal`. After the first run, use the `dotfiles` CLI or make targets for updates.
+
+**Option B — Home Manager only** (no nix-darwin). From the repo directory:
 
 ```sh
 # Personal
 nix run .#switch-personal
-# or with home-manager already installed:
-home-manager switch --flake .#personal --impure
+# or: make switch-personal
 
 # Work
 nix run .#switch-work
-# or: home-manager switch --flake .#work --impure
+# or: make switch-work
 ```
 
 Use `--impure` when calling `home-manager` directly because `local.nix` is loaded from a path outside the store. The flake apps (`nix run .#switch-personal` / `.#switch-work`) use the flake’s home-manager input so the version stays in one place.
 
-**Option B — nix-darwin (workstation)**. One-time bootstrap (run from this repo):
+**Option C — nix-darwin (workstation)**. One-time bootstrap (run from this repo):
 
 ```sh
 export DOTFILES_DIR="$HOME/.config/dotfiles"   # or your clone path
 nix run nix-darwin# -- switch --flake "$DOTFILES_DIR#workstation" --impure
+# or: make workstation
 ```
 
-After that, the flake installs a helper script. For updates:
+After that, the flake installs the `dotfiles` CLI. For updates:
 
 ```sh
-dotfiles-switch         # personal profile (darwin + home-manager)
-dotfiles-switch work    # work profile
+dotfiles profile personal
+dotfiles profile work
+dotfiles workstation rebuild
 ```
 
-`dotfiles-switch` runs `darwin-rebuild` and applies both system and home-manager config.
+`dotfiles` runs home-manager or darwin-rebuild as appropriate.

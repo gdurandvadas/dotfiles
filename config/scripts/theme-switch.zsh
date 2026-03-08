@@ -13,12 +13,6 @@ _theme_switch() {
   fi
   _theme_switch_last="$is_dark"
 
-  if [[ "$is_dark" == true ]]; then
-    print "Switching to dark mode"
-  else
-    print "Switching to light mode"
-  fi
-
   local alacritty_themes="$HOME/.config/alacritty/themes"
   local starship_dir="$HOME/.config/starship"
   local starship_default="$HOME/.config/starship.toml"
