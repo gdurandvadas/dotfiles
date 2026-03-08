@@ -1,17 +1,21 @@
-// Zellij config for Alacritty: tabs, panes, compact bar.
-// Unlock-first (non-colliding): press Ctrl+g to focus Zellij, then shortcut (e.g. t for tab).
+// Add this to your ~/.config/zellij/config.kdl
 
-// UI
+keybinds {
+    // This defines what happens when the UI is "Locked" (the default)
+    locked {
+        bind "Ctrl g" { SwitchToMode "Normal"; }
+    }
+    // This defines what happens when you are in "Normal" mode
+    // It allows you to hit Ctrl+g to immediately go back to "typing mode"
+    shared_except "locked" {
+        bind "Ctrl g" { SwitchToMode "Locked"; }
+    }
+}
+
+// Keep your existing settings below
 pane_frames false
 default_layout "compact"
-
-// Mouse & copy
 mouse_mode true
 copy_clipboard "system"
 copy_on_select true
-
-// Theme (catppuccin-macchiato; matches dark theme)
-theme "catppuccin-macchiato"
-
-// Unlock-first: Zellij only grabs keys after Ctrl+g, so editor shortcuts (Ctrl+p etc.) work.
-simplified_ui true
+theme "catppuccin-frappe"

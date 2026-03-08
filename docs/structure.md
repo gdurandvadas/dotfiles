@@ -2,6 +2,7 @@
 
 ```
 .
+├── Makefile               # Bootstrap and switch targets (make bootstrap, make switch-personal, …)
 ├── flake.nix              # Entry point — pins all dependencies, exposes switch-personal/switch-work apps
 ├── default.nix            # Aggregates all modules
 ├── unfree-packages.nix   # Single source of unfree package names (base + darwinExtra)
@@ -13,11 +14,12 @@
 │   └── local.nix.example  # Template for local.nix
 ├── modules/
 │   ├── user.nix           # Defines options.my.user.* (identity contract)
-│   ├── zed.nix            # Zed editor + language servers
-│   ├── opencode.nix       # OpenCode AI orchestrator
-│   ├── terminal.nix       # Zsh, Starship, Alacritty, Zellij, direnv, git, CLI tools
+│   ├── shell.nix          # Zsh, Starship, direnv, git, CLI utilities
+│   ├── terminal.nix       # Alacritty, Zellij, nerd fonts
+│   ├── editor.nix         # Zed editor + language servers
+│   ├── ai.nix             # OpenCode AI orchestrator
 │   ├── tools.nix          # Unfree/extra tools (1Password CLI, Brave, mise, gh)
-│   ├── scripts.nix        # Custom scripts as Nix packages (ai-init, dotfiles-switch, nix-switch)
+│   ├── scripts.nix        # Custom scripts as Nix packages (ai-init, dotfiles-switch, dotfiles)
 │   └── work.nix           # Work profile overrides (git email, opencode config)
 ├── config/
 │   ├── alacritty/
@@ -40,7 +42,7 @@
 │   │       └── research.md
 │   └── scripts/
 │       ├── theme-switch.zsh  # Dark/light sync for Alacritty + Starship
-│       └── nix-switch.sh     # Unified home-manager / darwin switch script
+│       └── dotfiles.sh       # Unified home-manager / darwin switch script (dotfiles CLI)
 └── docs/
     └── (this documentation)
 ```

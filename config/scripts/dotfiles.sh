@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # Unified script for home-manager and darwin profile switches.
 # Usage:
-#   nix-switch profile work       → home-manager switch #work
-#   nix-switch profile personal   → home-manager switch #personal
-#   nix-switch workstation rebuild → darwin-rebuild switch #workstation
+#   dotfiles profile work       → home-manager switch #work
+#   dotfiles profile personal   → home-manager switch #personal
+#   dotfiles workstation rebuild → darwin-rebuild switch #workstation
 
 set -e
 DOTFILES="${DOTFILES_DIR:-$HOME/.config/dotfiles}"
 
 usage() {
-  echo "Usage: nix-switch profile <work|personal>"
-  echo "       nix-switch workstation rebuild"
+  echo "Usage: dotfiles profile <work|personal>"
+  echo "       dotfiles workstation rebuild"
   echo ""
   echo "  profile work       - nix run \$DOTFILES#switch-work (uses flake's home-manager)"
   echo "  profile personal   - nix run \$DOTFILES#switch-personal (uses flake's home-manager)"

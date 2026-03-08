@@ -1,0 +1,31 @@
+Tool: storewrite
+
+Purpose:
+This tool is for SAVING durable, session-scoped memories that must survive session compaction. Use it to persist architectural decisions, data schemas, design rationale, critical context, and any other information that you want the system to reliably retain between agent restarts and memory pruning.
+
+Prompt guidance:
+- Use storewrite when you need to make information durable for the session lifecycle.
+- Provide a concise summary (required), at least one tag (required) for discoverability, and optional structured payload in the `data` field.
+- Supply an explicit `id` when you intend to update an existing record; omit `id` to create a new record and let the system generate a UUID.
+
+When to use:
+- Persist architectural decisions and the rationale behind them.
+- Save canonical data schemas or API contracts.
+- Record constraints, important discoveries, or decisions that future agents must reference.
+- Store migration plans, rollout notes, or other operational artifacts that must survive memory compaction.
+
+Usage:
+- Use this tool to persist memory. Example payload:
+  {
+    "summary": "Choose Postgres for ACID transactions",
+    "tags": ["db", "critical", "design"],
+    "data": { "reason": "strong consistency required", "alternatives": ["cockroachdb"] }
+  }
+- To update an existing entry: include its `id` in the payload. The tool will merge updates and bump `updatedAt`.
+
+Behavior guarantees:
+- Stored items are session-scoped and written to `.opencode/sessions/{sessionID}/store.json` under the current working directory.
+- The tool automatically creates directories and the file if they do not exist.
+- JSON parse errors in the existing store are handled gracefully: the tool backs up the broken file and continues with a fresh store to avoid data loss.
+
+Use this to persist memory.
