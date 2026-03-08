@@ -27,7 +27,7 @@
     "explore": { "disable": true },
     "general": { "disable": true },
     "planner": {
-      "model": "github-copilot/gpt-5.3",
+      "model": "github-copilot/gpt-5.2",
       "temperature": 0.4
     },
     "orchestrator": {

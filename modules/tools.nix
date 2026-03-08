@@ -6,6 +6,8 @@
     brave
     mise
     gh
+    protobuf
+    wasm-pack
   ];
 
   xdg.configFile."mise/config.toml".source = ../config/mise/config.toml;
