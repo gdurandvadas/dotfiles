@@ -8,6 +8,7 @@
     protobuf
     wasm-pack
     dioxus-cli
+    cursor-cli
     claude-code
     poppler-utils
     _1password-cli

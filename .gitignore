@@ -1,3 +1,5 @@
 result
 hosts/local.nix
 .opencode
+.claude
+.cursor

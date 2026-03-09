@@ -1,4 +1,11 @@
 {
+  "agent": {
+    "default_model": {
+      "provider": "copilot_chat",
+      "model": "gpt-4.1",
+    },
+    "model_parameters": [],
+  },
   "terminal": {
     "font_family": "FiraCode Nerd Font Propo",
   },
@@ -46,6 +53,21 @@
       "type": "custom",
       "command": "opencode",
       "args": ["acp"],
+    },
+    "cursor-sonnet": {
+      "type": "custom",
+      "command": "cursor-agent",
+      "args": ["acp", "--model", "claude-4.6-sonnet"],
+    },
+    "cursor-codex": {
+      "type": "custom",
+      "command": "cursor-agent",
+      "args": ["acp", "--model", "gpt-5.3-codex"],
+    },
+    "cursor-flash": {
+      "type": "custom",
+      "command": "cursor-agent",
+      "args": ["acp", "--model", "gemini-3-flash-preview"],
     },
   },
 
