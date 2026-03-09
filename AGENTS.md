@@ -8,8 +8,10 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 
 ```
 .
+├── Makefile               # Bootstrap and switch targets (make bootstrap, make switch-personal, …)
 ├── flake.nix              # Entry point — defines personal and work profiles
 ├── default.nix            # Shared module imports (all profiles)
+├── unfree-packages.nix    # Single source of unfree package names (base + darwinExtra)
 ├── hosts/
 │   ├── personal.nix       # Personal profile host config
 │   ├── work.nix           # Work profile host config
@@ -18,11 +20,12 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 │   └── local.nix.example  # Template for local.nix
 ├── modules/
 │   ├── user.nix           # Defines options.my.user.* (identity contract)
-│   ├── terminal.nix       # Shell, git, CLI tools
-│   ├── zed.nix            # Zed editor + language servers
-│   ├── opencode.nix       # OpenCode AI tool
-│   ├── scripts.nix        # Custom shell scripts (dotfiles-switch, ai-init)
-│   ├── tools.nix          # Unfree CLI tools (1Password, Brave, mise, gh)
+│   ├── shell.nix          # Zsh, Starship, direnv, git, CLI utilities
+│   ├── terminal.nix       # Alacritty, Zellij, nerd fonts
+│   ├── editor.nix         # Zed editor + language servers
+│   ├── ai.nix             # OpenCode AI orchestrator
+│   ├── scripts.nix        # Custom scripts as Nix packages (dotfiles-switch, dotfiles)
+│   ├── tools.nix          # Unfree/extra tools (1Password CLI, Brave, mise, gh, claude-code)
 │   └── work.nix           # Work-profile overrides (git email, opencode config)
 ├── config/
 │   ├── zed/               # Mutable Zed config (symlinked out-of-store)

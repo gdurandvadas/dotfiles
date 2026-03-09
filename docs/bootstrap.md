@@ -51,11 +51,9 @@ This checks that Nix is installed, ensures `hosts/local.nix` exists (copies from
 ```sh
 # Personal
 nix run .#switch-personal
-# or: make switch-personal
 
 # Work
 nix run .#switch-work
-# or: make switch-work
 ```
 
 Use `--impure` when calling `home-manager` directly because `local.nix` is loaded from a path outside the store. The flake apps (`nix run .#switch-personal` / `.#switch-work`) use the flake’s home-manager input so the version stays in one place.
@@ -65,7 +63,6 @@ Use `--impure` when calling `home-manager` directly because `local.nix` is loade
 ```sh
 export DOTFILES_DIR="$HOME/.config/dotfiles"   # or your clone path
 nix run nix-darwin# -- switch --flake "$DOTFILES_DIR#workstation" --impure
-# or: make workstation
 ```
 
 After that, the flake installs the `dotfiles` CLI. For updates:

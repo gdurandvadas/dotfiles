@@ -18,8 +18,8 @@
 │   ├── terminal.nix       # Alacritty, Zellij, nerd fonts
 │   ├── editor.nix         # Zed editor + language servers
 │   ├── ai.nix             # OpenCode AI orchestrator
-│   ├── tools.nix          # Unfree/extra tools (1Password CLI, Brave, mise, gh)
-│   ├── scripts.nix        # Custom scripts as Nix packages (ai-init, dotfiles-switch, dotfiles)
+│   ├── tools.nix          # Unfree/extra tools (1Password CLI, Brave, mise, gh, claude-code)
+│   ├── scripts.nix        # Custom scripts as Nix packages (dotfiles-switch, dotfiles)
 │   └── work.nix           # Work profile overrides (git email, opencode config)
 ├── config/
 │   ├── alacritty/
@@ -42,6 +42,7 @@
 │   │       └── research.md
 │   └── scripts/
 │       ├── theme-switch.zsh  # Dark/light sync for Alacritty + Starship
+│       ├── mise.zsh          # Mise (polyglot runtime manager) integration
 │       └── dotfiles.sh       # Unified home-manager / darwin switch script (dotfiles CLI)
 └── docs/
     └── (this documentation)

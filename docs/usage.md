@@ -2,20 +2,20 @@
 
 ## Daily use
 
-| Command | Description |
-|---|---|
-| `dotfiles-switch` | Apply latest personal configuration (darwin only) |
-| `dotfiles-switch work` | Apply latest work configuration (darwin only) |
-| `nix run .#switch-personal` / `nix run .#switch-work` | Apply profile when using Home Manager only |
-| `ai-init <topic>` | Start an AI research loop, then open Zed |
-| `direnv allow` | Activate a project-local Nix environment (`.envrc`) |
+| Command                                               | Description                                         |
+| ----------------------------------------------------- | --------------------------------------------------- |
+| `dotfiles profile personal`                           | Switch to personal profile (home-manager)           |
+| `dotfiles profile work`                               | Switch to work profile (home-manager)               |
+| `dotfiles workstation rebuild`                        | Rebuild darwin workstation (darwin only)            |
+| `nix run .#switch-personal` / `nix run .#switch-work` | Alternative: apply profile directly via flake       |
+| `direnv allow`                                        | Activate a project-local Nix environment (`.envrc`) |
 
 ## Profiles
 
-| Profile | Flake key | Git identity | OpenCode config |
-|---|---|---|---|
-| Personal | `personal` | `my.user.email` | `config/opencode/config.json` |
-| Work | `work` | `my.user.workEmail` | `config/opencode/work-config.json` |
+| Profile  | Flake key  | Git identity        | OpenCode config                    |
+| -------- | ---------- | ------------------- | ---------------------------------- |
+| Personal | `personal` | `my.user.email`     | `config/opencode/config.json`      |
+| Work     | `work`     | `my.user.workEmail` | `config/opencode/work-config.json` |
 
 Both profiles share the same tools (Zed, OpenCode, CLI stack). The work profile only overrides git email and OpenCode settings.
 
@@ -32,7 +32,7 @@ Or write a `flake.nix` in the project root with a `devShell` output. `direnv` wi
 
 ## Adding tools
 
-Edit `modules/terminal.nix` or `modules/tools.nix` (or create a new module) and add the package to `home.packages`. Then run `dotfiles-switch` (darwin) or `nix run .#switch-personal` / `nix run .#switch-work` (home-manager only).
+Edit `modules/shell.nix`, `modules/terminal.nix`, or `modules/tools.nix` (or create a new module) and add the package to `home.packages`. Then run `dotfiles-switch` or `dotfiles workstation rebuild` (darwin) or `dotfiles profile personal` / `dotfiles profile work` (home-manager).
 
 Search packages at [search.nixos.org](https://search.nixos.org/packages).
 
@@ -43,4 +43,4 @@ Search packages at [search.nixos.org](https://search.nixos.org/packages).
 1. Create `modules/<name>.nix`
 2. Add it to the `imports` list in `default.nix` (all profiles), or only in a specific host file if profile-specific
 3. Reference identity via `config.my.user.*` — never hardcode strings
-4. Apply: `dotfiles-switch` (darwin) or `nix run .#switch-personal` / `nix run .#switch-work` (home-manager only)
+4. Apply: `dotfiles-switch` or `dotfiles workstation rebuild` (darwin) or `dotfiles profile personal` / `dotfiles profile work` (home-manager)

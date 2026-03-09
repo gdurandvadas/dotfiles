@@ -4,7 +4,7 @@ This repo does **not** store API keys, tokens, or passwords. Identity (name, ema
 
 ## What’s already in the repo
 
-- **Git SSH signing**: Commit signing uses 1Password via `op-ssh-sign` (see `programs.git` in `modules/terminal.nix`). The public key is in `my.user.sshSigningKey` in `hosts/local.nix`.
+- **Git SSH signing**: Commit signing uses 1Password via `op-ssh-sign` (see `programs.git` in `modules/shell.nix`). The public key is in `my.user.sshSigningKey` in `hosts/local.nix`.
 - **1Password CLI**: The `op` CLI is installed via `modules/tools.nix` (unfree; allowlisted in the flake). Sign in with `op signin` (or use biometrics / SSH agent where supported).
 
 ## Principle
