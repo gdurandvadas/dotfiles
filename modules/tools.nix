@@ -7,7 +7,9 @@
     brave
     protobuf
     wasm-pack
+    dioxus-cli
     claude-code
+    poppler-utils
     _1password-cli
   ];
 

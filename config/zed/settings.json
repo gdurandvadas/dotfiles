@@ -1,4 +1,7 @@
 {
+  "terminal": {
+    "font_family": "FiraCode Nerd Font Propo",
+  },
   "format_on_save": "on",
   "auto_install_extensions": {
     "nix": true,

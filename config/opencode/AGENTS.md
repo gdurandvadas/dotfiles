@@ -14,6 +14,7 @@
 - Prefer GNU tool variants over macOS variants
 - Always pipe long outputs (like `go test -v`) to a file and filter its terminal output (like `2>&1 | tee <some-file> | tail -n 20`) for later processing as output can be really long, or alternatively use grep/rg to filter its output
 - Only delegate parallel tasks when some of the tasks are read-only. Never delegate more than 1 read-write task as agents run into each other.
+- The system package manager is mainly `nix`, but language version management is done with `mise`
 
 # Tools
 
