@@ -202,6 +202,10 @@
         "--allowed-origins",
         "http://localhost:*;https://localhost:*;http://127.0.0.1:*;https://127.0.0.1:*"
       ]
+    },
+    "ClickUp": {
+      "type": "local",
+      "command": ["npx", "mcp-remote", "https://mcp.clickup.com/mcp"]
     }
   },
   "autoupdate": true,
