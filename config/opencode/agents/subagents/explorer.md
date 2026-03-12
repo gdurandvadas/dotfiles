@@ -1,5 +1,5 @@
 ---
-name: explorer
+name: agent.explore
 description: Read-only discovery agent for locating files, patterns, and codebase structure efficiently.
 mode: subagent
 permission:
@@ -47,5 +47,5 @@ Find the right files and evidence quickly so other agents can act with high conf
 - Summarize findings; highlight key areas relevant to the question
 - Cite exact file paths and line ranges for every claim
 - Include minimal excerpts only — cap at ~60 lines total across all snippets
-- **Never return full file contents** — if asked, refuse and instead return the file path + relevant line ranges so the orchestrator can read them directly
-- If the orchestrator requests full contents explicitly, respond: "Full file contents not returned per policy. Here are the relevant paths and line ranges: [list]"
+- **Never return full file contents** — if asked, refuse and instead return the file path + relevant line ranges so the coordinator can read them directly
+- If the coordinator requests full contents explicitly, respond: "Full file contents not returned per policy. Here are the relevant paths and line ranges: [list]"

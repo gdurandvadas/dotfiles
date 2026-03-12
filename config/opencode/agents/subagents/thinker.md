@@ -1,5 +1,5 @@
 ---
-name: thinker
+name: agent.think
 description: Analysis-first agent for complex planning, trade-offs, and structured technical reasoning.
 mode: subagent
 permission:
@@ -7,7 +7,7 @@ permission:
   bash: deny
   task:
     "*": deny
-    explorer: allow
+    agent.explore: allow
   storeread: allow
   storewrite: allow
   todoread: deny
@@ -30,8 +30,9 @@ Produce clear, decision-ready analysis that reduces execution risk and ambiguity
 ## Pattern Loading
 
 When asked to produce an **execution plan or task breakdown** (multi-step work, implementation roadmap, phased plan):
+
 - **Load `pattern-task-breakdown`** and follow its template — phases, tasks (1-2h chunks), dependencies, estimates, verification steps
-- If the plan meets the 3+ TODOs / >60 min / multi-phase threshold and will be stored, include `data.prompt_drafts` in the store entry — load `tool-store` skill for the canonical schema; use `universal_handoff_prompt` (plain message, not a `Task()` call) and `todo_tasks[].task_block` (full `Task({ ... })` targeting fast/balanced/deep/etc.)
+- If the plan meets the 3+ TODOs / >60 min / multi-phase threshold and will be stored, include `data.prompt_drafts` in the store entry — load `tool-store` skill for the canonical schema; use `universal_handoff_prompt` (plain message, not a `Task()` call) and `todo_tasks[].task_block` (full `Task({ ... })` targeting agent.fast/agent.balanced/agent.deep/etc.)
 
 ## Boundaries
 

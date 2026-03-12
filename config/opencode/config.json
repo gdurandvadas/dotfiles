@@ -4,7 +4,7 @@
     "hostname": "127.0.0.1",
     "mdns": false
   },
-  "default_agent": "planner",
+  "default_agent": "plan",
   "model": "github-copilot/claude-haiku-4.5",
   "provider": {
     "github-copilot": {
@@ -24,16 +24,13 @@
   },
   "agent": {
     "build": { "disable": true },
-    "plan": { "disable": true },
-    "explore": { "disable": true },
-    "general": { "disable": true },
-    "planner": {
+    "plan": {
       "model": "github-copilot/gpt-5.2",
       "temperature": 0.4
     },
-    "orchestrator": {
+    "orchestrate": {
       "model": "github-copilot/claude-sonnet-4.6",
-      "description": "Execution orchestrator that delegates to subagents, enforces quality gates, and drives tasks to completion. Can execute plans from planner or handle direct requests.",
+      "description": "Execution orchestrator that delegates to subagents, enforces quality gates, and drives tasks to completion. Can execute plans from plan or handle direct requests.",
       "temperature": 0.3,
       "prompt": "{file:./agents/universal.md}",
       "tools": {
@@ -46,19 +43,23 @@
         "bash": "deny"
       }
     },
-    "universal": {
-      "model": "github-copilot/claude-sonnet-4.5",
-      "temperature": 0.3
-    },
-    "explorer": {
+    "agent.explore": {
       "model": "github-copilot/gpt-5-mini",
-      "temperature": 0.1
+      "temperature": 0.1,
+      "hidden": true
     },
-    "fast": {
-      "model": "github-copilot/gemini-3-flash-preview",
+    "agent.think": {
+      "model": "github-copilot/gpt-5.3-codex",
+      "temperature": 0.5,
+      "reasoningEffort": "high",
+      "hidden": true
+    },
+    "agent.fast": {
+      "model": "github-copilot/gpt-5-mini",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Small-scope engineering agent for docs, tests, and bounded edits. Use for quick, low-risk changes with minimal coordination.",
       "temperature": 0.2,
+      "hidden": true,
       "permission": {
         "task": "deny",
         "todoread": "deny",
@@ -66,11 +67,12 @@
         "Playwright*": "allow"
       }
     },
-    "balanced": {
-      "model": "github-copilot/gemini-3-pro-preview",
+    "agent.balanced": {
+      "model": "github-copilot/gpt-5.2-codex",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Implementation agent for standard multi-file features, refactors, and non-trivial bugfixes.",
       "temperature": 0.3,
+      "hidden": true,
       "permission": {
         "task": "deny",
         "todoread": "deny",
@@ -78,11 +80,12 @@
         "Playwright*": "allow"
       }
     },
-    "deep": {
+    "agent.deep": {
       "model": "github-copilot/claude-opus-4.6",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Implementation agent for complex, multi-file work and debugging. Use when scope is uncertain, cross-cutting, or requires careful design and verification.",
       "temperature": 0.3,
+      "hidden": true,
       "permission": {
         "task": "deny",
         "todoread": "deny",
@@ -90,12 +93,13 @@
         "Playwright*": "allow"
       }
     },
-    "deep-l": {
+    "agent.deep-l": {
       "disable": false,
       "model": "github-copilot/gpt-5.3-codex",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Implementation agent with large context (272k) for broad-scope work spanning many files or requiring extended analysis.",
       "temperature": 0.3,
+      "hidden": true,
       "permission": {
         "todoread": "deny",
         "todowrite": "deny",
@@ -103,23 +107,19 @@
         "Playwright*": "allow"
       }
     },
-    "deep-xl": {
+    "agent.deep-xl": {
       "disable": false,
-      "model": "github-copilot/gemini-3.1-pro-preview",
+      "model": "github-copilot/gpt-5.4",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Implementation agent with extra-large context (400k) for the broadest-scope work. Requires direct OpenAI API access.",
       "temperature": 0.3,
+      "hidden": true,
       "permission": {
         "todoread": "deny",
         "todowrite": "deny",
         "task": "deny",
         "Playwright*": "allow"
       }
-    },
-    "thinker": {
-      "model": "github-copilot/gpt-5.3-codex",
-      "temperature": 0.5,
-      "reasoningEffort": "high"
     }
   },
   "plugin": ["./plugins/skill-preservation.ts"],
@@ -206,6 +206,11 @@
     "ClickUp": {
       "type": "local",
       "command": ["npx", "mcp-remote", "https://mcp.clickup.com/mcp"]
+    },
+    "GitHub": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": { "Authorization": "Bearer {env:GITHUB_TOKEN}" }
     }
   },
   "autoupdate": true,

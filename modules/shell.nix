@@ -1,6 +1,7 @@
 { config, pkgs, ... }: {
   home.sessionVariables = {
     XDG_CONFIG_HOME = "$HOME/.config";
+    PROJECTS_DIR = "$HOME/Development";
   };
 
   home.packages = with pkgs; [
@@ -33,6 +34,7 @@
   # Custom scripts sourced by .zsh; theme-switch symlinks Alacritty theme + Starship config by dark/light
   home.file.".zsh/theme-switch.zsh".source = ../config/scripts/theme-switch.zsh;
   home.file.".zsh/mise.zsh".source = ../config/scripts/mise.zsh;
+  home.file.".zsh/z-completion.zsh".source = ../config/scripts/z-completion.zsh;
 
   #####################
   # Starship          #

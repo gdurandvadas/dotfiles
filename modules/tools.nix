@@ -10,6 +10,7 @@
     dioxus-cli
     cursor-cli
     claude-code
+    cloudflared
     _1password-cli
   ];
 

@@ -26,6 +26,10 @@ let
   # Install dotfiles from config/scripts (profile work|personal, workstation rebuild).
   # Script must be tracked (git add) so the flake store copy includes it.
   dotfiles = pkgs.writeShellScriptBin "dotfiles" (builtins.readFile ../config/scripts/dotfiles.sh);
+
+  # Open a project directory in Zed.
+  # Usage: z <dir> [subdir]
+  z = pkgs.writeShellScriptBin "z" (builtins.readFile ../config/scripts/z.sh);
 in {
-  home.packages = [ ai-init dotfiles-switch dotfiles ];
+  home.packages = [ ai-init dotfiles-switch dotfiles z ];
 }

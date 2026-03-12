@@ -10,13 +10,14 @@ metadata:
 
 **Provides:** Persistent memory storage with tag-based discovery, durable context across sessions, and TODO-Store linking patterns.
 
-**CRITICAL:** Store items are NOT auto-loaded. You MUST explicitly call `storeread({ id: "<id>" })` when you see `Load store:` or `[store:<id>]` in prompts or TODO items.
+**CRITICAL:** Store items are NOT auto-loaded. You MUST explicitly call `storeread({ id: "<id>" })` when you see `Load store:` directives in prompts or user input.
 
 ## Tools
 
 ### `storewrite` - Persist Memory
 
 **Parameters:**
+
 - `summary` (required): Brief 1-2 sentence description
 - `tags` (required): Array of tags for categorization
 - `status` (required): `"active"`, `"archived"`, or `"deprecated"`
@@ -31,25 +32,30 @@ metadata:
 **Two modes:**
 
 **LIST Mode** (no ID provided):
+
 - Returns summaries WITHOUT `data` field (lightweight discovery)
 - Optional `tags` filter
 
 **READ Mode** (with ID):
+
 - Returns full item INCLUDING `data` field
 
 ### `storedelete` - Remove Memory
 
 **Parameters:**
+
 - `id` (required): UUID of the item to permanently delete
 
 **Returns:** `{ success: boolean, id: string, deleted: boolean }`
 
 **Use this to:**
+
 - Clean up obsolete or incorrect entries
 - Remove sensitive information that should not persist
 - Delete temporary experimental specs
 
 **Important:**
+
 - Deletion is **permanent** and cannot be undone
 - **Prefer archival over deletion**: Use `status: "deprecated"` or `status: "archived"` for items that may have historical value
 - Only delete when certain the information will never be needed
@@ -59,7 +65,7 @@ metadata:
 
 ```javascript
 // Remove obsolete item
-storedelete({ id: "old-spec-123" })
+storedelete({ id: "old-spec-123" });
 // Returns: { success: true, id: "old-spec-123", deleted: true }
 ```
 
@@ -67,13 +73,13 @@ storedelete({ id: "old-spec-123" })
 
 ## Storage Decision Matrix
 
-| Store Here | Store in `.opencode/sessions/` Context Files |
-|------------|--------------------------------|
-| Permanent decisions | Temporary work-in-progress |
-| Project-wide context | Task-specific notes |
-| Schemas & specs | Current implementation plan |
-| Survives session end | Deleted after task |
-| Shared across sessions | Session-specific |
+| Store Here             | Store in `.opencode/sessions/` Context Files |
+| ---------------------- | -------------------------------------------- |
+| Permanent decisions    | Temporary work-in-progress                   |
+| Project-wide context   | Task-specific notes                          |
+| Schemas & specs        | Current implementation plan                  |
+| Survives session end   | Deleted after task                           |
+| Shared across sessions | Session-specific                             |
 
 ---
 
@@ -91,11 +97,11 @@ storewrite({
     rationale: ["ACID compliance needed", "Team expertise", "JSON support"],
     alternatives_rejected: {
       MongoDB: "No transaction support",
-      MySQL: "Weaker JSON handling"
+      MySQL: "Weaker JSON handling",
     },
-    date: "2026-01-13"
-  }
-})
+    date: "2026-01-13",
+  },
+});
 ```
 
 ### 2. Store Schemas
@@ -108,19 +114,51 @@ storewrite({
   data: {
     tables: {
       users: {
-        columns: ["id UUID PRIMARY KEY", "email VARCHAR UNIQUE", "password_hash VARCHAR"],
-        indexes: ["email"]
+        columns: [
+          "id UUID PRIMARY KEY",
+          "email VARCHAR UNIQUE",
+          "password_hash VARCHAR",
+        ],
+        indexes: ["email"],
       },
       sessions: {
-        columns: ["id UUID", "user_id UUID", "token VARCHAR", "expires_at TIMESTAMP"],
-        foreign_keys: ["user_id -> users.id"]
-      }
-    }
-  }
-})
+        columns: [
+          "id UUID",
+          "user_id UUID",
+          "token VARCHAR",
+          "expires_at TIMESTAMP",
+        ],
+        foreign_keys: ["user_id -> users.id"],
+      },
+    },
+  },
+});
 ```
 
-### 3. Store API Specs
+### 3. Store Task Checkpoints
+
+```javascript
+storewrite({
+  summary: "Checkpoint: Add OAuth2 login flow",
+  tags: ["checkpoint", "todo-context"],
+  status: "active",
+  data: {
+    task: "Implement GitHub OAuth2 login",
+    progress: {
+      config: "done",
+      callback: "in_progress",
+      tests: "pending",
+    },
+    completed_steps: ["Added OAuth2 provider config and env vars"],
+    current_step: "Implement callback handler and session creation",
+    remaining_steps: ["Write integration tests", "E2E verification"],
+  },
+});
+// Update the same checkpoint (reuse ID) after each step completes
+// Archive when the full task is done: status: "archived"
+```
+
+### 4. Store API Specs
 
 ```javascript
 storewrite({
@@ -132,10 +170,10 @@ storewrite({
     authentication: "Bearer token",
     endpoints: [
       { path: "/users", method: "GET", auth: true, returns: "User[]" },
-      { path: "/auth/login", method: "POST", auth: false, returns: "Token" }
-    ]
-  }
-})
+      { path: "/auth/login", method: "POST", auth: false, returns: "Token" },
+    ],
+  },
+});
 ```
 
 ---
@@ -144,13 +182,13 @@ storewrite({
 
 Store entries serve two distinct audiences. Understanding the difference prevents context bloat and incorrect field usage.
 
-### Plan entries (orchestrator / control plane)
+### Plan entries (orchestrate / control plane)
 
-Used by the orchestrator or universal agent to drive TODO creation and delegation.
+Used by the orchestrate agent to drive TODO creation and delegation.
 
 - **Tags:** `["plan", "todo-context", ...]`
 - **Include:** `data.prompt_drafts` (see section below)
-- **Loaded by:** orchestrator/universal to kick off or resume execution
+- **Loaded by:** orchestrate to kick off or resume execution
 
 ### Spec/context entries (implementer / data plane)
 
@@ -158,7 +196,7 @@ Used by subagents during implementation to understand requirements, constraints,
 
 - **Tags:** `["spec"]`, `["decision"]`, `["schema"]`, etc. — no `"plan"` tag
 - **Do NOT include** `data.prompt_drafts` — that field is for plan entries only
-- **Loaded by:** fast/balanced/deep agents via `Load store:` in their delegation prompt
+- **Loaded by:** agent.fast/agent.balanced/agent.deep agents via `Load store:` in their delegation prompt
 
 ### Cross-referencing plans and specs
 
@@ -169,15 +207,15 @@ storewrite({
   summary: "Plan: Implement payment gateway",
   tags: ["plan", "todo-context", "payments"],
   status: "active",
-  links: ["payment-spec-abc", "api-schema-xyz"],  // ← Link to spec entries
+  links: ["payment-spec-abc", "api-schema-xyz"], // ← Link to spec entries
   data: {
     // ...plan fields...
     prompt_drafts: {
       // Each task_block loads plan + linked specs:
       // Load store: <plan-id>, payment-spec-abc, api-schema-xyz
-    }
-  }
-})
+    },
+  },
+});
 ```
 
 ---
@@ -191,6 +229,7 @@ storewrite({
 ### When Required
 
 Prompt drafts **MUST** be included in a stored plan when **any** of:
+
 - [ ] Plan will produce **3+ TODO items**
 - [ ] Estimated effort **> 60 minutes**
 - [ ] Plan involves **multiple phases or agents**
@@ -202,11 +241,11 @@ Otherwise optional but recommended.
 ```json
 {
   "prompt_drafts": {
-    "universal_handoff_prompt": "@orchestrator Load store: <plan-store-id>\n\nTask: Execute the stored plan.",
+    "universal_handoff_prompt": "@orchestrate Load store: <plan-store-id>\n\nTask: Execute the stored plan.",
     "todo_tasks": [
       {
         "todo_title": "Short display title for this step",
-        "todo_content": "Short display title for this step [store:<plan-store-id>]",
+        "todo_content": "Short display title for this step",
         "task_block": "Task({ ... })"
       }
     ]
@@ -214,12 +253,12 @@ Otherwise optional but recommended.
 }
 ```
 
-| Field | Required | Notes |
-|-------|----------|-------|
-| `prompt_drafts.universal_handoff_prompt` | Yes | Plain copy-paste message (e.g. `@orchestrator Load store: <id>\n\nTask: ...`) for the user to resume execution — **not** a `Task({ ... })` wrapper, since `orchestrator`/`universal` are primary agents, not subagent targets |
-| `prompt_drafts.todo_tasks[].todo_title` | Yes | Short label for the TODO item |
-| `prompt_drafts.todo_tasks[].todo_content` | Yes | TODO text including `[store:<plan-id>]` reference |
-| `prompt_drafts.todo_tasks[].task_block` | Yes | Full `Task({ ... })` for delegating this specific step to a subagent (fast/balanced/deep/etc.) |
+| Field                                     | Required | Notes                                                                                                                                                                                                            |
+| ----------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prompt_drafts.universal_handoff_prompt`  | Yes      | Plain copy-paste message (e.g. `@orchestrate Load store: <id>\n\nTask: ...`) for the user to resume execution — **not** a `Task({ ... })` wrapper, since `orchestrate` is a primary agent, not a subagent target |
+| `prompt_drafts.todo_tasks[].todo_title`   | Yes      | Short label for the TODO item                                                                                                                                                                                    |
+| `prompt_drafts.todo_tasks[].todo_content` | Yes      | Clean, human-readable TODO text — no embedded store IDs. Store refs belong in `task_block` via `Load store:` directives                                                                                          |
+| `prompt_drafts.todo_tasks[].task_block`   | Yes      | Full `Task({ ... })` with `Load store:` directives for delegating this step to a subagent                                                                                                                        |
 
 **Keep prompt drafts concise:** reference file paths and store IDs rather than pasting code. Each `task_block` should be executable after a `storeread`.
 
@@ -237,14 +276,15 @@ const result = storewrite({
     approach: [
       "Add OAuth2 provider config and env vars",
       "Implement callback handler and session creation",
-      "Write integration tests"
+      "Write integration tests",
     ],
     affected_files: ["config/auth.ts", "routes/auth.ts"],
     risks: ["OAuth state param CSRF", "Session fixation on login"],
-    verification: "E2E: user can complete GitHub login; unit tests for callback handler",
+    verification:
+      "E2E: user can complete GitHub login; unit tests for callback handler",
     estimated_effort: "2-3 hours",
     prompt_drafts: {
-      universal_handoff_prompt: `@orchestrator Load store: <plan-store-id>
+      universal_handoff_prompt: `@orchestrate Load store: <plan-store-id>
 
 Task: Execute the stored OAuth2 GitHub login plan.
 Load the plan, convert each step to a TODO using prompt_drafts.todo_tasks
@@ -252,9 +292,9 @@ entries (todo_content field), then delegate each using the corresponding task_bl
       todo_tasks: [
         {
           todo_title: "Add OAuth2 config and env vars",
-          todo_content: "Add OAuth2 config and env vars [store:<plan-store-id>]",
+          todo_content: "Add OAuth2 config and env vars",
           task_block: `Task({
-  subagent_type: "fast",
+  subagent_type: "agent.fast",
   description: "Add OAuth2 config and env vars",
   prompt: \`
 Load skills: role-developer, standards-security
@@ -270,13 +310,13 @@ Success Criteria:
 - config/auth.ts exists and exports provider config
 - Env schema validates required vars
   \`
-})`
+})`,
         },
         {
           todo_title: "Implement callback handler",
-          todo_content: "Implement callback handler [store:<plan-store-id>]",
+          todo_content: "Implement callback handler",
           task_block: `Task({
-  subagent_type: "balanced",
+  subagent_type: "agent.balanced",
   description: "Implement OAuth2 callback and session creation",
   prompt: \`
 Load skills: role-developer, standards-security
@@ -292,13 +332,13 @@ Success Criteria:
 - Callback handles valid and invalid state params
 - Session created and user redirected on success
   \`
-})`
+})`,
         },
         {
           todo_title: "Write integration tests",
-          todo_content: "Write integration tests [store:<plan-store-id>]",
+          todo_content: "Write integration tests",
           task_block: `Task({
-  subagent_type: "balanced",
+  subagent_type: "agent.balanced",
   description: "Write OAuth2 integration tests",
   prompt: \`
 Load skills: role-qa-engineer, standards-testing
@@ -313,12 +353,12 @@ Requirements:
 Success Criteria:
 - All tests pass; callback error paths covered
   \`
-})`
-        }
-      ]
-    }
-  }
-})
+})`,
+        },
+      ],
+    },
+  },
+});
 // Returns: { success: true, id: "<plan-store-id>" }
 // After storing: replace <plan-store-id> in all prompt_drafts with the returned id
 ```
@@ -329,7 +369,7 @@ Success Criteria:
 
 **Problem:** TODO items have limited space. Complex tasks need detailed specs.
 
-**Solution:** Store details in memory, reference from TODO using `[store:id]` syntax.
+**Solution:** Store details in memory. TODO content stays clean and human-readable. Store references live in the delegation `task_block` prompts via `Load store:` directives — no embedded IDs in TODO text.
 
 ### Workflow
 
@@ -341,35 +381,49 @@ const result = storewrite({
   tags: ["feature", "payments", "spec", "todo-context"],
   status: "active",
   data: {
-    requirements: ["PCI-DSS compliant", "Support credit cards", "Handle webhooks"],
+    requirements: [
+      "PCI-DSS compliant",
+      "Support credit cards",
+      "Handle webhooks",
+    ],
     endpoints: ["/api/payments/create", "/api/payments/webhook"],
     security: ["Never store card numbers", "Use Stripe tokens"],
     acceptance: ["User can checkout", "Failed payments show error"],
-    estimated_effort: "3-5 days"
-  }
-})
+    estimated_effort: "3-5 days",
+  },
+});
 // Returns: { success: true, id: "store-abc-123" }
 ```
 
-**Step 2: Create TODO with reference**
+**Step 2: Create TODO with clean content**
 
 ```javascript
 todowrite({
-  todos: [{
-    id: "todo-1",
-    content: "Implement Stripe payment gateway [store:store-abc-123]",
-    status: "pending",
-    priority: "high"
-  }]
-})
+  todos: [
+    {
+      id: "todo-1",
+      content: "Implement Stripe payment gateway",
+      status: "pending",
+      priority: "high",
+    },
+  ],
+});
 ```
 
-**Step 3: Retrieve when working on TODO**
+**Step 3: Delegate with store context**
+
+The `task_block` from `prompt_drafts` carries `Load store:` directives. The delegated subagent loads store items directly — no parsing needed.
 
 ```javascript
-// Parse store ID from TODO: [store:store-abc-123]
-const context = storeread({ id: "store-abc-123" })
-// Now have full requirements, specs, and acceptance criteria
+Task({
+  subagent_type: "agent.balanced",
+  prompt: `
+Load store: store-abc-123
+
+Task: Implement Stripe payment gateway.
+// ... requirements and success criteria
+  `,
+});
 ```
 
 **Step 4: Update store as work progresses**
@@ -379,22 +433,16 @@ storewrite({
   id: "store-abc-123",
   data: {
     ...existingData,
-    implementation_notes: [{
-      date: "2026-01-13",
-      note: "Used Stripe Checkout for PCI compliance"
-    }],
-    actual_effort: "4 days"
-  }
-})
+    implementation_notes: [
+      {
+        date: "2026-01-13",
+        note: "Used Stripe Checkout for PCI compliance",
+      },
+    ],
+    actual_effort: "4 days",
+  },
+});
 ```
-
-### Benefits
-
-- ✅ TODO stays concise
-- ✅ Full context available on-demand
-- ✅ Context survives after TODO completion
-- ✅ Same spec can inform multiple TODOs
-- ✅ Audit trail of decisions
 
 ---
 
@@ -404,19 +452,19 @@ storewrite({
 
 ```javascript
 // Category (what type)
-["architecture", "database", "api", "security"]
-
-// Domain (which feature)
-["auth", "payments", "user-mgmt"]
-
-// Status metadata
-["draft", "approved", "deprecated"]
-
-// Priority
-["critical", "important"]
-
-// Special: TODO context marker
-["todo-context"]  // ← Indicates referenced by TODOs
+["architecture", "database", "api", "security"][
+  // Domain (which feature)
+  ("auth", "payments", "user-mgmt")
+][
+  // Status metadata
+  ("draft", "approved", "deprecated")
+][
+  // Priority
+  ("critical", "important")
+][
+  // Special: TODO context marker
+  "todo-context"
+]; // ← Indicates referenced by TODOs
 ```
 
 ### Link Related Items
@@ -426,9 +474,11 @@ storewrite({
   summary: "Payment API migration plan",
   tags: ["api", "migration", "payments"],
   status: "active",
-  links: ["payment-schema-123", "api-spec-456"],  // ← Cross-reference
-  data: { /* ... */ }
-})
+  links: ["payment-schema-123", "api-spec-456"], // ← Cross-reference
+  data: {
+    /* ... */
+  },
+});
 ```
 
 ### Store Rationale
@@ -455,20 +505,22 @@ storewrite({
   data: {
     ...existing,
     deprecated_reason: "Replaced by v2.0",
-    replaced_by: "new-spec-id"
-  }
-})
+    replaced_by: "new-spec-id",
+  },
+});
 ```
 
 ### Archival vs Deletion
 
 **Prefer archival for:**
+
 - Architectural decisions (historical context)
 - Deprecated specs (may need reference)
 - Completed TODO-context items (audit trail)
 - Migration plans (lessons learned)
 
 **Use deletion for:**
+
 - Truly incorrect information
 - Sensitive data that must be removed
 - Duplicate entries
@@ -476,18 +528,18 @@ storewrite({
 
 ```javascript
 // ✅ GOOD: Archive deprecated items
-storewrite({ 
-  id: "payment-v1-spec", 
+storewrite({
+  id: "payment-v1-spec",
   status: "deprecated",
-  data: { 
-    ...existing, 
+  data: {
+    ...existing,
     deprecated_reason: "Migrated to Stripe v2 API",
-    replaced_by: "payment-v2-spec-789" 
-  }
-})
+    replaced_by: "payment-v2-spec-789",
+  },
+});
 
 // ⚠️ USE SPARINGLY: Permanent deletion
-storedelete({ id: "accidental-duplicate" })
+storedelete({ id: "accidental-duplicate" });
 ```
 
 ---
@@ -495,6 +547,7 @@ storedelete({ id: "accidental-duplicate" })
 ## Quick Reference
 
 **When to store:**
+
 - [ ] Is this permanent (not temporary)?
 - [ ] Will other agents/sessions need this?
 - [ ] Is this a decision, schema, or requirement?
@@ -502,14 +555,17 @@ storedelete({ id: "accidental-duplicate" })
 - [ ] Will TODO items reference this?
 
 **Tag consistently:**
+
 - Use `todo-context` tag for TODO-referenced items
 - Review existing tags first: `storeread()`
 
 **Link comprehensively:**
+
 - Related store items via `links` array
-- TODO items via `[store:id]` syntax
+- TODO items via `Load store:` directives in delegation `task_block` prompts
 
 **Update regularly:**
+
 - Add implementation notes
 - Track actual vs estimated effort
 - Mark deprecated when replaced
@@ -522,6 +578,6 @@ storedelete({ id: "accidental-duplicate" })
 
 - Survives sessions, restarts, compaction
 - Tag-based discovery
-- TODO integration via `[store:id]`
+- TODO integration via `Load store:` in delegation prompts
 - Shared across all agents
 - Includes rationale, not just facts

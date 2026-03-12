@@ -55,12 +55,14 @@ It holds machine-specific identity and is the only place personal information li
 ```
 
 **Rules for agents:**
+
 - Never hardcode names, emails, usernames, or home directory paths in committed `.nix` files
 - Always reference identity via `config.my.user.<field>` (defined in `modules/user.nix`)
 - `home.homeDirectory` must be derived as `"/Users/${config.my.user.username}"`
 - If a new module needs identity, import it from `config.my.user.*` — do not add new options without updating `local.nix.example` too
 
 **Bootstrap on a new machine:**
+
 ```bash
 cp hosts/local.nix.example hosts/local.nix
 # edit hosts/local.nix with real values
@@ -70,10 +72,10 @@ cp hosts/local.nix.example hosts/local.nix
 
 ## Profiles
 
-| Profile | Flake key | Host file | Extra modules |
-|---------|-----------|-----------|---------------|
-| Personal | `personal` | `hosts/personal.nix` | — |
-| Work | `work` | `hosts/work.nix` | `modules/work.nix` |
+| Profile  | Flake key  | Host file            | Extra modules      |
+| -------- | ---------- | -------------------- | ------------------ |
+| Personal | `personal` | `hosts/personal.nix` | —                  |
+| Work     | `work`     | `hosts/work.nix`     | `modules/work.nix` |
 
 The work profile overrides git `userEmail` with `my.user.workEmail` and points OpenCode to `config/opencode/work-config.json`.
 
@@ -99,11 +101,11 @@ home-manager dry-activate --flake .#work
 
 ```bash
 # Personal profile (default)
-dotfiles-switch
+dotfiles profile personal
 home-manager switch --flake .#personal
 
 # Work profile
-dotfiles-switch work
+dotfiles profile work
 home-manager switch --flake .#work
 ```
 
@@ -149,28 +151,33 @@ This is a declarative **Nix/ NixOS** configuration repository using Home Manager
 ### Nix Language Conventions
 
 **Formatting:**
+
 - 2-space indentation
 - Align attributes within attribute sets when it improves readability
 - Use trailing commas in attribute sets and lists (Nix style)
 - Maximum line length: 100 characters (soft limit)
 
 **Imports:**
+
 - Use `./relative/path` for local module imports
 - Put imports at the top of files
 - Group imports logically (stdlib first, then local modules)
 
 **Types:**
+
 - Always declare option types: `type = types.str`, `type = types.listOf types.str`, etc.
 - Use `types.str`, `types.int`, `types.bool`, `types.path`, `types.listOf`, `types.attrsOf`
 - Provide sensible defaults with `default = ...;`
 - Add `description = "...";` for every option
 
 **Naming:**
+
 - Use `snake_case` for variable and option names (e.g., `home.packages`, `enableZshIntegration`)
 - Use `PascalCase` for Nix library functions (e.g., `lib.mkOption`, `lib.mkIf`)
 - Prefix boolean options with `enable` or `disable` (e.g., `enable`, `enableCompletion`)
 
 **Error Handling:**
+
 - Use `lib.mkIf` for conditional config (evaluates to Nix `null` if false)
 - Use `lib.mkWhen` for platform-specific config
 - Use `lib.mkForce` to override values set by imported modules
@@ -232,6 +239,7 @@ let inherit (lib) mkOption types mkIf; in
 ## Key Patterns
 
 **Out-of-store symlinks** (allows tools to mutate their own config):
+
 ```nix
 xdg.configFile."zed/settings.json".source =
   config.lib.file.mkOutOfStoreSymlink
@@ -239,11 +247,13 @@ xdg.configFile."zed/settings.json".source =
 ```
 
 **Work profile override** (force a value set by a base module):
+
 ```nix
 programs.git.userEmail = lib.mkForce config.my.user.workEmail;
 ```
 
 **Profile-specific config file** (different symlink target per profile):
+
 ```nix
 xdg.configFile."opencode/config.json".source = lib.mkForce
   (config.lib.file.mkOutOfStoreSymlink
