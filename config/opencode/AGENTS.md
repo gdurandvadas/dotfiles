@@ -19,5 +19,5 @@
 # Tools
 
 - If you are unsure how to do something, use `gh_grep` to search code examples from GitHub
-- If you are an orchestrator/universal and trying to use `playwright` tools, delegate this to an agent/task
+- If you are an orchestrate agent and trying to use `playwright` tools, delegate this to a subagent task
 - If LSP is available, prefer LSP operations `findReferences`, `gotoDefinition`, `goToImplementation`, `incomingCalls`, `outgoingCalls` over raw grep/ripgrep

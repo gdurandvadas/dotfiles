@@ -13,12 +13,13 @@ metadata:
 ## Quick Reference
 
 **Subagent Selection:**
-- **Explorer**: Read-only discovery, finding files/patterns
-- **Thinker**: Deep analysis, planning, research (no writes)
-- **Fast**: Simple edits, docs, tests (bounded, low-risk)
-- **Balanced**: Standard implementation, refactors, non-trivial bugfixes
-- **Deep**: Complex, multi-file work; uncertain scope or cross-cutting changes
-- **Deep-L**: Deep work requiring large context (272k)
+
+- **agent.explore**: Read-only discovery, finding files/patterns
+- **agent.think**: Deep analysis, planning, research (no writes)
+- **agent.fast**: Simple edits, docs, tests (bounded, low-risk)
+- **agent.balanced**: Standard implementation, refactors, non-trivial bugfixes
+- **agent.deep**: Complex, multi-file work; uncertain scope or cross-cutting changes
+- **agent.deep-l**: Deep work requiring large context (272k)
 
 **Delegation Format:** Always include skills, requirements, and success criteria
 
@@ -28,20 +29,22 @@ metadata:
 
 ## Subagent Selection Criteria
 
-### Use Explorer When:
+### Use agent.explore When:
+
 - User asks "where is...", "find...", "show me..."
 - Need to locate files, functions, or patterns
 - Need to map codebase structure
 - Any read-only information gathering
 - Quick status checks
 
-**Explorer output:** Always ask for summary + file paths + line ranges. Do not request full file contents — if you need specific content after discovery, read the identified ranges directly or delegate to an implementation agent.
-**Explorer constraints:** Explorer is a read-only agent with bash **denied**. Do NOT include bash commands, shell scripts, or any execution instructions in explorer delegation prompts. Use only grep/glob/list/read tools. If you need shell commands run, delegate to an implementation agent instead.
+**agent.explore output:** Always ask for summary + file paths + line ranges. Do not request full file contents — if you need specific content after discovery, read the identified ranges directly or delegate to an implementation agent.
+**agent.explore constraints:** agent.explore is a read-only agent with bash **denied**. Do NOT include bash commands, shell scripts, or any execution instructions in agent.explore delegation prompts. Use only grep/glob/list/read tools. If you need shell commands run, delegate to an implementation agent instead.
 
-**Explorer delegation template:**
+**agent.explore delegation template:**
+
 ```
 Task({
-  subagent_type: "explorer",
+  subagent_type: "agent.explore",
   description: "<5-10 word discovery summary>",
   prompt: `
 Task: <what to find/discover>
@@ -56,7 +59,8 @@ Return:
 })
 ```
 
-### Use Thinker When:
+### Use agent.think When:
+
 - User asks "how should I...", "what's the best way..."
 - Need to plan multi-step work
 - Need to break down complex feature
@@ -65,38 +69,43 @@ Return:
 - Tasks estimated > 60 minutes
 - Approach isn't immediately clear
 
-### Use Fast When:
+### Use agent.fast When:
+
 - Simple edit, documentation changes, or adding comments
 - Writing tests for existing code
 - Routine, well-defined tasks with minimal coordination needed
 
-### Use Balanced When:
+### Use agent.balanced When:
+
 - Standard multi-file features and refactors
 - Non-trivial bugfixes
 - Implementation work with clear scope
 
-### Use Deep When:
+### Use agent.deep When:
+
 - Complex, multi-file work where scope is uncertain or cross-cutting
 - Debugging complex issues
 - Security-critical or performance-critical code
 - Refactoring with architectural changes
 
-### Use Deep-L When:
+### Use agent.deep-l When:
+
 - Deep implementation requiring large context (272k) — e.g. broad-scope analysis spanning many files
 
 ### Pattern Selection Triggers
 
 **Before routing, check these triggers:**
 
-| Condition | Action |
-|-----------|--------|
-| 2+ complexity/risk/size indicators present | **Load `pattern-orchestration-complex`** and follow its 4-phase workflow |
-| Task requires multi-step breakdown or >60 min plan | **Delegate to Thinker with `pattern-task-breakdown`** |
-| Storing a plan that will produce 3+ TODOs or >60 min effort | **Store `prompt_drafts`** in plan data — see `tool-store` skill |
+| Condition                                                   | Action                                                                   |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 2+ complexity/risk/size indicators present                  | **Load `pattern-orchestration-complex`** and follow its 4-phase workflow |
+| Task requires multi-step breakdown or >60 min plan          | **Delegate to agent.think with `pattern-task-breakdown`**                |
+| Storing a plan that will produce 3+ TODOs or >60 min effort | **Store `prompt_drafts`** in plan data — see `tool-store` skill          |
 
 **Complexity indicators** (size, complexity, or risk):
+
 - 4+ files affected
-- >60 minutes estimated
+- > 60 minutes estimated
 - Multiple sequential phases needed
 - Cross-cutting or security-critical changes
 - Approach isn't immediately clear
@@ -104,13 +113,13 @@ Return:
 
 ### Complexity Assessment
 
-| Complexity | Indicators | Agent |
-|------------|------------|-------|
-| **Trivial** | Conversational only | Handle directly |
-| **Simple** | Bounded, low-risk, clear scope | Fast |
-| **Medium** | Multi-file, clear approach | Balanced |
-| **Complex** | Uncertain scope, cross-cutting, >60 min | Load `pattern-orchestration-complex`; Thinker with `pattern-task-breakdown` first |
-| **Very Large** | Broad scope spanning many files | Deep-L |
+| Complexity     | Indicators                              | Agent                                                                                 |
+| -------------- | --------------------------------------- | ------------------------------------------------------------------------------------- |
+| **Trivial**    | Conversational only                     | Handle directly                                                                       |
+| **Simple**     | Bounded, low-risk, clear scope          | agent.fast                                                                            |
+| **Medium**     | Multi-file, clear approach              | agent.balanced                                                                        |
+| **Complex**    | Uncertain scope, cross-cutting, >60 min | Load `pattern-orchestration-complex`; agent.think with `pattern-task-breakdown` first |
+| **Very Large** | Broad scope spanning many files         | agent.deep-l                                                                          |
 
 ---
 
@@ -120,7 +129,7 @@ Return:
 
 ```
 Task({
-  subagent_type: "<explorer|fast|balanced|deep|deep-l|thinker>",
+  subagent_type: "<agent.explore|agent.fast|agent.balanced|agent.deep|agent.deep-l|agent.think>",
   description: "<5-10 word summary>",
   prompt: `
 Load skills: <skill1>, <skill2>
@@ -146,6 +155,7 @@ Success Criteria:
 ### Skill Selection for Delegation
 
 Match task needs to skills:
+
 - Code implementation → `role-developer`, `standards-code`
 - Security-critical → `standards-security`, `role-security-auditor`
 - Writing tests → `role-qa-engineer`, `standards-testing`
@@ -165,7 +175,7 @@ For tasks requiring context continuity:
 
 ```
 Task({
-  subagent_type: "deep",
+  subagent_type: "agent.deep",
   session_id: extractedSessionId,  // Reuse for continuity
   prompt: `Continue implementation...`
 })
@@ -176,18 +186,25 @@ Task({
 Subagents may experience context compaction during long tasks. Orchestrators must detect and handle this to ensure task completion.
 
 ### Detection Criteria
+
 Check for any of the following in subagent output:
+
 - Presence of a `CompactionPart` (type: "compaction") in the task result.
 - Explicit statements about missing context or "forgetting" the plan.
 - Incomplete work despite reaching the response limit.
 - Failure to follow previously established requirements.
 
 ### Recovery Delegation Template
-When re-delegating after compaction, use this format to restore context:
+
+When re-delegating after compaction:
+
+1. **Load checkpoint first**: `storeread()` → filter for `checkpoint` tag → load the most recent one
+2. Use checkpoint `data.progress` / `data.completed_steps` / `data.remaining_steps` to build the recovery prompt
+3. Re-delegate with restored context:
 
 ```javascript
 Task({
-  subagent_type: "deep",
+  subagent_type: "agent.deep",
   session_id: "original-session-id", // CRITICAL: Reuse session_id
   prompt: `
 [CONTEXT RECOVERY]
@@ -196,24 +213,81 @@ Your context was compacted. We are continuing with: <task description>
 Load skills: <skills>
 Load store: <store-ids> // CRITICAL: Store items must be reloaded
 
-**Progress So Far:**
-- <summarize what was completed before compaction>
+**Progress So Far (from checkpoint):**
+- <completed_steps from checkpoint>
 
 **Remaining Work:**
-- <specifically list what still needs to be done>
+- <remaining_steps from checkpoint>
 
 Requirements & Success Criteria:
 - <restate critical requirements>
-`
-})
+`,
+});
 ```
 
 ### Best Practices for Recovery
+
 - **Reuse session_id**: Always pass the original `session_id` to maintain the surviving context.
 - **Explicit Store Loading**: Subagents lose loaded store items after compaction. Force a reload in the recovery prompt.
 - **Summarize Progress**: Do not just repeat the original prompt; tell the agent what is already done to avoid duplicated effort.
 - **Limit Retries**: Max 2 automatic recovery attempts per task. If it fails a third time, escalate to the user or split the task.
 - **Task Splitting**: If a task is large enough to cause frequent compaction, break it into smaller sub-tasks via `Task` parallel calls or sequential steps.
+
+---
+
+## Task Checkpoints
+
+### Purpose
+
+Checkpoints persist task progress in the store so that after compaction or session breaks, the orchestrator can resume without re-solving completed work.
+
+### When to Checkpoint
+
+Write a checkpoint after:
+
+- Completing each phase in a multi-phase task
+- Completing each TODO item in a multi-step plan
+- Before a delegation that may trigger compaction (large scope)
+
+### Checkpoint Schema
+
+```javascript
+storewrite({
+  summary: "Checkpoint: <task-name>",
+  tags: ["checkpoint", "todo-context"],
+  status: "active",
+  data: {
+    task: "<task description>",
+    progress: {
+      phase1: "done",
+      phase2: "in_progress",
+      phase3: "pending",
+    },
+    completed_steps: [
+      "Step 1: Added OAuth config",
+      "Step 2: Implemented callback handler",
+    ],
+    current_step: "Step 3: Write integration tests",
+    remaining_steps: ["Step 4: E2E verification"],
+  },
+});
+```
+
+### Recovery Using Checkpoints
+
+After compaction or session resumption:
+
+1. Run `storeread()` (list mode) and look for `checkpoint` tagged items
+2. Load the most recent checkpoint: `storeread({ id: "<checkpoint-id>" })`
+3. Use `data.progress` to skip completed phases
+4. Resume from `data.current_step` with `data.remaining_steps`
+5. Update the checkpoint after each subsequent completion
+
+### Checkpoint Lifecycle
+
+- **Create** when starting multi-step execution
+- **Update** after each step completes (reuse same ID)
+- **Archive** when the full task is done (`status: "archived"`)
 
 ---
 
@@ -259,6 +333,7 @@ Load `pattern-retry` skill for detailed retry strategies.
 ### When to Use
 
 Use TODO-Store linking for:
+
 - Complex tasks with detailed specifications
 - Multi-step work requiring persistent context
 - Architectural decisions that inform implementation
@@ -267,6 +342,7 @@ Use TODO-Store linking for:
 ### Workflow
 
 **Step 1: Store detailed context**
+
 ```javascript
 storewrite({
   summary: "Feature X specification",
@@ -278,12 +354,12 @@ storewrite({
     technical_notes: [...],
     // If plan is multi-step (3+ TODOs, >60 min, or multi-phase), add:
     prompt_drafts: {
-      universal_handoff_prompt: `@orchestrator Load store: <plan-id>\n\nTask: Execute the stored plan.`,  // plain copy-paste message for user; NOT a Task() call
+      universal_handoff_prompt: `@orchestrate Load store: <plan-id>\n\nTask: Execute the stored plan.`,
       todo_tasks: [
         {
           todo_title: "Step title",
-          todo_content: "Step title [store:<plan-id>]",
-          task_block: `Task({ ... })`  // full delegation Task block for this step — targets fast/balanced/deep/etc.
+          todo_content: "Step title",
+          task_block: `Task({ ... })`  // task_block carries Load store: directives directly
         }
       ]
     }
@@ -295,48 +371,51 @@ storewrite({
 
 See `tool-store` skill → "Plan Prompt Drafts" section for the canonical schema and a full working example.
 
-**Step 2: Create TODO with reference**
+**Step 2: Create TODO with clean content**
+
+TODO content stays human-readable — no embedded store IDs. Store references live in the delegation `task_block` prompts via `Load store:` directives.
+
 ```javascript
 todowrite({
-  todos: [{
-    id: "1",
-    content: "Implement feature X [store:store-abc-123]",
-    status: "pending",
-    priority: "high"
-  }]
-})
+  todos: [
+    {
+      id: "1",
+      content: "Implement feature X",
+      status: "pending",
+      priority: "high",
+    },
+  ],
+});
 ```
 
-**Step 3: Load when working**
-```javascript
-// Parse [store:id] from TODO content
-storeread({ id: "store-abc-123" })
-```
+**Step 3: Delegate with store context**
+
+The `task_block` from `prompt_drafts` already contains `Load store:` directives. Use it directly when delegating — no need to parse store IDs from TODO content.
 
 ### Store Loading Enforcement
 
 **CRITICAL**: Store items are NOT auto-loaded.
 
-When you see `Load store:` or `[store:<id>]`:
+When you see `Load store:` in delegation prompts or user input:
+
 1. IMMEDIATELY call `storeread({ id: "<id>" })`
 2. DO NOT proceed without loading
 3. Verify subagents also loaded store items
 
-### Proactive Store Discovery
+### Proactive Store Discovery (Mandatory)
 
-**When starting a session or after context compaction:**
+**This is a coordination invariant — not optional.**
 
-Store items are NOT automatically reloaded after compaction. To maintain context continuity:
+At session start and after every compaction:
 
-1. **List available items**: Call `storeread()` (LIST mode - no ID parameter)
-2. **Review for relevance**: Scan summaries and tags for items related to current work
-3. **Load selectively**: Call `storeread({ id: "..." })` only for relevant items
-
-This prevents context bloat while ensuring critical context isn't lost after compaction.
+1. **List available items**: Call `storeread()` (LIST mode — no ID parameter)
+2. **Prioritize**: Load `checkpoint` and `todo-context` tagged items first
+3. **Load selectively**: Call `storeread({ id: "..." })` only for items relevant to current work
 
 **When to discover:**
-- At the start of a new session
-- After receiving notification of context compaction
+
+- At the start of every new session (mandatory)
+- After context compaction (mandatory)
 - When user references past work or decisions
 - Before planning complex, multi-session tasks
 
@@ -442,17 +521,20 @@ How would you like to proceed?
 ## Integration with Other Skills
 
 ### With pattern-orchestration-complex
+
 - **Load when:** 2+ complexity/risk/size indicators are present (4+ files, >60 min, cross-cutting, security-critical)
 - Provides 4-phase workflow (planning, execution, verification, cleanup)
 - Overrides simple direct-delegation approach — follow its workflow instead
 
 ### With pattern-task-breakdown
-- **Load when:** delegating to Thinker for any multi-step execution plan
-- Include in Thinker delegation prompt: `Load skills: pattern-task-breakdown`
-- Thinker's plan output feeds directly into TODOs and the `prompt_drafts` store entry
+
+- **Load when:** delegating to agent.think for any multi-step execution plan
+- Include in agent.think delegation prompt: `Load skills: pattern-task-breakdown`
+- agent.think's plan output feeds directly into TODOs and the `prompt_drafts` store entry
 - For simple 1-2 step tasks, skip and delegate directly
 
 ### With tool-store
+
 - Detailed guidance on store operations
 - ADR patterns for architectural decisions
 - **Plan Prompt Drafts** section: canonical schema for embedding copy-pastable `Task({ ... })` blocks in stored plans
@@ -469,7 +551,8 @@ Before EVERY action, verify:
 - [ ] Did I review output and run quality gate?
 - [ ] Did I load all referenced store items?
 - [ ] For multi-step tasks: Did I update TODO?
-- [ ] For Explorer delegations: Does the prompt ask for summary + paths + line ranges only — **not full file contents**?
+- [ ] For multi-step tasks: Did I write/update a checkpoint?
+- [ ] For agent.explore delegations: Does the prompt ask for summary + paths + line ranges only — **not full file contents**?
 
 **If ANY unchecked → Fix before responding**
 
@@ -480,6 +563,7 @@ Before EVERY action, verify:
 **Orchestrators coordinate, they don't execute directly.**
 
 Core responsibilities:
+
 - Analyze and delegate appropriately
 - Load relevant skills for subagents
 - Review ALL outputs
@@ -488,6 +572,7 @@ Core responsibilities:
 - Communicate clearly with user
 
 What NOT to do:
+
 - Write code directly (delegate instead)
 - Skip quality reviews
 - Accept substandard output

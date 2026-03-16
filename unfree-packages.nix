@@ -4,6 +4,6 @@
 # When adding an unfree package in modules/tools.nix (or elsewhere), add its
 # pkg name to base (or darwinExtra if only needed on darwin).
 {
-  base = [ "1password-cli" "brave" "claude-code" "cursor-cli" ];
+  base = [ "1password-cli" "brave" "claude-code" "cursor-cli" "cloudflared" "surrealdb"];
   darwinExtra = [ "1password-gui" ];
 }

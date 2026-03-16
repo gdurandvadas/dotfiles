@@ -27,18 +27,21 @@ metadata:
 ### Indicators You Need This
 
 **Size indicators:**
+
 - [ ] 4+ files need modification or creation
 - [ ] Estimated time > 60 minutes
 - [ ] Multiple components affected
 - [ ] Cross-cutting changes
 
 **Complexity indicators:**
+
 - [ ] Approach isn't immediately clear
 - [ ] Multiple sequential steps required
 - [ ] Dependencies between tasks
 - [ ] Requires architectural decisions
 
 **Risk indicators:**
+
 - [ ] Security-critical changes
 - [ ] Data migration involved
 - [ ] Breaking changes to APIs
@@ -49,6 +52,7 @@ metadata:
 ### When NOT to Use
 
 **Simple tasks:**
+
 - 1-3 files, < 30 minutes
 - Clear, straightforward approach
 - Single delegation sufficient
@@ -65,7 +69,7 @@ metadata:
 
 ```
 Task({
-  subagent_type: "thinker",
+  subagent_type: "agent.think",
   description: "Create execution plan for complex task",
   prompt: `
 Load skills: pattern-task-breakdown, role-architect
@@ -85,6 +89,7 @@ Output as markdown following pattern-task-breakdown skill format.
 ```
 
 **Thinker will return structured plan with:**
+
 - Overview of work
 - Phases broken into tasks
 - Dependencies mapped
@@ -107,6 +112,7 @@ Output as markdown following pattern-task-breakdown skill format.
 ### Phases
 
 **Phase 1: {Phase Name}** ({time estimate})
+
 - Task 1.1: {Description}
   - Files: {files to modify/create}
   - Dependencies: {none or task X}
@@ -115,11 +121,13 @@ Output as markdown following pattern-task-breakdown skill format.
   - Dependencies: {task 1.1}
 
 **Phase 2: {Phase Name}** ({time estimate})
+
 - Task 2.1: {Description}
   - Files: {files}
   - Dependencies: {Phase 1 complete}
 
 **Phase 3: {Phase Name}** ({time estimate})
+
 - Task 3.1: {Description}
   - Files: {files}
   - Dependencies: {Phase 2 complete}
@@ -127,10 +135,12 @@ Output as markdown following pattern-task-breakdown skill format.
 ---
 
 ### Dependencies
+
 - {Critical dependency 1}
 - {Critical dependency 2}
 
 ### Risks
+
 - {Potential risk 1 and mitigation}
 - {Potential risk 2 and mitigation}
 
@@ -144,6 +154,7 @@ Output as markdown following pattern-task-breakdown skill format.
 **DO NOT proceed without explicit user approval**
 
 **User may:**
+
 - Approve as-is → Proceed to execution
 - Request modifications → Revise plan and re-present
 - Change scope → Update plan
@@ -156,40 +167,48 @@ Output as markdown following pattern-task-breakdown skill format.
 **Once approved, create session for tracking:**
 
 1. **Create session:**
+
    ```bash
    Session ID: {timestamp}-{random}
    Location: .opencode/sessions/{session-id}/
    ```
 
 2. **Create context file:**
+
    ```markdown
    # Task Context: {Feature Name}
-   
+
    Session ID: {session-id}
    Created: {timestamp}
    Status: in_progress
-   
+
    ## Current Request
+
    {User's original request}
-   
+
    ## Plan Approved
+
    {Link to or summary of approved plan}
-   
+
    ## Requirements
+
    {All functional and non-functional requirements}
-   
+
    ## Decisions Made
+
    {Architectural and technical decisions from planning}
-   
+
    ## Files to Modify/Create
+
    {Complete list from all phases}
-   
+
    ## Progress
+
    [ ] Phase 1: {name}
-     [ ] Task 1.1: {description}
-     [ ] Task 1.2: {description}
+   [ ] Task 1.1: {description}
+   [ ] Task 1.2: {description}
    [ ] Phase 2: {name}
-     [ ] Task 2.1: {description}
+   [ ] Task 2.1: {description}
    ```
 
 **Session is now ready for execution**
@@ -197,11 +216,13 @@ Output as markdown following pattern-task-breakdown skill format.
 ### Step 5: Persist Plan to Store (Required for Complex Tasks)
 
 **Load tool-store skill:**
+
 ```
 skill(name: "tool-store")
 ```
 
 **When to persist:**
+
 - [ ] Feature will take >4 hours
 - [ ] Architectural decisions made during planning
 - [ ] Multiple phases or agents involved
@@ -210,14 +231,16 @@ skill(name: "tool-store")
 **What to store — include `prompt_drafts` for compaction-safe execution:**
 
 Since this is a complex task (3+ TODOs, >60 min), the stored plan **MUST** include `data.prompt_drafts` with:
-- `universal_handoff_prompt`: a plain copy-paste message (e.g. `@orchestrator Load store: <id>\n\nTask: Execute the plan.`) for the user to resume execution — **not** a `Task({ ... })` wrapper, since `orchestrator`/`universal` are primary agents, not `Task()` targets
-- `todo_tasks[]`: one entry per planned step, each with `todo_content` (for `todowrite`) and `task_block` (the full delegation `Task({ ... })` targeting fast/balanced/deep/etc.)
+
+- `universal_handoff_prompt`: a plain copy-paste message (e.g. `@orchestrate Load store: <id>\n\nTask: Execute the plan.`) for the user to resume execution — **not** a `Task({ ... })` wrapper, since `orchestrate` is a primary agent, not a `Task()` target
+- `todo_tasks[]`: one entry per planned step, each with `todo_content` (for `todowrite`) and `task_block` (the full delegation `Task({ ... })` targeting agent.fast/agent.balanced/agent.deep/etc.)
 
 This ensures that if context is compacted between planning and execution, the agent can load the store item and immediately start delegating using the stored prompts — no context reconstruction needed.
 
 **See `tool-store` skill → "Plan Prompt Drafts" section** for the canonical schema and a complete working example.
 
 **Benefits:**
+
 - Plan and decisions survive session cleanup and compaction
 - Prompt drafts are always available — no reconstruction from memory
 - Can be referenced via `[store:id]` syntax in TODO items
@@ -233,14 +256,16 @@ This ensures that if context is compacted between planning and execution, the ag
 #### 1. Delegate Task
 
 **Select appropriate subagent:**
-- Fast: Simple edits, documentation, tests
-- Balanced: Standard multi-file work
-- Deep: Complex logic, security-critical, cross-cutting changes
+
+- agent.fast: Simple edits, documentation, tests
+- agent.balanced: Standard multi-file work
+- agent.deep: Complex logic, security-critical, cross-cutting changes
 
 **Delegate with context:**
+
 ```
 Task({
-  subagent_type: "{fast|balanced|deep}",
+  subagent_type: "{agent.fast|agent.balanced|agent.deep}",
   description: "{5-10 word summary}",
   prompt: `
 Load skills: {relevant domain skills/standards/patterns}
@@ -301,6 +326,7 @@ Task {X.Y} from {feature name}"
 ```
 
 **Why atomic commits:**
+
 - Easy to rollback if needed
 - Clear history of what changed when
 - Bisect-friendly for debugging
@@ -309,12 +335,14 @@ Task {X.Y} from {feature name}"
 ### Phase Management
 
 **Between phases:**
+
 1. Review phase completion
 2. Update session progress
 3. Verify phase goals met
 4. Brief user on progress (optional but recommended)
 
 **Example update to user:**
+
 ```
 Phase 1 complete: User model and database schema implemented
 - Created user model with bcrypt password hashing
@@ -336,7 +364,7 @@ Starting Phase 2: Authentication endpoints
 
 ```
 Task({
-  subagent_type: "fast",
+  subagent_type: "agent.fast",
   description: "Final verification of completed work",
   prompt: `
 Load skills: role-code-review, role-qa-engineer
@@ -365,14 +393,17 @@ Success Criteria:
 ### Step 2: Review Verification Results
 
 **If issues found:**
+
 1. Prioritize by severity
 2. For critical issues: Load pattern-retry and fix before proceeding
 3. For minor issues: Document as follow-up tasks or fix immediately
 
 **If all good:**
+
 - Proceed to cleanup
 
 **Don't skip this step - final verification catches:**
+
 - Integration issues
 - Inconsistencies across changes
 - Missing edge cases
@@ -426,30 +457,37 @@ git commit -m "Final cleanup for {feature name}
 **Duration**: {hours}
 
 ## What Was Built
+
 {1-2 paragraph summary of implementation}
 
 ## Files Created/Modified
+
 - {file 1} - {purpose}
 - {file 2} - {purpose}
 - ... ({N} files total)
 
 ## Key Decisions
+
 - {Decision 1 and rationale}
 - {Decision 2 and rationale}
 
 ## Testing
+
 - Test coverage: {%}
 - All tests passing: {yes/no}
 
 ## Known Limitations
+
 - {Limitation 1 if any}
 - {Limitation 2 if any}
 
 ## Follow-up Items
+
 - [ ] {Future improvement 1}
 - [ ] {Future improvement 2}
 
 ## Learnings
+
 {Any insights or challenges encountered}
 ```
 
@@ -458,7 +496,7 @@ git commit -m "Final cleanup for {feature name}
 **Ask user before removing files:**
 
 ```
-Task complete! 
+Task complete!
 
 Summary of work:
 - {Brief summary}
@@ -470,6 +508,7 @@ Summary of work:
 ## Best Practices
 
 ### Planning Phase
+
 ✅ Get detailed plan before starting
 ✅ Present plan to user for approval
 ✅ Wait for explicit approval
@@ -480,6 +519,7 @@ Summary of work:
 ❌ Don't start without session for complex work
 
 ### Execution Phase
+
 ✅ Execute one task at a time
 ✅ Quality gate after each task
 ✅ Retry with strategy if needed
@@ -492,6 +532,7 @@ Summary of work:
 ❌ Don't forget to update session state
 
 ### Verification Phase
+
 ✅ Comprehensive final review
 ✅ Load role-code-review + role-qa-engineer skills
 ✅ Verify all original requirements
@@ -502,6 +543,7 @@ Summary of work:
 ❌ Don't assume "tests pass" means "done"
 
 ### Cleanup Phase
+
 ✅ Run all tests before finalizing
 ✅ Create summary of work
 ✅ Ask before deleting session
@@ -518,7 +560,7 @@ Summary of work:
 ### Pattern 1: New Feature Implementation
 
 ```
-1. Planning: Delegate to thinker (pattern-task-breakdown + role-architect)
+1. Planning: Delegate to agent.think (pattern-task-breakdown + role-architect)
 2. User Approval: Present plan, get explicit approval
 3. Session Setup: Create with full context
 4. Execution:
@@ -533,7 +575,7 @@ Summary of work:
 ### Pattern 2: Large Refactoring
 
 ```
-1. Planning: Delegate to thinker (pattern-task-breakdown + role-architect)
+1. Planning: Delegate to agent.think (pattern-task-breakdown + role-architect)
    - Include "add tests first" phase
    - Plan incremental changes
 2. User Approval: Ensure plan is safe
@@ -569,11 +611,13 @@ Summary of work:
 ## Integration with Other Skills
 
 ### With pattern-task-breakdown
+
 - Pattern-task-breakdown creates the plan
 - Pattern-orchestration-complex executes the plan
 - Use both together for planning phase
 
 ### With pattern-retry
+
 - Pattern-retry handles quality gate failures
 - Load when tasks don't meet criteria
 - Both work together for quality assurance
@@ -583,24 +627,28 @@ Summary of work:
 ## Troubleshooting
 
 ### "Plan keeps getting rejected by user"
+
 - Make plan more detailed
 - Break down tasks smaller
 - Add more specific estimates
 - Address user concerns explicitly
 
 ### "Tasks taking longer than estimated"
+
 - Normal for some complexity
 - Update user on progress
 - Revise remaining estimates
 - Consider if tasks need further breakdown
 
 ### "Quality gates keep failing"
+
 - Requirements may be unclear
 - Load pattern-retry skill
 - May need to escalate agent
 - Consider if task too complex (break down)
 
 ### "Lost track of progress"
+
 - Check session context file
 - Review commit history
 - Update session state
@@ -611,13 +659,15 @@ Summary of work:
 ## Quick Checklist
 
 ### Before Starting
+
 - [ ] Task indicators suggest complexity (4+ files, >60 min, unclear approach)
-- [ ] Delegated to thinker for plan
+- [ ] Delegated to agent.think for plan
 - [ ] Plan presented to user
 - [ ] User explicitly approved
 - [ ] Session created with full context
 
 ### During Execution
+
 - [ ] Executing one task at a time
 - [ ] Quality gate after each task
 - [ ] Using pattern-retry if needed
@@ -625,6 +675,7 @@ Summary of work:
 - [ ] Session state updated
 
 ### Before Finishing
+
 - [ ] All tasks in plan complete
 - [ ] Final verification performed
 - [ ] All tests passing
@@ -632,6 +683,7 @@ Summary of work:
 - [ ] User notified of completion
 
 ### Cleanup
+
 - [ ] Asked user about session cleanup
 - [ ] Session archived or removed
 - [ ] Follow-up items documented

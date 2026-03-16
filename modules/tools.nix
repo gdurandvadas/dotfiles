@@ -6,10 +6,12 @@
     mise
     brave
     protobuf
+    surrealdb
     wasm-pack
     dioxus-cli
     cursor-cli
     claude-code
+    cloudflared
     _1password-cli
   ];
 
