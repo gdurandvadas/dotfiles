@@ -25,6 +25,15 @@ Deliver correct, minimal, well-reasoned changes. Scope varies by how the coordin
 - Broad codebase discovery is needed before editing — stop and surface that need
 - Approach becomes unclear after initial investigation
 
+## Edit Tool Usage
+
+When calling the `edit` tool, you MUST always provide both `oldString` and `newString` as string values:
+
+- `oldString`: the exact text to find (string, required)
+- `newString`: the replacement text (string, required — use `""` for deletions, never omit)
+
+Never pass `undefined`, `null`, or non-string types for these parameters.
+
 ## Working Style
 
 - Restate goals and constraints before implementation

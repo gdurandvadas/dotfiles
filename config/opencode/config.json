@@ -5,7 +5,7 @@
     "mdns": false
   },
   "default_agent": "plan",
-  "model": "github-copilot/claude-haiku-4.5",
+  "model": "github-copilot/gpt-5-mini",
   "provider": {
     "github-copilot": {
       "models": {
@@ -28,8 +28,12 @@
       "model": "github-copilot/gpt-5.2",
       "temperature": 0.4
     },
+    "investigate": {
+      "model": "github-copilot/claude-haiku-4.5",
+      "temperature": 0.3
+    },
     "orchestrate": {
-      "model": "github-copilot/claude-sonnet-4.6",
+      "model": "github-copilot/gpt-5.2",
       "description": "Execution orchestrator that delegates to subagents, enforces quality gates, and drives tasks to completion. Can execute plans from plan or handle direct requests.",
       "temperature": 0.3,
       "prompt": "{file:./agents/universal.md}",
@@ -44,20 +48,20 @@
       }
     },
     "agent.explore": {
-      "model": "github-copilot/gpt-5-mini",
+      "model": "github-copilot/gemini-3-flash-preview",
       "temperature": 0.1,
       "hidden": true
     },
     "agent.think": {
-      "model": "github-copilot/gpt-5.3-codex",
+      "model": "github-copilot/o4-mini",
       "temperature": 0.5,
       "reasoningEffort": "high",
       "hidden": true
     },
     "agent.fast": {
-      "model": "github-copilot/gpt-5-mini",
+      "model": "github-copilot/gemini-3-flash-preview",
       "prompt": "{file:./agents/prompts/implementer.md}",
-      "description": "Small-scope engineering agent for docs, tests, and bounded edits. Use for quick, low-risk changes with minimal coordination.",
+      "description": "Small-scope implementation agent for docs, tests, and bounded edits. Use for quick, low-risk changes with minimal coordination.",
       "temperature": 0.2,
       "hidden": true,
       "permission": {
@@ -109,9 +113,9 @@
     },
     "agent.deep-xl": {
       "disable": false,
-      "model": "github-copilot/gpt-5.4",
+      "model": "github-copilot/gemini-3.1-pro",
       "prompt": "{file:./agents/prompts/implementer.md}",
-      "description": "Implementation agent with extra-large context (400k) for the broadest-scope work. Requires direct OpenAI API access.",
+      "description": "Implementation agent with extra-large context (2M) for the broadest-scope work spanning many files or requiring extended analysis.",
       "temperature": 0.3,
       "hidden": true,
       "permission": {
@@ -199,6 +203,7 @@
       "command": [
         "npx",
         "@playwright/mcp@latest",
+        "--headless",
         "--allowed-origins",
         "http://localhost:*;https://localhost:*;http://127.0.0.1:*;https://127.0.0.1:*"
       ]

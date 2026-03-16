@@ -6,6 +6,7 @@
     mise
     brave
     protobuf
+    surrealdb
     wasm-pack
     dioxus-cli
     cursor-cli
