@@ -233,7 +233,7 @@ skill(name: "tool-store")
 Since this is a complex task (3+ TODOs, >60 min), the stored plan **MUST** include `data.prompt_drafts` with:
 
 - `universal_handoff_prompt`: a plain copy-paste message (e.g. `@orchestrate Load store: <id>\n\nTask: Execute the plan.`) for the user to resume execution — **not** a `Task({ ... })` wrapper, since `orchestrate` is a primary agent, not a `Task()` target
-- `todo_tasks[]`: one entry per planned step, each with `todo_content` (for `todowrite`) and `task_block` (the full delegation `Task({ ... })` targeting agent.fast/agent.balanced/agent.deep/etc.)
+- `todo_tasks[]`: one entry per planned step, each with `todo_content` (for `todowrite`) and `task_block` (the full delegation `Task({ ... })` targeting agent.fast/agent.balanced/agent.engineer/agent.architect/etc.)
 
 This ensures that if context is compacted between planning and execution, the agent can load the store item and immediately start delegating using the stored prompts — no context reconstruction needed.
 
@@ -259,13 +259,14 @@ This ensures that if context is compacted between planning and execution, the ag
 
 - agent.fast: Simple edits, documentation, tests
 - agent.balanced: Standard multi-file work
-- agent.deep: Complex logic, security-critical, cross-cutting changes
+- agent.engineer: Complex logic, security-critical, cross-cutting changes
+- agent.architect: Broadest-scope work spanning many files
 
 **Delegate with context:**
 
 ```
 Task({
-  subagent_type: "{agent.fast|agent.balanced|agent.deep}",
+  subagent_type: "{agent.fast|agent.balanced|agent.engineer|agent.architect}",
   description: "{5-10 word summary}",
   prompt: `
 Load skills: {relevant domain skills/standards/patterns}

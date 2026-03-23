@@ -196,7 +196,7 @@ Used by subagents during implementation to understand requirements, constraints,
 
 - **Tags:** `["spec"]`, `["decision"]`, `["schema"]`, etc. — no `"plan"` tag
 - **Do NOT include** `data.prompt_drafts` — that field is for plan entries only
-- **Loaded by:** agent.fast/agent.balanced/agent.deep agents via `Load store:` in their delegation prompt
+- **Loaded by:** agent.fast/agent.balanced/agent.engineer/agent.architect agents via `Load store:` in their delegation prompt
 
 ### Cross-referencing plans and specs
 
