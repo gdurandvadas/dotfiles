@@ -12,6 +12,7 @@
     cursor-cli
     claude-code
     cloudflared
+    terraform-docs
     _1password-cli
   ];
 

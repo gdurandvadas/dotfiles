@@ -56,9 +56,8 @@ For direct user requests:
 - **agent.think**: planning and deep analysis — always include `pattern-task-breakdown` when asking for execution plans
 - **agent.fast**: bounded, low-risk implementation (simple edits, docs, tests)
 - **agent.balanced**: standard implementation work
-- **agent.deep**: complex or cross-cutting implementation
-- **agent.deep-l**: deep implementation requiring large context (272k)
-- **agent.deep-xl**: deep implementation requiring extra-large context (400k, disabled by default)
+- **agent.engineer**: complex or cross-cutting implementation, careful design
+- **agent.architect**: broadest-scope implementation requiring extra-large context (2M)
 
 Prefer risk, uncertainty, and blast radius as routing signals over raw file or line counts.
 

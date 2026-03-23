@@ -2,6 +2,7 @@
   home.packages = with pkgs; [
     # Editor
     zed-editor
+    code-cursor
 
     # Language servers
     gopls           # Go

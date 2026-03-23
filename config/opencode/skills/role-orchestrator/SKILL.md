@@ -18,8 +18,8 @@ metadata:
 - **agent.think**: Deep analysis, planning, research (no writes)
 - **agent.fast**: Simple edits, docs, tests (bounded, low-risk)
 - **agent.balanced**: Standard implementation, refactors, non-trivial bugfixes
-- **agent.deep**: Complex, multi-file work; uncertain scope or cross-cutting changes
-- **agent.deep-l**: Deep work requiring large context (272k)
+- **agent.engineer**: Complex, multi-file work; uncertain scope or cross-cutting changes; careful design
+- **agent.architect**: Broadest-scope implementation requiring extra-large context (2M)
 
 **Delegation Format:** Always include skills, requirements, and success criteria
 
@@ -81,16 +81,18 @@ Return:
 - Non-trivial bugfixes
 - Implementation work with clear scope
 
-### Use agent.deep When:
+### Use agent.engineer When:
 
 - Complex, multi-file work where scope is uncertain or cross-cutting
 - Debugging complex issues
 - Security-critical or performance-critical code
 - Refactoring with architectural changes
 
-### Use agent.deep-l When:
+### Use agent.architect When:
 
-- Deep implementation requiring large context (272k) — e.g. broad-scope analysis spanning many files
+- Broadest-scope implementation requiring extra-large context (2M)
+- Large-scale refactors spanning many files
+- Massive codebases requiring extended analysis
 
 ### Pattern Selection Triggers
 
@@ -119,7 +121,7 @@ Return:
 | **Simple**     | Bounded, low-risk, clear scope          | agent.fast                                                                            |
 | **Medium**     | Multi-file, clear approach              | agent.balanced                                                                        |
 | **Complex**    | Uncertain scope, cross-cutting, >60 min | Load `pattern-orchestration-complex`; agent.think with `pattern-task-breakdown` first |
-| **Very Large** | Broad scope spanning many files         | agent.deep-l                                                                          |
+| **Very Large** | Broad scope spanning many files         | agent.architect                                                                       |
 
 ---
 
@@ -129,7 +131,7 @@ Return:
 
 ```
 Task({
-  subagent_type: "<agent.explore|agent.fast|agent.balanced|agent.deep|agent.deep-l|agent.think>",
+  subagent_type: "<agent.explore|agent.fast|agent.balanced|agent.engineer|agent.architect|agent.think>",
   description: "<5-10 word summary>",
   prompt: `
 Load skills: <skill1>, <skill2>
@@ -175,7 +177,7 @@ For tasks requiring context continuity:
 
 ```
 Task({
-  subagent_type: "agent.deep",
+  subagent_type: "agent.engineer",
   session_id: extractedSessionId,  // Reuse for continuity
   prompt: `Continue implementation...`
 })
@@ -204,7 +206,7 @@ When re-delegating after compaction:
 
 ```javascript
 Task({
-  subagent_type: "agent.deep",
+  subagent_type: "agent.engineer",
   session_id: "original-session-id", // CRITICAL: Reuse session_id
   prompt: `
 [CONTEXT RECOVERY]

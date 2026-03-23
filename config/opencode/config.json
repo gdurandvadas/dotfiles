@@ -8,18 +8,7 @@
   "model": "github-copilot/gpt-5-mini",
   "provider": {
     "github-copilot": {
-      "models": {
-        "gpt-5.3-codex": {
-          "modalities": {
-            "input": ["text", "image"],
-            "output": ["text"]
-          },
-          "limit": {
-            "context": 272000,
-            "output": 128000
-          }
-        }
-      }
+      "models": {}
     }
   },
   "agent": {
@@ -53,7 +42,7 @@
       "hidden": true
     },
     "agent.think": {
-      "model": "github-copilot/o4-mini",
+      "model": "github-copilot/gpt-4o",
       "temperature": 0.5,
       "reasoningEffort": "high",
       "hidden": true
@@ -84,7 +73,7 @@
         "Playwright*": "allow"
       }
     },
-    "agent.deep": {
+    "agent.engineer": {
       "model": "github-copilot/claude-opus-4.6",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Implementation agent for complex, multi-file work and debugging. Use when scope is uncertain, cross-cutting, or requires careful design and verification.",
@@ -97,25 +86,10 @@
         "Playwright*": "allow"
       }
     },
-    "agent.deep-l": {
-      "disable": false,
-      "model": "github-copilot/gpt-5.3-codex",
+    "agent.architect": {
+      "model": "github-copilot/gemini-3.1-pro-preview",
       "prompt": "{file:./agents/prompts/implementer.md}",
-      "description": "Implementation agent with large context (272k) for broad-scope work spanning many files or requiring extended analysis.",
-      "temperature": 0.3,
-      "hidden": true,
-      "permission": {
-        "todoread": "deny",
-        "todowrite": "deny",
-        "task": "deny",
-        "Playwright*": "allow"
-      }
-    },
-    "agent.deep-xl": {
-      "disable": false,
-      "model": "github-copilot/gemini-3.1-pro",
-      "prompt": "{file:./agents/prompts/implementer.md}",
-      "description": "Implementation agent with extra-large context (2M) for the broadest-scope work spanning many files or requiring extended analysis.",
+      "description": "Implementation agent with extra-large context (2M) for the broadest-scope work spanning many files, large-scale refactors, or requiring extended analysis across massive codebases.",
       "temperature": 0.3,
       "hidden": true,
       "permission": {

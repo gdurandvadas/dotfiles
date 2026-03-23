@@ -20,9 +20,8 @@ flowchart TB
  subgraph subGraph2["Hidden Subagents — Implementation"]
         Fast["agent.fast (gemini-3-flash)"]
         Balanced["agent.balanced (gpt-5.2-codex)"]
-        Deep["agent.deep (claude-opus-4.6)"]
-        DeepL["agent.deep-l (gpt-5.3-codex)"]
-        DeepXL["agent.deep-xl (gemini-3.1-pro)"]
+        Engineer["agent.engineer (claude-opus-4.6)"]
+        Architect["agent.architect (gemini-3.1-pro)"]
   end
     User(("User")) -- @plan --> Plan
     User -- @investigate --> Investigate
@@ -30,7 +29,7 @@ flowchart TB
     Plan -. Task() .-> Explore & Think
     Plan -. handoff .-> Orchestrate
     Investigate -. Task() .-> Explore & Think
-    Orchestrate -. Task() .-> Explore & Think & Fast & Balanced & Deep & DeepL & DeepXL
+    Orchestrate -. Task() .-> Explore & Think & Fast & Balanced & Engineer & Architect
 ```
 
 ## Primary Agents
@@ -66,13 +65,12 @@ These are only invocable via `Task()` from primary agents or orchestrate. They n
 
 All implementation agents share `prompts/implementer.md` as their system prompt. They cannot spawn further subagents (`task: deny`), preventing unbounded delegation chains.
 
-| Agent              | Model           | Context | Role                                       | When to use                                     |
-| ------------------ | --------------- | ------- | ------------------------------------------ | ----------------------------------------------- |
-| **agent.fast**     | gemini-3-flash  | 2M      | Small-scope edits, docs, tests             | Quick, low-risk, bounded changes                |
-| **agent.balanced** | gpt-5.2-codex   | 272K    | Standard multi-file features and refactors | Typical implementation work                     |
-| **agent.deep**     | claude-opus-4.6 | 1M      | Complex, cross-cutting implementation      | Uncertain scope, hard debugging, careful design |
-| **agent.deep-l**   | gpt-5.3-codex   | 272K    | Large-context implementation               | Broad-scope work spanning many files            |
-| **agent.deep-xl**  | gemini-3.1-pro  | 2M      | Extra-large context implementation         | Broadest-scope work, massive codebases          |
+| Agent               | Model           | Context | Role                                       | When to use                                     |
+| ------------------- | --------------- | ------- | ------------------------------------------ | ----------------------------------------------- |
+| **agent.fast**      | gemini-3-flash  | 2M      | Small-scope edits, docs, tests             | Quick, low-risk, bounded changes                |
+| **agent.balanced**  | gpt-5.2-codex   | 272K    | Standard multi-file features and refactors | Typical implementation work                     |
+| **agent.engineer**  | claude-opus-4.6 | 1M      | Complex, cross-cutting implementation      | Uncertain scope, hard debugging, careful design |
+| **agent.architect** | gemini-3.1-pro  | 2M      | Broadest-scope implementation              | Large-scale refactors, massive codebases        |
 
 ## Default Model
 
@@ -89,7 +87,6 @@ The fallback model (used when no agent is selected) is **gpt-5-mini**. The `defa
 | gpt-5.2          | $1.75                 | $14.00                 |
 | gemini-3.1-pro   | $2.00                 | $12.00                 |
 | gpt-5.2-codex    | —                     | —                      |
-| gpt-5.3-codex    | —                     | —                      |
 | claude-opus-4.6  | $5.00                 | $25.00                 |
 
 ## Design Principles
