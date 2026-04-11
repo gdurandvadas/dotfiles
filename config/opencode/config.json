@@ -8,22 +8,13 @@
   "model": "github-copilot/gpt-5-mini",
   "provider": {
     "github-copilot": {
-      "models": {
-        "claude-opus-4.6": { "name": "Claude Opus 4.6" },
-        "claude-haiku-4.5": { "name": "Claude Haiku 4.5" },
-        "gpt-5-mini": { "name": "GPT-5 Mini" },
-        "gpt-5.2": { "name": "GPT-5.2" },
-        "gpt-5.2-codex": { "name": "GPT-5.2 Codex" },
-        "gpt-4o": { "name": "GPT-4o" },
-        "gemini-3-flash-preview": { "name": "Gemini 3 Flash" },
-        "gemini-3.1-pro-preview": { "name": "Gemini 3.1 Pro" }
-      }
+      "models": {}
     }
   },
   "agent": {
     "build": { "disable": true },
     "plan": {
-      "model": "github-copilot/claude-opus-4.6",
+      "model": "github-copilot/gpt-5.2",
       "prompt": "{file:./agents/planner.md}",
       "description": "Plans and executes tasks by analyzing requests and delegating to the right subagent.",
       "temperature": 0.4,
@@ -31,16 +22,17 @@
         "task": "allow",
         "read": "allow",
         "edit": "deny",
-        "bash": "deny",
-        "Playwright*": "allow"
+        "bash": "deny"
       }
     },
     "investigate": {
-      "model": "github-copilot/claude-haiku-4.5",
+      "model": "github-copilot/gpt-5-mini",
+      "prompt": "{file:./agents/investigator.md}",
       "temperature": 0.3
     },
     "agent.explore": {
-      "model": "github-copilot/gemini-3-flash-preview",
+      "model": "github-copilot/gpt-5-mini",
+      "prompt": "{file:./agents/subagents/explorer.md}",
       "temperature": 0.1,
       "hidden": true
     },
@@ -53,8 +45,7 @@
       "permission": {
         "task": "deny",
         "todoread": "deny",
-        "todowrite": "deny",
-        "Playwright*": "allow"
+        "todowrite": "deny"
       }
     },
     "agent.balanced": {
@@ -66,12 +57,11 @@
       "permission": {
         "task": "deny",
         "todoread": "deny",
-        "todowrite": "deny",
-        "Playwright*": "allow"
+        "todowrite": "deny"
       }
     },
     "agent.engineer": {
-      "model": "github-copilot/claude-opus-4.6",
+      "model": "github-copilot/gpt-5.3-codex",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Implementation agent for complex, multi-file work and debugging. Use when scope is uncertain, cross-cutting, or requires careful design and verification.",
       "temperature": 0.3,
@@ -79,12 +69,11 @@
       "permission": {
         "task": "deny",
         "todoread": "deny",
-        "todowrite": "deny",
-        "Playwright*": "allow"
+        "todowrite": "deny"
       }
     },
     "agent.architect": {
-      "model": "github-copilot/gemini-3.1-pro-preview",
+      "model": "github-copilot/gpt-5.4",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Implementation agent with extra-large context (2M) for the broadest-scope work spanning many files, large-scale refactors, or requiring extended analysis across massive codebases.",
       "temperature": 0.3,
@@ -92,8 +81,7 @@
       "permission": {
         "todoread": "deny",
         "todowrite": "deny",
-        "task": "deny",
-        "Playwright*": "allow"
+        "task": "deny"
       }
     }
   },
@@ -157,8 +145,7 @@
       "*": "ask",
       "/tmp": "allow"
     },
-    "doom_loop": "ask",
-    "Playwright*": "deny"
+    "doom_loop": "ask"
   },
   "mcp": {
     "GitHub Grep": {
@@ -168,20 +155,6 @@
     "Deep Wiki": {
       "type": "remote",
       "url": "https://mcp.deepwiki.com/mcp"
-    },
-    "Playwright": {
-      "type": "local",
-      "command": [
-        "npx",
-        "@playwright/mcp@latest",
-        "--headless",
-        "--allowed-origins",
-        "http://localhost:*;https://localhost:*;http://127.0.0.1:*;https://127.0.0.1:*"
-      ]
-    },
-    "ClickUp": {
-      "type": "local",
-      "command": ["npx", "mcp-remote", "https://mcp.clickup.com/mcp"]
     },
     "GitHub": {
       "type": "remote",
