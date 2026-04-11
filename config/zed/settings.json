@@ -1,8 +1,9 @@
 {
   "agent": {
     "default_model": {
+      "effort": "high",
       "provider": "copilot_chat",
-      "model": "gpt-4.1",
+      "model": "gpt-5.4",
     },
     "model_parameters": [],
   },
@@ -29,6 +30,7 @@
     "catppuccin": true,
     "dockerfile": true,
     "catppuccin-icons": true,
+    "claude-agent": true,
   },
   // Theming
   "theme": {
@@ -49,25 +51,13 @@
 
   // Agents
   "agent_servers": {
+    "claude-acp": {
+      "type": "registry",
+    },
     "OpenCode": {
       "type": "custom",
       "command": "opencode",
       "args": ["acp"],
-    },
-    "cursor-sonnet": {
-      "type": "custom",
-      "command": "cursor-agent",
-      "args": ["acp", "--model", "claude-4.6-sonnet"],
-    },
-    "cursor-codex": {
-      "type": "custom",
-      "command": "cursor-agent",
-      "args": ["acp", "--model", "gpt-5.3-codex"],
-    },
-    "cursor-flash": {
-      "type": "custom",
-      "command": "cursor-agent",
-      "args": ["acp", "--model", "gemini-3-flash-preview"],
     },
   },
 

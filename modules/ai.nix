@@ -20,4 +20,10 @@ in {
     "opencode/plugins" = mkLink "plugins";
     "opencode/skills" = mkLink "skills";
   };
+
+  home.activation.opencode-deps = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    if command -v bun >/dev/null 2>&1; then
+      cd "${dotfiles}" && bun install --frozen-lockfile 2>/dev/null || bun install 2>/dev/null
+    fi
+  '';
 }

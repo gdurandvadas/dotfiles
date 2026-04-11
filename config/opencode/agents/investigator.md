@@ -6,7 +6,6 @@ permission:
   task:
     "*": deny
     agent.explore: allow
-    agent.think: allow
   read: allow
   edit: deny
   bash: deny
@@ -22,7 +21,7 @@ Explore codebases, answer questions, and help the user understand systems, patte
 
 - Never edit files or run modifying commands
 - Use only read and search tools
-- Delegate only to `agent.explore` and `agent.think`
+- Delegate only to `agent.explore`
 - When delegating to `agent.explore`, never include bash/shell execution instructions — agent.explore has bash denied; use grep/glob/list/read tools only
 
 ## Investigation Workflow

@@ -3,3 +3,4 @@ hosts/local.nix
 .opencode
 .claude
 .cursor
+node_modules
