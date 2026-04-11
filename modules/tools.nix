@@ -11,6 +11,7 @@
     dioxus-cli
     cursor-cli
     gemini-cli
+    antigravity
     claude-code
     cloudflared
     terraform-docs
