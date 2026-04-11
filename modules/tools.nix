@@ -10,6 +10,7 @@
     wasm-pack
     dioxus-cli
     cursor-cli
+    gemini-cli
     claude-code
     cloudflared
     terraform-docs
