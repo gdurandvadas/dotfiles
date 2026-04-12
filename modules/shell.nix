@@ -76,4 +76,5 @@
       fetch.pruneTags = true;
     };
   };
+
 }

@@ -15,8 +15,8 @@
     "build": { "disable": true },
     "plan": {
       "model": "github-copilot/gpt-5.2",
-      "prompt": "{file:./agents/personal/planner.md}",
-      "description": "Research and task breakdown. Explores the codebase and produces a structured plan for @orchestrate to execute.",
+      "prompt": "{file:./agents/work/planner.md}",
+      "description": "Ticket-aware research and task breakdown. Validates the ticket before exploring and planning.",
       "temperature": 0.4,
       "max_tokens": 4000,
       "permission": {
@@ -31,12 +31,29 @@
     },
     "orchestrate": {
       "model": "github-copilot/gpt-5.2",
-      "prompt": "{file:./agents/personal/orchestrator.md}",
-      "description": "Execution orchestrator. Takes a plan and delegates tasks to the right implementation agents.",
+      "prompt": "{file:./agents/work/orchestrator.md}",
+      "description": "Ticket-first execution orchestrator. Enforces research-before-implementation and delegates to the right agents.",
       "temperature": 0.3,
       "max_tokens": 2000,
       "permission": {
         "task": "allow",
+        "read": "allow",
+        "edit": "deny",
+        "bash": "deny"
+      }
+    },
+    "work.architect": {
+      "model": "github-copilot/gpt-5.2-codex",
+      "prompt": "{file:./agents/work/architect.md}",
+      "description": "Technical research subagent. Analyses requirements and codebase, produces implementation plan, posts to ticket.",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "hidden": true,
+      "permission": {
+        "task": {
+          "*": "deny",
+          "agent.explore": "allow"
+        },
         "read": "allow",
         "edit": "deny",
         "bash": "deny"
@@ -170,6 +187,26 @@
       "type": "remote",
       "url": "https://api.githubcopilot.com/mcp/",
       "headers": { "Authorization": "Bearer {env:GITHUB_TOKEN}" }
+    },
+    "ClickUp": {
+      "type": "remote",
+      "url": "https://mcp.clickup.com/mcp",
+      "headers": { "Authorization": "Bearer {env:CLICKUP_API_TOKEN}" }
+    },
+    "Cortex": {
+      "type": "remote",
+      "url": "https://mcp.cortex.io/mcp",
+      "headers": { "Authorization": "Bearer {env:CORTEX_API_TOKEN}" }
+    },
+    "Slite": {
+      "type": "remote",
+      "url": "https://api.slite.com/mcp",
+      "headers": { "Authorization": "Bearer {env:SLITE_API_TOKEN}" }
+    },
+    "Wiz": {
+      "type": "remote",
+      "url": "https://mcp.app.wiz.io",
+      "headers": { "Authorization": "Bearer {env:WIZ_API_TOKEN}" }
     }
   },
   "autoupdate": true,
