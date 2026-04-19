@@ -11,10 +11,12 @@ DOTFILES="${DOTFILES_DIR:-$HOME/.config/dotfiles}"
 usage() {
   echo "Usage: dotfiles profile <work|personal>"
   echo "       dotfiles workstation rebuild"
+  echo "       dotfiles update"
   echo ""
-  echo "  profile work       - nix run \$DOTFILES#switch-work (uses flake's home-manager)"
-  echo "  profile personal   - nix run \$DOTFILES#switch-personal (uses flake's home-manager)"
+  echo "  profile work        - nix run \$DOTFILES#switch-work (uses flake's home-manager)"
+  echo "  profile personal    - nix run \$DOTFILES#switch-personal (uses flake's home-manager)"
   echo "  workstation rebuild - darwin-rebuild switch --flake $DOTFILES#workstation --impure"
+  echo "  update              - nix flake update \$DOTFILES"
   exit 1
 }
 
@@ -32,6 +34,9 @@ case "${1:-}" in
         usage
         ;;
     esac
+    ;;
+  update)
+    exec nix flake update --flake "$DOTFILES" "${@:2}"
     ;;
   workstation)
     if [ "${2:-}" = "rebuild" ]; then

@@ -5,6 +5,7 @@
     gh
     mise
     brave
+    tflint
     protobuf
     surrealdb
     wasm-pack
