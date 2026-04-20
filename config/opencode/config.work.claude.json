@@ -170,35 +170,35 @@
     "doom_loop": "ask"
   },
   "mcp": {
-    "GitHub Grep": {
+    "github_grep": {
       "type": "remote",
       "url": "https://mcp.grep.app"
     },
-    "Deep Wiki": {
+    "deep_wiki": {
       "type": "remote",
       "url": "https://mcp.deepwiki.com/mcp"
     },
-    "GitHub": {
+    "github": {
       "type": "remote",
       "url": "https://api.githubcopilot.com/mcp/",
       "headers": { "Authorization": "Bearer {env:GITHUB_TOKEN}" }
     },
-    "ClickUp": {
+    "clickup": {
       "type": "remote",
       "url": "https://mcp.clickup.com/mcp",
       "headers": { "Authorization": "Bearer {env:CLICKUP_API_TOKEN}" }
     },
-    "Cortex": {
+    "cortex": {
       "type": "remote",
       "url": "https://mcp.cortex.io/mcp",
       "headers": { "Authorization": "Bearer {env:CORTEX_API_TOKEN}" }
     },
-    "Slite": {
+    "slite": {
       "type": "remote",
       "url": "https://api.slite.com/mcp",
       "headers": { "Authorization": "Bearer {env:SLITE_API_TOKEN}" }
     },
-    "Wiz": {
+    "wiz": {
       "type": "remote",
       "url": "https://mcp.app.wiz.io",
       "headers": { "Authorization": "Bearer {env:WIZ_API_TOKEN}" }
