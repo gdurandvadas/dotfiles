@@ -4,6 +4,7 @@
 #   oc-work              → uses Copilot provider (default)
 #   oc-work --copilot    → uses Copilot provider
 #   oc-work --bedrock    → uses AWS Bedrock provider
+#   oc-work --claude     → uses Claude (via opencode-claude-auth)
 
 set -e
 
@@ -12,6 +13,7 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     --copilot) provider="copilot"; shift ;;
     --bedrock) provider="bedrock"; shift ;;
+    --claude) provider="claude"; shift ;;
     *) break ;;
   esac
 done
