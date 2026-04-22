@@ -19,6 +19,7 @@ in {
     "opencode/tools" = mkLink "tools";
     "opencode/plugins" = mkLink "plugins";
     "opencode/skills" = mkLink "skills";
+    "opencode/workflows" = mkLink "workflows";
   };
 
   home.activation.opencode-deps = config.lib.dag.entryAfter [ "writeBoundary" ] ''

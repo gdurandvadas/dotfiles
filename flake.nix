@@ -3,6 +3,9 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    # Upstream ships its own flake (not gated on nixpkgs merge timing). Lock updates via
+    # `nix flake update upstream-opencode` or full `nix flake update`.
+    upstream-opencode.url = "github:anomalyco/opencode";
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -15,12 +18,20 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, darwin, ... }:
+  outputs = { self, nixpkgs, upstream-opencode, home-manager, darwin, ... }:
   let
     system = "aarch64-darwin";
     unfree = import ./unfree-packages.nix;
     pkgs = import nixpkgs {
       inherit system;
+      overlays = [
+        # Single-attribute override: everything else stays from inputs.nixpkgs (nixpkgs-unstable).
+        # upstream-opencode's bundled nixpkgs is only used inside that flake to *build* opencode,
+        # not as your global package set.
+        (_final: prev: {
+          opencode = upstream-opencode.packages.${system}.default;
+        })
+      ];
       config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfree.base;
     };
     # local.nix is gitignored — referenced via absolute path so Nix doesn't
