@@ -38,9 +38,9 @@
   },
   // Theming
   "theme": {
-    "mode": "system",
+    "mode": "dark",
     "light": "Catppuccin Frappé",
-    "dark": "Catppuccin Mocha",
+    "dark": "Ayu Dark",
   },
   "icon_theme": {
     "mode": "system",
@@ -55,6 +55,9 @@
 
   // Agents
   "agent_servers": {
+    "codex-acp": {
+      "type": "registry"
+    },
     "claude-acp": {
       "type": "registry",
     },

@@ -14,8 +14,11 @@
     gemini-cli
     antigravity
     claude-code
+    codex
     cloudflared
     terraform-docs
+    pulumi
+    awscli2
     _1password-cli
   ];
 
