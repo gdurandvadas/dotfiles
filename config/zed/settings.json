@@ -1,9 +1,21 @@
 {
+  "cli_default_open_behavior": "new_window",
+  "project_panel": {
+    "dock": "left"
+  },
+  "outline_panel": {
+    "dock": "left"
+  },
+  "collaboration_panel": {
+    "dock": "left"
+  },
   "git_panel": {
+    "dock": "left",
     "sort_by_path": true,
     "tree_view": true
   },
   "agent": {
+    "dock": "right",
     "default_model": {
       "effort": "high",
       "provider": "copilot_chat",
@@ -37,11 +49,7 @@
     "claude-agent": true,
   },
   // Theming
-  "theme": {
-    "mode": "dark",
-    "light": "Catppuccin Frappé",
-    "dark": "Ayu Dark",
-  },
+  "theme": "Catppuccin Latte",
   "icon_theme": {
     "mode": "system",
     "light": "Catppuccin Frappé",

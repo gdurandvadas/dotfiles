@@ -4,6 +4,8 @@
     PROJECTS_DIR = "$HOME/Development";
   };
 
+  home.sessionPath = [ "$HOME/.local/bin" ];
+
   home.packages = with pkgs; [
     # Shell utilities
     fzf

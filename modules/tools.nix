@@ -7,7 +7,6 @@
     brave
     tflint
     protobuf
-    surrealdb
     wasm-pack
     dioxus-cli
     cursor-cli
