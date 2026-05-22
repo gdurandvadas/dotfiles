@@ -17,6 +17,7 @@
 │   ├── shell.nix          # Zsh, Starship, direnv, git, CLI utilities
 │   ├── terminal.nix       # Alacritty, Zellij, nerd fonts
 │   ├── editor.nix         # Zed editor + language servers
+│   ├── pi.nix             # Pi coding agent harness
 │   ├── tools.nix          # Unfree/extra tools (1Password CLI, Brave, mise, gh, claude-code)
 │   ├── scripts.nix        # Custom scripts as Nix packages (dotfiles-switch, dotfiles)
 │   └── work.nix           # Work profile overrides (git email)
@@ -34,6 +35,9 @@
 │   │   └── layouts/default.kdl
 │   ├── mise/
 │   │   └── config.toml
+│   ├── pi/
+│   │   ├── AGENTS.md      # Global Pi guidance
+│   │   └── settings.json  # Global Pi settings
 │   └── scripts/
 │       ├── theme-switch.zsh  # Dark/light sync for Alacritty + Starship
 │       ├── mise.zsh          # Mise (polyglot runtime manager) integration

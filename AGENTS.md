@@ -23,11 +23,14 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 │   ├── shell.nix          # Zsh, Starship, direnv, git, CLI utilities
 │   ├── terminal.nix       # Alacritty, Zellij, nerd fonts
 │   ├── editor.nix         # Zed editor + language servers
+│   ├── pi.nix             # Pi coding agent harness
 │   ├── scripts.nix        # Custom scripts as Nix packages (dotfiles-switch, dotfiles)
 │   ├── tools.nix          # Unfree/extra tools (1Password CLI, Brave, mise, gh, claude-code)
 │   └── work.nix           # Work-profile overrides (git email)
 ├── config/
-│   └── zed/               # Mutable Zed config (symlinked out-of-store)
+│   ├── zed/               # Mutable Zed config (symlinked out-of-store)
+│   └── pi/                # Mutable Pi global config (symlinked out-of-store)
+├── .pi/                   # Project-local Pi settings, extensions, skills, and memory notes
 └── docs/
     └── secrets-1password.md # 1Password CLI usage for secrets (no secrets in repo/store)
 ```
@@ -227,7 +230,7 @@ let inherit (lib) mkOption types mkIf; in
 ## Security Rules
 
 - No emails, usernames, tokens, API keys, or absolute paths in committed files
-- `config/` files (zed) are symlinked out-of-store so tools can mutate them — they may contain non-sensitive config like themes or model names, but never credentials
+- `config/` files (zed, pi) are symlinked out-of-store so tools can mutate them — they may contain non-sensitive config like themes or model names, but never credentials
 - Secrets (API keys, tokens) belong in environment variables or a secrets manager (e.g. 1Password CLI); see [docs/secrets-1password.md](docs/secrets-1password.md)
 - Home Manager config and the Nix store must not contain secrets; use 1Password + `op run` / wrapper scripts
 - `hosts/local.nix` is the only sanctioned location for personal identity values
@@ -248,6 +251,14 @@ xdg.configFile."zed/settings.json".source =
 
 ```nix
 programs.git.userEmail = lib.mkForce config.my.user.workEmail;
+```
+
+**Out-of-store Pi config** (allows Pi to mutate its own settings):
+
+```nix
+home.file.".pi/agent/settings.json".source =
+  config.lib.file.mkOutOfStoreSymlink
+    "${config.home.homeDirectory}/.config/dotfiles/config/pi/settings.json";
 ```
 
 ## Editor Setup

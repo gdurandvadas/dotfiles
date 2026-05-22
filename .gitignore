@@ -2,6 +2,7 @@ result
 hosts/local.nix
 .opencode
 .claude
+.pi/sessions/
 .dotfiles-profile
 .cursor
 node_modules

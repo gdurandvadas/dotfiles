@@ -1,0 +1,6 @@
+{
+  "sessionDir": "~/.pi/agent/sessions",
+  "extensions": [],
+  "skills": [],
+  "enableSkillCommands": true
+}
