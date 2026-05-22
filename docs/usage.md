@@ -10,6 +10,7 @@
 | `nix run .#switch-personal` / `nix run .#switch-work` | Alternative: apply profile directly via flake       |
 | `direnv allow`                                        | Activate a project-local Nix environment (`.envrc`) |
 | `pi`                                                  | Start the pinned Pi coding agent                    |
+| `pi-init`                                             | Initialize or update `.pi/` in the current project  |
 
 ## Profiles
 
@@ -26,6 +27,32 @@ Pi is installed through the pinned `pkgs.pi-coding-agent` package. Global mutabl
 settings live in `apps/pi/config/` and are linked to `~/.pi/agent/` by Home
 Manager. Project-local Pi extensions, skills, and memory placeholders live in
 `apps/pi/project/`; root `.pi/` is only a discovery shim.
+
+### Initialize a project
+
+From any project directory:
+
+```sh
+pi-init
+```
+
+This syncs `apps/pi/project/` into the current project's `.pi/` directory.
+If `.pi/` already exists, `pi-init` prompts before overwrite.
+
+Useful flags:
+
+```sh
+pi-init --dry-run
+pi-init --force
+```
+
+Version tracking:
+
+- Template version: `.pi/VERSION`
+- Template changelog: `.pi/CHANGELOG.md`
+
+When you update dotfiles, run `pi-init` again in projects to move them to the
+new template version.
 
 ## Per-project environments
 
@@ -48,7 +75,7 @@ Search packages at [search.nixos.org](https://search.nixos.org/packages).
 
 ## Adding a new module
 
-1. Create `modules/<name>.nix`
+1. For app-specific behavior, create `apps/<name>/module.nix`
 2. Add it to the `imports` list in `default.nix` (all profiles), or only in a specific host file if profile-specific
 3. Reference identity via `config.my.user.*` — never hardcode strings
 4. Apply: `dotfiles-switch` or `dotfiles workstation rebuild` (darwin) or `dotfiles profile personal` / `dotfiles profile work` (home-manager)

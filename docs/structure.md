@@ -43,6 +43,8 @@
 │   │   ├── module.nix     # Pi Home Manager integration
 │   │   ├── config/        # Global Pi guidance and settings
 │   │   └── project/       # Project-local Pi settings, extensions, skills, memory
+│   │       ├── VERSION    # Project template version
+│   │       └── CHANGELOG.md # Project template changes between versions
 │   └── scripts/
 │       ├── module.nix     # Script packaging and zsh helper links
 │       ├── theme-switch.zsh  # Dark/light sync for Alacritty + Starship

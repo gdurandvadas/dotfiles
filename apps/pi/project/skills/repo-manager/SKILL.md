@@ -12,7 +12,7 @@ Makefile target exists.
 
 ## Workflow
 
-1. Read `apps/pi/project/memory/CORE.md` if it exists.
+1. Read `.pi/memory/CORE.md` if it exists.
 2. Run `make repo-status` to inspect all discovered repositories.
 3. Run `make sync-default` before creating branches across multiple repos.
 4. Create coordinated branches with:

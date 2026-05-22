@@ -7,6 +7,5 @@
   setup scripts.
 - Use the root `Makefile` targets for multi-repository sync, branch creation,
   and repository status checks when they apply.
-- Before starting a task, read `apps/pi/project/memory/CORE.md` if it exists
-  and use it as project-local memory. Do not assume a self-learning package is
-  installed.
+- Before starting a task, read `.pi/memory/CORE.md` if it exists and use it as
+  project-local memory. Do not assume a self-learning package is installed.
