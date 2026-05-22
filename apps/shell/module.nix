@@ -7,7 +7,6 @@
   home.sessionPath = [ "$HOME/.local/bin" ];
 
   home.packages = with pkgs; [
-    # Shell utilities
     fzf
     ripgrep
     fd
@@ -18,9 +17,6 @@
     git
   ];
 
-  #####################
-  # ZSH               #
-  #####################
   programs.zsh = {
     enable = true;
     enableCompletion = true;
@@ -33,40 +29,17 @@
     '';
   };
 
-  # Custom scripts sourced by .zsh; theme-switch symlinks Alacritty theme + Starship config by dark/light
-  home.file.".zsh/theme-switch.zsh".source = ../apps/scripts/theme-switch.zsh;
-  home.file.".zsh/mise.zsh".source = ../apps/scripts/mise.zsh;
-  home.file.".zsh/z.zsh".source = ../apps/scripts/z.zsh;
-
-  #####################
-  # Starship          #
-  #####################
-  programs.starship = {
-    enable = true;
-    enableZshIntegration = true;
-  };
-
-  # Starship: dark (mocha) / light (frappe); script symlinks ~/.config/starship.toml to one
-  xdg.configFile."starship/starship_dark.toml".source = ../apps/starship/starship_dark.toml;
-  xdg.configFile."starship/starship_light.toml".source = ../apps/starship/starship_light.toml;
-
-  #####################
-  # Direnv          #
-  #####################
   programs.direnv = {
     enable = true;
     enableZshIntegration = true;
     nix-direnv.enable = true;
   };
 
-  #####################
-  # Git               #
-  #####################
   programs.git = {
     enable = true;
     settings = {
       user = {
-        name  = config.my.user.name;
+        name = config.my.user.name;
         email = config.my.user.email;
         signingkey = config.my.user.sshSigningKey;
       };
@@ -78,5 +51,4 @@
       fetch.pruneTags = true;
     };
   };
-
 }

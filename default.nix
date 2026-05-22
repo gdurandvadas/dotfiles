@@ -1,12 +1,15 @@
 { config, lib, pkgs, ... }: {
   imports = [
     ./modules/user.nix
-    ./modules/shell.nix
-    ./modules/terminal.nix
-    ./modules/editor.nix
+    ./apps/shell/module.nix
+    ./apps/scripts/module.nix
+    ./apps/starship/module.nix
+    ./apps/alacritty/module.nix
+    ./apps/zellij/module.nix
+    ./apps/zed/module.nix
+    ./apps/mise/module.nix
+    ./apps/tools/module.nix
     ./apps/pi/module.nix
-    ./modules/scripts.nix
-    ./modules/tools.nix
   ];
 
   programs.home-manager.enable = true;

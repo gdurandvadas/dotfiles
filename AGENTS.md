@@ -20,19 +20,35 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 │   └── local.nix.example  # Template for local.nix
 ├── modules/
 │   ├── user.nix           # Defines options.my.user.* (identity contract)
-│   ├── shell.nix          # Zsh, Starship, direnv, git, CLI utilities
-│   ├── terminal.nix       # Alacritty, Zellij, nerd fonts
-│   ├── editor.nix         # Zed editor + language servers
-│   ├── scripts.nix        # Custom scripts as Nix packages (dotfiles-switch, dotfiles)
-│   ├── tools.nix          # Unfree/extra tools (1Password CLI, Brave, mise, gh, claude-code)
 │   └── work.nix           # Work-profile overrides (git email)
 ├── apps/
+│   ├── shell/
+│   │   └── module.nix     # Zsh, direnv, git, shell defaults, baseline CLI utilities
+│   ├── tools/
+│   │   └── module.nix     # Unfree/extra tools (1Password CLI, Brave, gh, claude-code)
+│   ├── scripts/
+│   │   ├── module.nix     # Custom scripts as Nix packages (dotfiles-switch, dotfiles, z)
+│   │   └── *.zsh          # Zsh helper scripts sourced at shell startup
+│   ├── zed/
+│   │   ├── module.nix     # Zed editor + language servers
+│   │   └── *.json         # Mutable Zed settings and keymap
+│   ├── alacritty/
+│   │   ├── module.nix     # Alacritty app wiring and theme links
+│   │   └── *.toml         # Mutable Alacritty config and themes
+│   ├── zellij/
+│   │   ├── module.nix     # Zellij package + config links
+│   │   └── *.kdl          # Mutable Zellij config/layout
+│   ├── starship/
+│   │   ├── module.nix     # Starship wiring and theme links
+│   │   └── *.toml         # Starship theme files
+│   ├── mise/
+│   │   ├── module.nix     # Mise package + config link
+│   │   └── config.toml
 │   ├── pi/
 │   │   ├── module.nix     # Pi coding agent harness
 │   │   ├── config/        # Mutable Pi global config (symlinked out-of-store)
 │   │   └── project/       # Project-local Pi extensions, skills, and memory notes
-│   ├── zed/               # Mutable Zed config (symlinked out-of-store)
-│   └── …                  # Other app payloads (alacritty, starship, zellij, mise, scripts)
+│   └── …                  # Additional app bundles follow the same pattern
 ├── .pi/                   # Minimal Pi discovery shim
 └── docs/
     └── secrets-1password.md # 1Password CLI usage for secrets (no secrets in repo/store)

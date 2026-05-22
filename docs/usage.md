@@ -40,7 +40,7 @@ Or write a `flake.nix` in the project root with a `devShell` output. `direnv` wi
 
 ## Adding tools
 
-Edit `modules/shell.nix`, `modules/terminal.nix`, or `modules/tools.nix` (or create a new module) and add the package to `home.packages`. Then run `dotfiles-switch` or `dotfiles workstation rebuild` (darwin) or `dotfiles profile personal` / `dotfiles profile work` (home-manager).
+Edit the relevant `apps/*/module.nix` and add the package to `home.packages` (for example: `apps/tools/module.nix`, `apps/shell/module.nix`, or an app-specific module). Then run `dotfiles-switch` or `dotfiles workstation rebuild` (darwin) or `dotfiles profile personal` / `dotfiles profile work` (home-manager).
 
 Search packages at [search.nixos.org](https://search.nixos.org/packages).
 

@@ -1,18 +1,14 @@
 { pkgs, config, ... }: {
   home.packages = with pkgs; [
-    # Editor
     zed-editor
     code-cursor
-
-    # Language servers
-    gopls           # Go
-    rust-analyzer   # Rust
-    vtsls           # TypeScript/JavaScript
-    nixd            # Nix
-    sqls            # SQL
+    gopls
+    rust-analyzer
+    vtsls
+    nixd
+    sqls
   ];
 
-  # Symlinks into dotfiles repo (edit there, changes apply without rebuild).
   xdg.configFile."zed/settings.json" = {
     source =
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/apps/zed/settings.json";

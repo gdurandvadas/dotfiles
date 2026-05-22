@@ -14,31 +14,37 @@
 │   └── local.nix.example  # Template for local.nix
 ├── modules/
 │   ├── user.nix           # Defines options.my.user.* (identity contract)
-│   ├── shell.nix          # Zsh, Starship, direnv, git, CLI utilities
-│   ├── terminal.nix       # Alacritty, Zellij, nerd fonts
-│   ├── editor.nix         # Zed editor + language servers
-│   ├── tools.nix          # Unfree/extra tools (1Password CLI, Brave, mise, gh, claude-code)
-│   ├── scripts.nix        # Custom scripts as Nix packages (dotfiles-switch, dotfiles)
 │   └── work.nix           # Work profile overrides (git email)
 ├── apps/
+│   ├── shell/
+│   │   └── module.nix     # Zsh, direnv, git, shell defaults, baseline CLI utilities
+│   ├── tools/
+│   │   └── module.nix     # Additional CLI/dev tools (unfree and extra)
 │   ├── alacritty/
+│   │   ├── module.nix     # Alacritty package + Home Manager wiring
 │   │   ├── alacritty.toml
 │   │   ├── keybindings.toml
 │   │   └── themes/        # alacritty_dark.toml, alacritty_light.toml (theme-switch symlinks theme.toml)
 │   ├── zed/
+│   │   ├── module.nix     # Zed package + language server wiring
 │   │   ├── settings.json  # Zed behavior, LSP config, theme
 │   │   └── keymap.json    # Custom keybindings
-│   ├── starship/          # starship_dark.toml, starship_light.toml (theme-switch symlinks)
+│   ├── starship/
+│   │   ├── module.nix     # Starship package wiring
+│   │   └── *.toml         # starship_dark.toml, starship_light.toml
 │   ├── zellij/
+│   │   ├── module.nix     # Zellij package + Home Manager wiring
 │   │   ├── config.kdl
 │   │   └── layouts/default.kdl
 │   ├── mise/
+│   │   ├── module.nix     # Mise package + Home Manager wiring
 │   │   └── config.toml
 │   ├── pi/
 │   │   ├── module.nix     # Pi Home Manager integration
 │   │   ├── config/        # Global Pi guidance and settings
 │   │   └── project/       # Project-local Pi settings, extensions, skills, memory
 │   └── scripts/
+│       ├── module.nix     # Script packaging and zsh helper links
 │       ├── theme-switch.zsh  # Dark/light sync for Alacritty + Starship
 │       ├── mise.zsh          # Mise (polyglot runtime manager) integration
 │       └── dotfiles.sh       # Unified home-manager / darwin switch script (dotfiles CLI)
