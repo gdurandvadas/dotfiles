@@ -23,13 +23,11 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 │   ├── shell.nix          # Zsh, Starship, direnv, git, CLI utilities
 │   ├── terminal.nix       # Alacritty, Zellij, nerd fonts
 │   ├── editor.nix         # Zed editor + language servers
-│   ├── ai.nix             # OpenCode AI orchestrator
 │   ├── scripts.nix        # Custom scripts as Nix packages (dotfiles-switch, dotfiles)
 │   ├── tools.nix          # Unfree/extra tools (1Password CLI, Brave, mise, gh, claude-code)
-│   └── work.nix           # Work-profile overrides (git email, opencode config)
+│   └── work.nix           # Work-profile overrides (git email)
 ├── config/
-│   ├── zed/               # Mutable Zed config (symlinked out-of-store)
-│   └── opencode/          # OpenCode config per profile
+│   └── zed/               # Mutable Zed config (symlinked out-of-store)
 └── docs/
     └── secrets-1password.md # 1Password CLI usage for secrets (no secrets in repo/store)
 ```
@@ -77,7 +75,7 @@ cp hosts/local.nix.example hosts/local.nix
 | Personal | `personal` | `hosts/personal.nix` | —                  |
 | Work     | `work`     | `hosts/work.nix`     | `modules/work.nix` |
 
-The work profile overrides git `userEmail` with `my.user.workEmail` and points OpenCode to `config/opencode/work-config.json`.
+The work profile overrides git `userEmail` with `my.user.workEmail`.
 
 ---
 
@@ -229,7 +227,7 @@ let inherit (lib) mkOption types mkIf; in
 ## Security Rules
 
 - No emails, usernames, tokens, API keys, or absolute paths in committed files
-- `config/` files (zed, opencode) are symlinked out-of-store so tools can mutate them — they may contain non-sensitive config like themes or model names, but never credentials
+- `config/` files (zed) are symlinked out-of-store so tools can mutate them — they may contain non-sensitive config like themes or model names, but never credentials
 - Secrets (API keys, tokens) belong in environment variables or a secrets manager (e.g. 1Password CLI); see [docs/secrets-1password.md](docs/secrets-1password.md)
 - Home Manager config and the Nix store must not contain secrets; use 1Password + `op run` / wrapper scripts
 - `hosts/local.nix` is the only sanctioned location for personal identity values
@@ -252,22 +250,11 @@ xdg.configFile."zed/settings.json".source =
 programs.git.userEmail = lib.mkForce config.my.user.workEmail;
 ```
 
-**Profile-specific config file** (different symlink target per profile):
-
-```nix
-xdg.configFile."opencode/config.json".source = lib.mkForce
-  (config.lib.file.mkOutOfStoreSymlink
-    "${config.home.homeDirectory}/.config/dotfiles/config/opencode/work-config.json");
-```
-
----
-
 ## Editor Setup
 
-For VS Code / Zed / OpenCode, add this to enable Nix language support:
+For VS Code / Zed, add this to enable Nix language support:
 
 - **Zed**: Built-in Nix support via tree-sitter
 - **VS Code**: Install `Nix IDE` or `Nix language server` extension
-- **OpenCode**: Uses Zed's language server internally
 
 Configure your editor to use `nixfmt` for formatting on save.

@@ -1,17 +1,5 @@
 { pkgs, ... }:
 let
-  # Bootstrap an AI-assisted project: research phase then open in Zed
-  ai-init = pkgs.writeShellScriptBin "ai-init" ''
-    set -e
-    if [ -z "$1" ]; then
-      echo "Usage: ai-init <topic>"
-      exit 1
-    fi
-    echo "Initializing AI research phase for: $1"
-    opencode --skill deep_research "$1"
-    zed .
-  '';
-
   # Switch to latest nix-darwin + home-manager configuration
   # Usage: dotfiles-switch
   dotfiles-switch = pkgs.writeShellScriptBin "dotfiles-switch" ''
@@ -30,13 +18,6 @@ let
   # Open a project directory in Zed.
   # Usage: z <dir> [subdir]
   z = pkgs.writeShellScriptBin "z" (builtins.readFile ../config/scripts/z.sh);
-
-  # Launch OpenCode with the personal config (restores home-manager symlink).
-  oc-pers = pkgs.writeShellScriptBin "oc-pers" (builtins.readFile ../config/scripts/oc-pers.sh);
-
-  # Launch OpenCode with a work config.
-  # Usage: oc-work [--copilot|--bedrock]
-  oc-work = pkgs.writeShellScriptBin "oc-work" (builtins.readFile ../config/scripts/oc-work.sh);
 in {
-  home.packages = [ ai-init dotfiles-switch dotfiles z oc-pers oc-work ];
+  home.packages = [ dotfiles-switch dotfiles z ];
 }

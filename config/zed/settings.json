@@ -69,11 +69,6 @@
     "claude-acp": {
       "type": "registry",
     },
-    "OpenCode": {
-      "type": "custom",
-      "command": "opencode",
-      "args": ["acp"],
-    },
   },
 
   // Language-specific settings

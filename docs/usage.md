@@ -12,12 +12,12 @@
 
 ## Profiles
 
-| Profile  | Flake key  | Git identity        | OpenCode config                    |
-| -------- | ---------- | ------------------- | ---------------------------------- |
-| Personal | `personal` | `my.user.email`     | `config/opencode/config.json`      |
-| Work     | `work`     | `my.user.workEmail` | `config/opencode/work-config.json` |
+| Profile  | Flake key  | Git identity        |
+| -------- | ---------- | ------------------- |
+| Personal | `personal` | `my.user.email`     |
+| Work     | `work`     | `my.user.workEmail` |
 
-Both profiles share the same tools (Zed, OpenCode, CLI stack). The work profile only overrides git email and OpenCode settings.
+Both profiles share the same tools (Zed and the CLI stack). The work profile only overrides git email.
 
 ## Per-project environments
 

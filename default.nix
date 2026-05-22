@@ -4,7 +4,6 @@
     ./modules/shell.nix
     ./modules/terminal.nix
     ./modules/editor.nix
-    ./modules/ai.nix
     ./modules/scripts.nix
     ./modules/tools.nix
   ];

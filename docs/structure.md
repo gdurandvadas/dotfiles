@@ -17,10 +17,9 @@
 │   ├── shell.nix          # Zsh, Starship, direnv, git, CLI utilities
 │   ├── terminal.nix       # Alacritty, Zellij, nerd fonts
 │   ├── editor.nix         # Zed editor + language servers
-│   ├── ai.nix             # OpenCode AI orchestrator
 │   ├── tools.nix          # Unfree/extra tools (1Password CLI, Brave, mise, gh, claude-code)
 │   ├── scripts.nix        # Custom scripts as Nix packages (dotfiles-switch, dotfiles)
-│   └── work.nix           # Work profile overrides (git email, opencode config)
+│   └── work.nix           # Work profile overrides (git email)
 ├── config/
 │   ├── alacritty/
 │   │   ├── alacritty.toml
@@ -35,11 +34,6 @@
 │   │   └── layouts/default.kdl
 │   ├── mise/
 │   │   └── config.toml
-│   ├── opencode/
-│   │   ├── config.json    # Personal OpenCode model + MCP servers
-│   │   ├── work-config.json  # Work OpenCode config
-│   │   └── skills/
-│   │       └── research.md
 │   └── scripts/
 │       ├── theme-switch.zsh  # Dark/light sync for Alacritty + Starship
 │       ├── mise.zsh          # Mise (polyglot runtime manager) integration
