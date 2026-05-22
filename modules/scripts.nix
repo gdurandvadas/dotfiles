@@ -11,13 +11,13 @@ let
     sudo DOTFILES_DIR="$DOTFILES" darwin-rebuild switch --flake "$DOTFILES#workstation" --impure "$@"
   '';
 
-  # Install dotfiles from config/scripts (profile work|personal, workstation rebuild).
+  # Install dotfiles from apps/scripts (profile work|personal, workstation rebuild).
   # Script must be tracked (git add) so the flake store copy includes it.
-  dotfiles = pkgs.writeShellScriptBin "dotfiles" (builtins.readFile ../config/scripts/dotfiles.sh);
+  dotfiles = pkgs.writeShellScriptBin "dotfiles" (builtins.readFile ../apps/scripts/dotfiles.sh);
 
   # Open a project directory in Zed.
   # Usage: z <dir> [subdir]
-  z = pkgs.writeShellScriptBin "z" (builtins.readFile ../config/scripts/z.sh);
+  z = pkgs.writeShellScriptBin "z" (builtins.readFile ../apps/scripts/z.sh);
 in {
   home.packages = [ dotfiles-switch dotfiles z ];
 }

@@ -15,26 +15,26 @@
 
   # Deploy alacritty.toml from template; shell.program uses home from local.nix.
   xdg.configFile."alacritty/alacritty.toml".text =
-    (import ../config/alacritty/alacritty.nix) config.home.homeDirectory;
+    (import ../apps/alacritty/alacritty.nix) config.home.homeDirectory;
   xdg.configFile."alacritty/keybindings.toml" = {
     source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/alacritty/keybindings.toml";
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/apps/alacritty/keybindings.toml";
     force = true;
   };
   xdg.configFile."alacritty/themes/alacritty_dark.toml" = {
     source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/alacritty/themes/alacritty_dark.toml";
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/apps/alacritty/themes/alacritty_dark.toml";
     force = true;
   };
   xdg.configFile."alacritty/themes/alacritty_light.toml" = {
     source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/alacritty/themes/alacritty_light.toml";
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/apps/alacritty/themes/alacritty_light.toml";
     force = true;
   };
 
   #####################
   # Zellij           #
   #####################
-  xdg.configFile."zellij/config.kdl".source = ../config/zellij/config.kdl;
-  xdg.configFile."zellij/layouts/default.kdl".source = ../config/zellij/layouts/default.kdl;
+  xdg.configFile."zellij/config.kdl".source = ../apps/zellij/config.kdl;
+  xdg.configFile."zellij/layouts/default.kdl".source = ../apps/zellij/layouts/default.kdl;
 }

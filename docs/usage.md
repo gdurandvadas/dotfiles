@@ -23,9 +23,9 @@ Both profiles share the same tools (Zed and the CLI stack). The work profile onl
 ## Pi
 
 Pi is installed through the pinned `pkgs.pi-coding-agent` package. Global mutable
-settings live in `config/pi/` and are linked to `~/.pi/agent/` by Home Manager.
-This repository also contains project-local `.pi/` settings, extensions, skills,
-and memory placeholders.
+settings live in `apps/pi/config/` and are linked to `~/.pi/agent/` by Home
+Manager. Project-local Pi extensions, skills, and memory placeholders live in
+`apps/pi/project/`; root `.pi/` is only a discovery shim.
 
 ## Per-project environments
 

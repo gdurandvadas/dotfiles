@@ -34,9 +34,9 @@
   };
 
   # Custom scripts sourced by .zsh; theme-switch symlinks Alacritty theme + Starship config by dark/light
-  home.file.".zsh/theme-switch.zsh".source = ../config/scripts/theme-switch.zsh;
-  home.file.".zsh/mise.zsh".source = ../config/scripts/mise.zsh;
-  home.file.".zsh/z.zsh".source = ../config/scripts/z.zsh;
+  home.file.".zsh/theme-switch.zsh".source = ../apps/scripts/theme-switch.zsh;
+  home.file.".zsh/mise.zsh".source = ../apps/scripts/mise.zsh;
+  home.file.".zsh/z.zsh".source = ../apps/scripts/z.zsh;
 
   #####################
   # Starship          #
@@ -47,8 +47,8 @@
   };
 
   # Starship: dark (mocha) / light (frappe); script symlinks ~/.config/starship.toml to one
-  xdg.configFile."starship/starship_dark.toml".source = ../config/starship/starship_dark.toml;
-  xdg.configFile."starship/starship_light.toml".source = ../config/starship/starship_light.toml;
+  xdg.configFile."starship/starship_dark.toml".source = ../apps/starship/starship_dark.toml;
+  xdg.configFile."starship/starship_light.toml".source = ../apps/starship/starship_light.toml;
 
   #####################
   # Direnv          #

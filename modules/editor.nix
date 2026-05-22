@@ -15,12 +15,12 @@
   # Symlinks into dotfiles repo (edit there, changes apply without rebuild).
   xdg.configFile."zed/settings.json" = {
     source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/zed/settings.json";
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/apps/zed/settings.json";
     force = true;
   };
   xdg.configFile."zed/keymap.json" = {
     source =
-      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/config/zed/keymap.json";
+      config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/dotfiles/apps/zed/keymap.json";
     force = true;
   };
 }

@@ -4,7 +4,7 @@
     ./modules/shell.nix
     ./modules/terminal.nix
     ./modules/editor.nix
-    ./modules/pi.nix
+    ./apps/pi/module.nix
     ./modules/scripts.nix
     ./modules/tools.nix
   ];

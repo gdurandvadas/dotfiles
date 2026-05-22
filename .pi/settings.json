@@ -1,5 +1,5 @@
 {
-  "extensions": ["extensions/repo-status.ts"],
-  "skills": ["skills"],
+  "extensions": ["../apps/pi/project/extensions/repo-status.ts"],
+  "skills": ["../apps/pi/project/skills"],
   "enableSkillCommands": true
 }

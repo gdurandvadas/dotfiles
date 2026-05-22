@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 let
   hd = config.home.homeDirectory;
-  dotfiles = "${hd}/.config/dotfiles/config/pi";
+  dotfiles = "${hd}/.config/dotfiles/apps/pi/config";
   mkLink = path: {
     source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
     force = true;

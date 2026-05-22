@@ -21,5 +21,5 @@
     _1password-cli
   ];
 
-  xdg.configFile."mise/config.toml".source = ../config/mise/config.toml;
+  xdg.configFile."mise/config.toml".source = ../apps/mise/config.toml;
 }
