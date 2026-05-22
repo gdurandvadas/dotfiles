@@ -5,7 +5,10 @@
     gh
     mise
     brave
+    codex
     tflint
+    pulumi
+    awscli2
     protobuf
     wasm-pack
     dioxus-cli
@@ -13,12 +16,10 @@
     gemini-cli
     antigravity
     claude-code
-    codex
     cloudflared
     terraform-docs
-    pulumi
-    awscli2
     _1password-cli
+    pi-coding-agent
   ];
 
   xdg.configFile."mise/config.toml".source = ../apps/mise/config.toml;
