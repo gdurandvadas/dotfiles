@@ -1,0 +1,20 @@
+{ pkgs, ... }:
+let
+  dotfiles-switch = pkgs.writeShellScriptBin "dotfiles-switch" ''
+    set -e
+    DOTFILES="$HOME/.config/dotfiles"
+    echo "Switching to dotfiles (darwin + home-manager)"
+    # Pass DOTFILES_DIR explicitly so builtins.getEnv resolves correctly even
+    # when nix-darwin activation runs as root and nix resets HOME to /var/root.
+    sudo DOTFILES_DIR="$DOTFILES" darwin-rebuild switch --flake "$DOTFILES#workstation" --impure "$@"
+  '';
+
+  dotfiles = pkgs.writeShellScriptBin "dotfiles" (builtins.readFile ./dotfiles.sh);
+  z = pkgs.writeShellScriptBin "z" (builtins.readFile ./z.sh);
+in {
+  home.packages = [ dotfiles-switch dotfiles z ];
+
+  home.file.".zsh/theme-switch.zsh".source = ./theme-switch.zsh;
+  home.file.".zsh/mise.zsh".source = ./mise.zsh;
+  home.file.".zsh/z.zsh".source = ./z.zsh;
+}

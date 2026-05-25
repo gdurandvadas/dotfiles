@@ -3,10 +3,6 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    # Track `nixpkgs` master only for `pkgs.opencode`: nixpkgs pins the derivation and patches (bun
-    # semver / build scripts) so it evaluates and often hits Hydra cache. OpenCode's own flake
-    # expects a newer Bun than `nixpkgs-unstable` ships and can fail mid-build without those patches.
-    nixpkgs-opencode.url = "github:nixos/nixpkgs/master";
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -19,18 +15,12 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-opencode, home-manager, darwin, ... }:
+  outputs = { self, nixpkgs, home-manager, darwin, ... }:
   let
     system = "aarch64-darwin";
     unfree = import ./unfree-packages.nix;
     pkgs = import nixpkgs {
       inherit system;
-      overlays = [
-        (_final: prev: {
-          # Only replaces `prev.opencode`; every other attribute stays from inputs.nixpkgs.
-          opencode = nixpkgs-opencode.legacyPackages.${system}.opencode;
-        })
-      ];
       config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfree.base;
     };
     # local.nix is gitignored — referenced via absolute path so Nix doesn't

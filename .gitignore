@@ -1,6 +1,5 @@
 result
 hosts/local.nix
-.opencode
 .claude
 .dotfiles-profile
 .cursor

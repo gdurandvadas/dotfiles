@@ -1,6 +1,6 @@
 # dotfiles
 
-**Goal:** A fast, GPU-friendly development environment with **agent management** (AI-assisted workflows, OpenCode, Cursor) and a **Rust-first** toolchain. Nix + Home Manager keep everything reproducible.
+**Goal:** A fast, GPU-friendly development environment with **editor, CLI, and agent tooling** plus a **Rust-first** toolchain. Nix + Home Manager keep everything reproducible.
 
 ![Screenshot](docs/screenshot.png)
 
