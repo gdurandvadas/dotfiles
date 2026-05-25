@@ -1,7 +1,0 @@
-{
-  "sessionDir": "~/.pi/agent/sessions",
-  "extensions": [],
-  "skills": [],
-  "enableSkillCommands": true,
-  "lastChangelogVersion": "0.70.0"
-}

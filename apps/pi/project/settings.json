@@ -1,5 +1,0 @@
-{
-  "extensions": ["extensions/repo-status.ts"],
-  "skills": ["skills"],
-  "enableSkillCommands": true
-}

@@ -9,8 +9,6 @@
 | `dotfiles workstation rebuild`                        | Rebuild darwin workstation (darwin only)            |
 | `nix run .#switch-personal` / `nix run .#switch-work` | Alternative: apply profile directly via flake       |
 | `direnv allow`                                        | Activate a project-local Nix environment (`.envrc`) |
-| `pi`                                                  | Start the pinned Pi coding agent                    |
-| `pi-init`                                             | Initialize or update `.pi/` in the current project  |
 
 ## Profiles
 
@@ -20,39 +18,6 @@
 | Work     | `work`     | `my.user.workEmail` |
 
 Both profiles share the same tools (Zed and the CLI stack). The work profile only overrides git email.
-
-## Pi
-
-Pi is installed through the pinned `pkgs.pi-coding-agent` package. Global mutable
-settings live in `apps/pi/config/` and are linked to `~/.pi/agent/` by Home
-Manager. Project-local Pi extensions, skills, and memory placeholders live in
-`apps/pi/project/`; root `.pi/` is only a discovery shim.
-
-### Initialize a project
-
-From any project directory:
-
-```sh
-pi-init
-```
-
-This syncs `apps/pi/project/` into the current project's `.pi/` directory.
-If `.pi/` already exists, `pi-init` prompts before overwrite.
-
-Useful flags:
-
-```sh
-pi-init --dry-run
-pi-init --force
-```
-
-Version tracking:
-
-- Template version: `.pi/VERSION`
-- Template changelog: `.pi/CHANGELOG.md`
-
-When you update dotfiles, run `pi-init` again in projects to move them to the
-new template version.
 
 ## Per-project environments
 

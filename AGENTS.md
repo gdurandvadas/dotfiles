@@ -44,12 +44,7 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 │   ├── mise/
 │   │   ├── module.nix     # Mise package + config link
 │   │   └── config.toml
-│   ├── pi/
-│   │   ├── module.nix     # Pi coding agent harness
-│   │   ├── config/        # Mutable Pi global config (symlinked out-of-store)
-│   │   └── project/       # Project-local Pi extensions, skills, and memory notes
 │   └── …                  # Additional app bundles follow the same pattern
-├── .pi/                   # Minimal Pi discovery shim
 └── docs/
     └── secrets-1password.md # 1Password CLI usage for secrets (no secrets in repo/store)
 ```
@@ -270,14 +265,6 @@ xdg.configFile."zed/settings.json".source =
 
 ```nix
 programs.git.userEmail = lib.mkForce config.my.user.workEmail;
-```
-
-**Out-of-store Pi config** (allows Pi to mutate its own settings):
-
-```nix
-home.file.".pi/agent/settings.json".source =
-  config.lib.file.mkOutOfStoreSymlink
-    "${config.home.homeDirectory}/.config/dotfiles/apps/pi/config/settings.json";
 ```
 
 ## Editor Setup
