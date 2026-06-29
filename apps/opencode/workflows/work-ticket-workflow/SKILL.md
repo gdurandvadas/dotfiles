@@ -20,7 +20,7 @@ Work through these steps in order. Do not skip any step.
 ### Pre-Implementation
 - [ ] **1. Confirm ticket** — get or confirm the ticket ID from the user
 - [ ] **2. Review readiness** — load `work-review-ticket` and validate the ticket is ready to implement
-- [ ] **3. Research** — delegate to `work.architect` for technical analysis and implementation plan
+- [ ] **3. Research** — delegate to `architect` for technical analysis and implementation plan
 - [ ] **4. Post plan** — post the architect's plan as a comment on the ClickUp ticket
 
 ### Implementation

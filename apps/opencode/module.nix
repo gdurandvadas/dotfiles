@@ -12,7 +12,7 @@ in {
   ];
 
   xdg.configFile = {
-    "opencode/config.json" = mkLink "config.json";
+    "opencode/config.json" = mkLink "config.vavo.json";
     "opencode/AGENTS.md" = mkLink "AGENTS.md";
     "opencode/agents" = mkLink "agents";
     "opencode/tools" = mkLink "tools";

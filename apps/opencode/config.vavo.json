@@ -1,25 +1,28 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "skills": {
-    "paths": ["./workflows/work"]
+    "paths": ["./workflows"]
   },
   "server": {
     "hostname": "127.0.0.1",
     "mdns": false
   },
   "default_agent": "plan",
-  "model": "amazonbedrock/anthropic.claude-haiku-4-5",
+  "model": "anthropic/claude-haiku-4-5",
   "provider": {
-    "amazonbedrock": {
-      "region": "<PLACEHOLDER: e.g. us-east-1>"
+    "anthropic": {
+      "options": {
+        "baseUrl": "{env:ANTHROPIC_BASE_URL}",
+        "apiKey": "{env:ANTHROPIC_AUTH_TOKEN}"
+      }
     }
   },
   "agent": {
     "build": { "disable": true },
     "plan": {
-      "model": "amazonbedrock/anthropic.claude-sonnet-4-5",
-      "prompt": "{file:./agents/work/planner.md}",
-      "description": "Ticket-aware research and task breakdown. Validates the ticket before exploring and planning.",
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./agents/planner.md}",
+      "description": "Research and task breakdown. Optionally grounds work in a ticket. Explores the codebase and produces a structured plan for @orchestrate to execute.",
       "temperature": 0.4,
       "max_tokens": 4000,
       "permission": {
@@ -33,9 +36,9 @@
       }
     },
     "orchestrate": {
-      "model": "amazonbedrock/anthropic.claude-sonnet-4-5",
-      "prompt": "{file:./agents/work/orchestrator.md}",
-      "description": "Ticket-first execution orchestrator. Enforces research-before-implementation and delegates to the right agents.",
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./agents/orchestrator.md}",
+      "description": "Execution orchestrator. Follows ticket lifecycle when a ticket is present, otherwise takes a plan and delegates to the right agents.",
       "temperature": 0.3,
       "max_tokens": 2000,
       "permission": {
@@ -45,9 +48,9 @@
         "bash": "deny"
       }
     },
-    "work.architect": {
-      "model": "amazonbedrock/anthropic.claude-sonnet-4-5",
-      "prompt": "{file:./agents/work/architect.md}",
+    "architect": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./agents/architect.md}",
       "description": "Technical research subagent. Analyses requirements and codebase, produces implementation plan, posts to ticket.",
       "temperature": 0.2,
       "max_tokens": 4000,
@@ -63,20 +66,20 @@
       }
     },
     "investigate": {
-      "model": "amazonbedrock/anthropic.claude-haiku-4-5",
+      "model": "anthropic/claude-haiku-4-5",
       "prompt": "{file:./agents/shared/investigator.md}",
       "temperature": 0.3,
       "max_tokens": 3000
     },
     "agent.explore": {
-      "model": "amazonbedrock/anthropic.claude-haiku-4-5",
+      "model": "anthropic/claude-haiku-4-5",
       "prompt": "{file:./agents/shared/explorer.md}",
       "temperature": 0.1,
       "max_tokens": 1500,
       "hidden": true
     },
     "agent.swift": {
-      "model": "amazonbedrock/anthropic.claude-haiku-4-5",
+      "model": "anthropic/claude-haiku-4-5",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Fast implementation agent for self-contained edits: single-file changes, docs, tests, trivial bugfixes.",
       "temperature": 0.2,
@@ -89,7 +92,7 @@
       }
     },
     "agent.craft": {
-      "model": "amazonbedrock/anthropic.claude-sonnet-4-5",
+      "model": "anthropic/claude-sonnet-4-6",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Standard implementation agent for multi-file features, refactors, and non-trivial bugfixes.",
       "temperature": 0.3,
@@ -102,7 +105,7 @@
       }
     },
     "agent.forge": {
-      "model": "amazonbedrock/anthropic.claude-sonnet-4-5",
+      "model": "anthropic/claude-sonnet-4-6",
       "prompt": "{file:./agents/prompts/implementer.md}",
       "description": "Advanced implementation agent for complex, cross-cutting work: large-scale refactors, uncertain scope, deep debugging.",
       "temperature": 0.3,
@@ -178,38 +181,9 @@
     "doom_loop": "ask"
   },
   "mcp": {
-    "github_grep": {
+    "mcp-gateway": {
       "type": "remote",
-      "url": "https://mcp.grep.app"
-    },
-    "deep_wiki": {
-      "type": "remote",
-      "url": "https://mcp.deepwiki.com/mcp"
-    },
-    "github": {
-      "type": "remote",
-      "url": "https://api.githubcopilot.com/mcp/",
-      "headers": { "Authorization": "Bearer {env:GITHUB_TOKEN}" }
-    },
-    "clickup": {
-      "type": "remote",
-      "url": "https://mcp.clickup.com/mcp",
-      "headers": { "Authorization": "Bearer {env:CLICKUP_API_TOKEN}" }
-    },
-    "cortex": {
-      "type": "remote",
-      "url": "https://mcp.cortex.io/mcp",
-      "headers": { "Authorization": "Bearer {env:CORTEX_API_TOKEN}" }
-    },
-    "slite": {
-      "type": "remote",
-      "url": "https://api.slite.com/mcp",
-      "headers": { "Authorization": "Bearer {env:SLITE_API_TOKEN}" }
-    },
-    "wiz": {
-      "type": "remote",
-      "url": "https://mcp.app.wiz.io",
-      "headers": { "Authorization": "Bearer {env:WIZ_API_TOKEN}" }
+      "url": "{env:MCP_GATEWAY_URL}"
     }
   },
   "autoupdate": true,
