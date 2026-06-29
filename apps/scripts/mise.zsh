@@ -1,2 +1,1 @@
-# Initialize mise (version manager)
-eval "$(~/.nix-profile/bin/mise activate zsh --quiet)"
+eval "$(mise activate zsh --quiet)"

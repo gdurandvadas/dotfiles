@@ -37,12 +37,6 @@
     hmSwitch = profile: self.lib.mkApp (pkgs.writeShellScriptBin "hm-switch" ''
       set -e
       export DOTFILES_DIR="''${DOTFILES_DIR:-$HOME/.config/dotfiles}"
-      # shellcheck source=ensure-binary-cache.sh
-      source "$DOTFILES_DIR/apps/scripts/ensure-binary-cache.sh"
-
-      if [[ "''${DOTFILES_SKIP_BINARY_GUARD:-0}" != 1 ]]; then
-        ensure_binary_cache_switch "$DOTFILES_DIR" "${profile}" "dotfiles switch"
-      fi
       exec "${hmPkg}/bin/home-manager" switch --flake "$DOTFILES_DIR#${profile}" --impure "$@"
     '');
   in {

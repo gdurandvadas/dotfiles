@@ -18,6 +18,8 @@ in {
   home.packages = [ dotfiles-switch dotfiles z c oc-pers oc-work ];
 
   home.file.".zsh/theme-switch.zsh".source = ./theme-switch.zsh;
-  home.file.".zsh/mise.zsh".source = ./mise.zsh;
-  home.file.".zsh/z.zsh".source = ./z.zsh;
+  home.file.".zsh/mise.zsh".source         = ./mise.zsh;
+  home.file.".zsh/direnv.zsh".source       = ./direnv.zsh;
+  home.file.".zsh/starship.zsh".source     = ./starship.zsh;
+  home.file.".zsh/z.zsh".source            = ./z.zsh;
 }

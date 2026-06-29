@@ -1,54 +1,45 @@
-{ config, pkgs, ... }: {
+{ config, ... }: {
   home.sessionVariables = {
     XDG_CONFIG_HOME = "$HOME/.config";
-    PROJECTS_DIR = "$HOME/Development";
+    PROJECTS_DIR    = "$HOME/Development";
   };
 
   home.sessionPath = [ "$HOME/.local/bin" ];
 
-  home.packages = with pkgs; [
-    fzf
-    ripgrep
-    fd
-    bat
-    eza
-    jq
-    yq
-    git
-  ];
+  # Brew manages the zsh binary; HM writes the config file.
+  home.file.".zshrc".text = ''
+    # HM session variables: XDG_CONFIG_HOME, PROJECTS_DIR, PATH extensions
+    [ -f "''${HOME}/.nix-profile/etc/profile.d/hm-session-vars.sh" ] \
+      && source "''${HOME}/.nix-profile/etc/profile.d/hm-session-vars.sh"
 
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;
+    eval "$(/opt/homebrew/bin/brew shellenv)"
 
-    initContent = ''
-      # Load custom scripts (using (N) to avoid errors if no files exist)
-      for f in $HOME/.zsh/*.zsh(N); do source $f; done
-    '';
-  };
+    autoload -Uz compinit && compinit
 
-  programs.direnv = {
-    enable = true;
-    enableZshIntegration = true;
-    nix-direnv.enable = true;
-  };
+    source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+    source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
-  programs.git = {
-    enable = true;
-    settings = {
-      user = {
-        name = config.my.user.name;
-        email = config.my.user.email;
-        signingkey = config.my.user.sshSigningKey;
-      };
-      gpg.format = "ssh";
-      "gpg \"ssh\"".program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign";
-      commit.gpgsign = true;
-      pull.rebase = true;
-      fetch.prune = true;
-      fetch.pruneTags = true;
-    };
-  };
+    source <(fzf --zsh)
+
+    for f in ''${HOME}/.zsh/*.zsh(N); do source "$f"; done
+  '';
+
+  # Git config — reads identity from my.user (set in hosts/local.nix).
+  xdg.configFile."git/config".text = ''
+    [user]
+      name       = ${config.my.user.name}
+      email      = ${config.my.user.email}
+      signingkey = ${config.my.user.sshSigningKey}
+    [gpg]
+      format = ssh
+    [gpg "ssh"]
+      program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
+    [commit]
+      gpgsign = true
+    [pull]
+      rebase = true
+    [fetch]
+      prune     = true
+      pruneTags = true
+  '';
 }

@@ -6,19 +6,16 @@ let
     force = true;
   };
 in {
-  home.packages = with pkgs; [
-    opencode
-    playwright
-  ];
+  # opencode binary is managed by Homebrew (anomalyco/tap/opencode).
 
   xdg.configFile = {
     "opencode/config.json" = mkLink "config.vavo.json";
-    "opencode/AGENTS.md" = mkLink "AGENTS.md";
-    "opencode/agents" = mkLink "agents";
-    "opencode/tools" = mkLink "tools";
-    "opencode/plugins" = mkLink "plugins";
-    "opencode/skills" = mkLink "skills";
-    "opencode/workflows" = mkLink "workflows";
+    "opencode/AGENTS.md"   = mkLink "AGENTS.md";
+    "opencode/agents"      = mkLink "agents";
+    "opencode/tools"       = mkLink "tools";
+    "opencode/plugins"     = mkLink "plugins";
+    "opencode/skills"      = mkLink "skills";
+    "opencode/workflows"   = mkLink "workflows";
   };
 
   home.activation.opencode-deps = config.lib.dag.entryAfter [ "writeBoundary" ] ''

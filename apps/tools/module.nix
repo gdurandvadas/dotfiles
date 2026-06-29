@@ -1,19 +1,4 @@
-{ pkgs, ... }: {
-  home.packages = with pkgs; [
-    gh
-    brave
-    codex
-    tflint
-    pulumi
-    awscli2
-    protobuf
-    wasm-pack
-    dioxus-cli
-    cursor-cli
-    gemini-cli
-    antigravity
-    claude-code
-    cloudflared
-    _1password-cli
-  ];
+{ ... }: {
+  # All tools are managed by Homebrew (see hosts/darwin.nix homebrew block).
+  # Keep this module for future config-only additions.
 }
