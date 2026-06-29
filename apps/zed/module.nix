@@ -1,4 +1,4 @@
-{ pkgs, config, ... }:
+{ config, ... }:
 let
   zedDownloadEndpoint =
     "https://cloud.zed.dev/releases/stable/latest/asset?asset=zed&os=macos&arch=aarch64";
@@ -22,10 +22,16 @@ in {
       app_dir="$HOME/Applications"
       app_path="$app_dir/Zed.app"
       bin_dir="$HOME/.local/bin"
+      jq_bin="$(command -v jq || true)"
 
-      latest_json="$(${pkgs.curl}/bin/curl -fsSL "${zedDownloadEndpoint}" || true)"
-      latest_version="$(printf '%s' "$latest_json" | ${pkgs.jq}/bin/jq -r '.version // empty' 2>/dev/null || true)"
-      download_url="$(printf '%s' "$latest_json" | ${pkgs.jq}/bin/jq -r '.url // empty' 2>/dev/null || true)"
+      if [[ -z "$jq_bin" ]]; then
+        echo "Zed binary install skipped: jq is not available yet." >&2
+        exit 0
+      fi
+
+      latest_json="$(/usr/bin/curl -fsSL "${zedDownloadEndpoint}" || true)"
+      latest_version="$(printf '%s' "$latest_json" | "$jq_bin" -r '.version // empty' 2>/dev/null || true)"
+      download_url="$(printf '%s' "$latest_json" | "$jq_bin" -r '.url // empty' 2>/dev/null || true)"
 
       installed_version=""
       if [[ -f "$app_path/Contents/Info.plist" ]]; then
@@ -37,7 +43,7 @@ in {
         tmpdir="$(mktemp -d)"
         mkdir -p "$tmpdir/mnt" "$app_dir"
 
-        if ${pkgs.curl}/bin/curl -fL "$download_url" -o "$tmpdir/Zed.dmg" \
+        if /usr/bin/curl -fL "$download_url" -o "$tmpdir/Zed.dmg" \
           && hdiutil attach "$tmpdir/Zed.dmg" -nobrowse -readonly -mountpoint "$tmpdir/mnt" >/dev/null \
           && [[ -d "$tmpdir/mnt/Zed.app" ]]; then
           rm -rf "$app_path"

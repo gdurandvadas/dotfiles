@@ -113,7 +113,7 @@ home-manager dry-activate --flake .#personal
 ### Apply Configuration
 
 ```bash
-dotfiles switch
+dotfiles apply
 home-manager switch --flake .#personal
 ```
 

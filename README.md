@@ -32,10 +32,10 @@
 4. **Apply:**
 
    ```sh
-   nix run .#switch
+   nix run .#apply
    ```
 
-   On a nix-darwin workstation you can use `dotfiles-switch` instead — see [docs/bootstrap.md](docs/bootstrap.md).
+   On a nix-darwin workstation, bootstrap the full system with `dotfiles-apply` after the first darwin build — see [docs/bootstrap.md](docs/bootstrap.md).
 
 ---
 

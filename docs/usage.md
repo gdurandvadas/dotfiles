@@ -15,18 +15,18 @@ Nix never installs a runtime binary. Homebrew never writes a config file.
 
 | Command                                    | Description                                                           |
 | ------------------------------------------ | --------------------------------------------------------------------- |
-| `dotfiles workstation rebuild`             | Apply everything: brew installs/upgrades + Home Manager config        |
-| `dotfiles switch`                          | Apply Home Manager config only (no brew changes)                      |
-| `dotfiles update [--darwin]`               | Update flake inputs, then switch; `--darwin` also runs darwin-rebuild |
+| `dotfiles workstation apply`               | Apply everything: brew installs/upgrades + Home Manager config        |
+| `dotfiles apply`                           | Apply Home Manager config only (no brew changes)                      |
+| `dotfiles update [--darwin]`               | Update flake inputs, then apply; `--darwin` also runs darwin-rebuild  |
 | `direnv allow`                             | Activate a project-local Nix dev environment (`.envrc`)               |
 | `z <project>`                              | Open a project in Zed                                                 |
 | `c <project>`                              | Open a project in Cursor                                              |
 | `oc-pers [--copilot\|--claude]`            | Launch OpenCode with personal config                                  |
 | `oc-work [--copilot\|--bedrock\|--claude]` | Launch OpenCode with work config                                      |
 
-> **When to use which switch command:**
-> - `dotfiles workstation rebuild` — canonical. Installs/upgrades brew packages AND applies config. Use this after adding a new brew package.
-> - `dotfiles switch` — config files only. No brew interaction. Use this for quick config edits.
+> **When to use which apply command:**
+> - `dotfiles workstation apply` — canonical. Installs/upgrades brew packages AND applies config. Use this after adding a new brew package.
+> - `dotfiles apply` — config files only. No brew interaction. Use this for quick config edits.
 
 ## Per-project environments
 
@@ -44,7 +44,7 @@ Or write a `flake.nix` in the project root with a `devShell` output. `direnv` wi
 Edit `hosts/darwin.nix` and add the formula or cask to the `homebrew.brews` or `homebrew.casks` list. Then run:
 
 ```sh
-dotfiles workstation rebuild
+dotfiles workstation apply
 ```
 
 - Formulas (CLIs): `homebrew.brews = [ ... "my-tool" ... ]`
@@ -62,10 +62,10 @@ Use `mise` — edit `apps/mise/config.toml` and run `mise install`. No rebuild n
 1. Create `apps/<name>/module.nix`
 2. Add it to the `imports` list in `default.nix`
 3. Reference identity via `config.my.user.*` — never hardcode strings
-4. Apply: `dotfiles switch`
+4. Apply: `dotfiles apply`
 
 ## Notes on specific packages
 
 - **dioxus-cli (`dx`):** No brew formula yet. Install with `curl -fsSL https://dioxuslabs.com/install.sh | bash` or `cargo binstall dioxus-cli`.
-- **Zed:** Downloaded from the upstream binary on each `dotfiles switch` if a newer version is available.
+- **Zed:** Downloaded from the upstream binary on each `dotfiles apply` if a newer version is available.
 - **LSP servers** (gopls, rust-analyzer, etc.): managed automatically by Zed/Cursor when opening a file. No manual installation needed.

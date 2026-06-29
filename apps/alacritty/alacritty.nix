@@ -53,8 +53,7 @@ homeDirectory: ''
   shape = "Block"
   blinking = "On"
 
-  # Launch Zellij on startup (path from local.nix via homeDirectory)
   [terminal.shell]
-  program = "${homeDirectory}/.nix-profile/bin/zellij"
+  program = "/opt/homebrew/bin/zellij"
   args = ["attach", "-c", "main"]
 ''

@@ -28,9 +28,9 @@
       if d != "" then d else "${builtins.getEnv "HOME"}/.config/dotfiles";
     localModule = "${dotfilesDir}/hosts/local.nix";
 
-    # Home-manager switch apps: use flake's home-manager so version stays in one place.
+    # Home Manager apply apps: use flake's home-manager so version stays in one place.
     hmPkg = home-manager.packages.${system}.default;
-    hmSwitch = profile: self.lib.mkApp (pkgs.writeShellScriptBin "hm-switch" ''
+    hmApply = profile: self.lib.mkApp (pkgs.writeShellScriptBin "hm-apply" ''
       set -e
       export DOTFILES_DIR="''${DOTFILES_DIR:-$HOME/.config/dotfiles}"
       exec "${hmPkg}/bin/home-manager" switch --flake "$DOTFILES_DIR#${profile}" --impure "$@"
@@ -41,7 +41,9 @@
     };
 
     apps.${system} = {
-      switch = hmSwitch "personal";
+      apply = hmApply "personal";
+      # Compatibility alias for old installed wrappers during migration.
+      switch = hmApply "personal";
     };
 
     homeConfigurations = {

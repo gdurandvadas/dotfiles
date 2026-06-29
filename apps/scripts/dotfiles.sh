@@ -1,28 +1,28 @@
 #!/usr/bin/env bash
-# Unified script for home-manager and darwin switches.
+# Unified script for Home Manager and nix-darwin applies.
 # Usage:
-#   dotfiles switch              → home-manager switch (config files only)
-#   dotfiles workstation rebuild → darwin-rebuild switch #workstation (brew + config)
-#   dotfiles update [--darwin]   → nix flake update, then home-manager switch
+#   dotfiles apply             → apply Home Manager config only
+#   dotfiles workstation apply → apply nix-darwin, brew, and Home Manager
+#   dotfiles update [--darwin] → nix flake update, then apply Home Manager config
 
 set -e
 DOTFILES="${DOTFILES_DIR:-$HOME/.config/dotfiles}"
 
 usage() {
-  echo "Usage: dotfiles switch"
-  echo "       dotfiles workstation rebuild"
+  echo "Usage: dotfiles apply"
+  echo "       dotfiles workstation apply"
   echo "       dotfiles update [--darwin] [nix flake update inputs...]"
   echo ""
-  echo "  switch              - apply Home Manager config (config files only)"
-  echo "  workstation rebuild - darwin-rebuild switch (also runs brew installs/upgrades)"
-  echo "  update              - nix flake update, then home-manager switch"
+  echo "  apply             - apply Home Manager config (config files only)"
+  echo "  workstation apply - apply nix-darwin config (also runs brew installs/upgrades)"
+  echo "  update            - nix flake update, then apply Home Manager config"
   echo "                        Use --darwin to also run darwin-rebuild switch."
   exit 1
 }
 
 case "${1:-}" in
-  switch)
-    exec nix run "$DOTFILES#switch" -- "${@:2}"
+  apply)
+    exec nix run "$DOTFILES#apply" -- "${@:2}"
     ;;
   update)
     flake_args=()
@@ -35,7 +35,7 @@ case "${1:-}" in
     done
 
     nix flake update --flake "$DOTFILES" "${flake_args[@]}"
-    nix run "$DOTFILES#switch" --
+    nix run "$DOTFILES#apply" --
 
     if [[ "$include_darwin" -eq 1 ]]; then
       if command -v darwin-rebuild >/dev/null 2>&1; then
@@ -47,10 +47,10 @@ case "${1:-}" in
     fi
     ;;
   workstation)
-    if [ "${2:-}" = "rebuild" ]; then
+    if [ "${2:-}" = "apply" ]; then
       exec sudo DOTFILES_DIR="$DOTFILES" darwin-rebuild switch --flake "$DOTFILES#workstation" --impure "${@:3}"
     else
-      echo "Expected: rebuild"
+      echo "Expected: apply"
       usage
     fi
     ;;

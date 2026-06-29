@@ -7,9 +7,9 @@ Bare minimum on macOS:
 | Requirement | Why |
 |---|---|
 | `curl` | Ships with macOS — used to install Nix |
-| **Nix** (with flakes) | Installs and manages everything else |
+| **Nix** (with flakes) | Applies config and bootstraps nix-darwin |
 
-No Homebrew. No asdf. No manual tool installs.
+Homebrew is installed by nix-darwin and then manages runtime packages.
 
 ## Steps
 
@@ -38,23 +38,15 @@ Edit `hosts/local.nix` and fill in your name, email, username, and GitHub handle
 
 ### 4. Apply
 
-**Option A — Makefile bootstrap (recommended for first-time)**. From the repo directory:
+**Option A — Home Manager only** (no nix-darwin):
 
 ```sh
-make bootstrap
+nix run .#apply
 ```
 
-This checks that Nix is installed, ensures `hosts/local.nix` exists (copies from example if not), ensures you are signed in to 1Password (prompts `op signin` if needed), then runs `nix run .#switch`.
+Use `--impure` when calling `home-manager` directly because `local.nix` is loaded from a path outside the store. The flake app (`nix run .#apply`) uses the flake's home-manager input so the version stays in one place.
 
-**Option B — Home Manager only** (no nix-darwin):
-
-```sh
-nix run .#switch
-```
-
-Use `--impure` when calling `home-manager` directly because `local.nix` is loaded from a path outside the store. The flake app (`nix run .#switch`) uses the flake's home-manager input so the version stays in one place.
-
-**Option C — nix-darwin (workstation)**. One-time bootstrap (run from this repo):
+**Option B — nix-darwin (workstation)**. One-time bootstrap (run from this repo):
 
 ```sh
 export DOTFILES_DIR="$HOME/.config/dotfiles"   # or your clone path
@@ -64,8 +56,8 @@ nix run nix-darwin# -- switch --flake "$DOTFILES_DIR#workstation" --impure
 After that, the flake installs the `dotfiles` CLI. For updates:
 
 ```sh
-dotfiles switch
-dotfiles workstation rebuild
+dotfiles apply
+dotfiles workstation apply
 ```
 
 `dotfiles` runs home-manager or darwin-rebuild as appropriate.
