@@ -29,13 +29,13 @@
 
    Edit `hosts/local.nix` with your name, emails, username, and GitHub handle (this file is gitignored).
 
-4. **Apply your profile:**
+4. **Apply:**
 
    ```sh
-   nix run .#switch-personal
+   nix run .#switch
    ```
 
-   For the work profile: `nix run .#switch-work`. On a nix-darwin workstation you can use `dotfiles-switch` instead — see [docs/bootstrap.md](docs/bootstrap.md).
+   On a nix-darwin workstation you can use `dotfiles-switch` instead — see [docs/bootstrap.md](docs/bootstrap.md).
 
 ---
 

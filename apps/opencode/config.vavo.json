@@ -1,0 +1,191 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "skills": {
+    "paths": ["./workflows"]
+  },
+  "server": {
+    "hostname": "127.0.0.1",
+    "mdns": false
+  },
+  "default_agent": "plan",
+  "model": "anthropic/claude-haiku-4-5",
+  "provider": {
+    "anthropic": {
+      "options": {
+        "baseUrl": "{env:ANTHROPIC_BASE_URL}",
+        "apiKey": "{env:ANTHROPIC_AUTH_TOKEN}"
+      }
+    }
+  },
+  "agent": {
+    "build": { "disable": true },
+    "plan": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./agents/planner.md}",
+      "description": "Research and task breakdown. Optionally grounds work in a ticket. Explores the codebase and produces a structured plan for @orchestrate to execute.",
+      "temperature": 0.4,
+      "max_tokens": 4000,
+      "permission": {
+        "task": {
+          "*": "deny",
+          "agent.explore": "allow"
+        },
+        "read": "allow",
+        "edit": "deny",
+        "bash": "deny"
+      }
+    },
+    "orchestrate": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./agents/orchestrator.md}",
+      "description": "Execution orchestrator. Follows ticket lifecycle when a ticket is present, otherwise takes a plan and delegates to the right agents.",
+      "temperature": 0.3,
+      "max_tokens": 2000,
+      "permission": {
+        "task": "allow",
+        "read": "allow",
+        "edit": "deny",
+        "bash": "deny"
+      }
+    },
+    "architect": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./agents/architect.md}",
+      "description": "Technical research subagent. Analyses requirements and codebase, produces implementation plan, posts to ticket.",
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "hidden": true,
+      "permission": {
+        "task": {
+          "*": "deny",
+          "agent.explore": "allow"
+        },
+        "read": "allow",
+        "edit": "deny",
+        "bash": "deny"
+      }
+    },
+    "investigate": {
+      "model": "anthropic/claude-haiku-4-5",
+      "prompt": "{file:./agents/shared/investigator.md}",
+      "temperature": 0.3,
+      "max_tokens": 3000
+    },
+    "agent.explore": {
+      "model": "anthropic/claude-haiku-4-5",
+      "prompt": "{file:./agents/shared/explorer.md}",
+      "temperature": 0.1,
+      "max_tokens": 1500,
+      "hidden": true
+    },
+    "agent.swift": {
+      "model": "anthropic/claude-haiku-4-5",
+      "prompt": "{file:./agents/prompts/implementer.md}",
+      "description": "Fast implementation agent for self-contained edits: single-file changes, docs, tests, trivial bugfixes.",
+      "temperature": 0.2,
+      "max_tokens": 2000,
+      "hidden": true,
+      "permission": {
+        "task": "deny",
+        "todoread": "deny",
+        "todowrite": "deny"
+      }
+    },
+    "agent.craft": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./agents/prompts/implementer.md}",
+      "description": "Standard implementation agent for multi-file features, refactors, and non-trivial bugfixes.",
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "hidden": true,
+      "permission": {
+        "task": "deny",
+        "todoread": "deny",
+        "todowrite": "deny"
+      }
+    },
+    "agent.forge": {
+      "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./agents/prompts/implementer.md}",
+      "description": "Advanced implementation agent for complex, cross-cutting work: large-scale refactors, uncertain scope, deep debugging.",
+      "temperature": 0.3,
+      "max_tokens": 8000,
+      "hidden": true,
+      "permission": {
+        "task": "deny",
+        "todoread": "deny",
+        "todowrite": "deny"
+      }
+    }
+  },
+  "plugin": ["./plugins/skill-preservation.ts"],
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+  "permission": {
+    "*": "ask",
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow",
+      "~/.config/opencode/**/*": "allow"
+    },
+    "list": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "edit": "allow",
+    "skill": "allow",
+    "task": "deny",
+    "lsp": "allow",
+    "question": "allow",
+    "todoread": "allow",
+    "todowrite": "allow",
+    "storeread": "allow",
+    "storewrite": "allow",
+    "webfetch": "allow",
+    "websearch": "allow",
+    "bash": {
+      "*": "ask",
+      "cat *": "allow",
+      "cp *": "allow",
+      "rg *": "allow",
+      "find *": "allow",
+      "wc *": "allow",
+      "git *": "allow",
+      "git push *": "ask",
+      "go build *": "allow",
+      "go doc *": "allow",
+      "go test *": "allow",
+      "go mod *": "allow",
+      "go docs *": "allow",
+      "go list *": "allow",
+      "grep *": "allow",
+      "head *": "allow",
+      "uniq *": "allow",
+      "ls *": "allow",
+      "mv *": "ask",
+      "rm *": "ask",
+      "sort *": "allow",
+      "sudo *": "ask",
+      "tail *": "allow",
+      "timeout *": "allow",
+      "task *": "allow",
+      "tee *": "allow"
+    },
+    "external_directory": {
+      "*": "ask",
+      "/tmp": "allow"
+    },
+    "doom_loop": "ask"
+  },
+  "mcp": {
+    "mcp-gateway": {
+      "type": "remote",
+      "url": "{env:MCP_GATEWAY_URL}"
+    }
+  },
+  "autoupdate": true,
+  "share": "disabled"
+}

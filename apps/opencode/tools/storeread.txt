@@ -1,0 +1,19 @@
+Use this tool to query and retrieve structured session memories stored by you or other agents.
+This tool supports two modes: LIST (discovery) and READ (retrieval).
+
+1. LIST MODE (Discovery)
+   - Call with NO `id`
+   - Returns a list of summaries only (no heavy data)
+   - Use `tags` to filter the list (AND logic - must match all tags)
+   - Use this to see what work exists without polluting context
+   
+   Example: storeread({ tags: ["auth"] }) -> Returns summaries of all auth work
+
+2. READ MODE (Retrieval)
+   - Call WITH `id`
+   - Returns the full item including the `data` field
+   - Use this when you know exactly what you need to read
+   
+   Example: storeread({ id: "auth-plan-v1" }) -> Returns full design doc
+
+Always Prefer LIST mode first if you are unsure what IDs exist.

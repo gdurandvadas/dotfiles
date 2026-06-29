@@ -2,22 +2,16 @@
 
 ## Daily use
 
-| Command                                               | Description                                         |
-| ----------------------------------------------------- | --------------------------------------------------- |
-| `dotfiles profile personal`                           | Switch to personal profile (home-manager)           |
-| `dotfiles profile work`                               | Switch to work profile (home-manager)               |
-| `dotfiles workstation rebuild`                        | Rebuild darwin workstation (darwin only)            |
-| `nix run .#switch-personal` / `nix run .#switch-work` | Alternative: apply profile directly via flake       |
-| `direnv allow`                                        | Activate a project-local Nix environment (`.envrc`) |
-
-## Profiles
-
-| Profile  | Flake key  | Git identity        |
-| -------- | ---------- | ------------------- |
-| Personal | `personal` | `my.user.email`     |
-| Work     | `work`     | `my.user.workEmail` |
-
-Both profiles share the same tools (Zed and the CLI stack). The work profile only overrides git email.
+| Command                        | Description                                         |
+| ------------------------------ | --------------------------------------------------- |
+| `dotfiles switch`              | Apply home-manager config                           |
+| `dotfiles workstation rebuild` | Rebuild darwin workstation (darwin only)            |
+| `nix run .#switch`             | Alternative: apply directly via flake               |
+| `direnv allow`                 | Activate a project-local Nix environment (`.envrc`) |
+| `z <project>`                  | Open a project in Zed                               |
+| `c <project>`                  | Open a project in Cursor                            |
+| `oc-pers [--copilot\|--claude]`| Launch OpenCode with personal config                |
+| `oc-work [--copilot\|--bedrock\|--claude]` | Launch OpenCode with work config      |
 
 ## Per-project environments
 
@@ -32,7 +26,7 @@ Or write a `flake.nix` in the project root with a `devShell` output. `direnv` wi
 
 ## Adding tools
 
-Edit the relevant `apps/*/module.nix` and add the package to `home.packages` (for example: `apps/tools/module.nix`, `apps/shell/module.nix`, or an app-specific module). Then run `dotfiles-switch` or `dotfiles workstation rebuild` (darwin) or `dotfiles profile personal` / `dotfiles profile work` (home-manager).
+Edit the relevant `apps/*/module.nix` and add the package to `home.packages` (for example: `apps/tools/module.nix`, `apps/shell/module.nix`, or an app-specific module). Then run `dotfiles switch` or `dotfiles workstation rebuild`.
 
 Search packages at [search.nixos.org](https://search.nixos.org/packages).
 
@@ -40,7 +34,7 @@ Search packages at [search.nixos.org](https://search.nixos.org/packages).
 
 ## Adding a new module
 
-1. For app-specific behavior, create `apps/<name>/module.nix`
-2. Add it to the `imports` list in `default.nix` (all profiles), or only in a specific host file if profile-specific
+1. Create `apps/<name>/module.nix`
+2. Add it to the `imports` list in `default.nix`
 3. Reference identity via `config.my.user.*` — never hardcode strings
-4. Apply: `dotfiles-switch` or `dotfiles workstation rebuild` (darwin) or `dotfiles profile personal` / `dotfiles profile work` (home-manager)
+4. Apply: `dotfiles switch` or `dotfiles workstation rebuild`
