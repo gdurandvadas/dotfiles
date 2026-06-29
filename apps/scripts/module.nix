@@ -11,8 +11,11 @@ let
 
   dotfiles = pkgs.writeShellScriptBin "dotfiles" (builtins.readFile ./dotfiles.sh);
   z = pkgs.writeShellScriptBin "z" (builtins.readFile ./z.sh);
+  c = pkgs.writeShellScriptBin "c" (builtins.readFile ./c.sh);
+  oc-pers = pkgs.writeShellScriptBin "oc-pers" (builtins.readFile ./oc-pers.sh);
+  oc-work = pkgs.writeShellScriptBin "oc-work" (builtins.readFile ./oc-work.sh);
 in {
-  home.packages = [ dotfiles-switch dotfiles z ];
+  home.packages = [ dotfiles-switch dotfiles z c oc-pers oc-work ];
 
   home.file.".zsh/theme-switch.zsh".source = ./theme-switch.zsh;
   home.file.".zsh/mise.zsh".source = ./mise.zsh;

@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch64-darwin`). It uses **Nix Flakes** to declare a reproducible user environment across two profiles: `personal` and `work`.
+This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch64-darwin`). It uses **Nix Flakes** to declare a reproducible user environment.
 
 ---
 
@@ -8,26 +8,38 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 
 ```
 .
-├── Makefile               # Bootstrap and switch targets (make bootstrap, make switch-personal, …)
-├── flake.nix              # Entry point — defines personal and work profiles
-├── default.nix            # Shared module imports (all profiles)
+├── Makefile               # Bootstrap and switch targets
+├── flake.nix              # Entry point — defines the personal profile
+├── default.nix            # Shared module imports
 ├── unfree-packages.nix    # Single source of unfree package names (base + darwinExtra)
 ├── hosts/
-│   ├── personal.nix       # Personal profile host config
-│   ├── work.nix           # Work profile host config
+│   ├── personal.nix       # Host config
 │   ├── darwin.nix         # nix-darwin system config (workstation flake)
 │   ├── local.nix          # GITIGNORED — machine identity (see below)
 │   └── local.nix.example  # Template for local.nix
 ├── modules/
-│   ├── user.nix           # Defines options.my.user.* (identity contract)
-│   └── work.nix           # Work-profile overrides (git email)
+│   └── user.nix           # Defines options.my.user.* (identity contract)
 ├── apps/
 │   ├── shell/
 │   │   └── module.nix     # Zsh, direnv, git, shell defaults, baseline CLI utilities
 │   ├── tools/
-│   │   └── module.nix     # Unfree/extra tools (1Password CLI, Brave, gh, claude-code)
+│   │   └── module.nix     # Unfree/extra tools (1Password CLI, Brave, gh, claude-code, etc.)
+│   ├── opencode/
+│   │   ├── module.nix     # OpenCode package + Home Manager wiring
+│   │   ├── config.json    # Personal config (Copilot provider)
+│   │   ├── config.claude.json
+│   │   ├── config.work.*.json
+│   │   ├── agents/        # Agent prompts (personal, shared, work)
+│   │   ├── skills/        # Skill definitions
+│   │   ├── workflows/     # Workflow definitions
+│   │   └── tools/         # Custom tools
 │   ├── scripts/
-│   │   ├── module.nix     # Custom scripts as Nix packages (dotfiles-switch, dotfiles, z)
+│   │   ├── module.nix     # Custom scripts as Nix packages
+│   │   ├── dotfiles.sh    # Unified home-manager / darwin switch script
+│   │   ├── oc-pers.sh     # Launch OpenCode with personal config
+│   │   ├── oc-work.sh     # Launch OpenCode with work config
+│   │   ├── z.sh           # Open project in Zed
+│   │   ├── c.sh           # Open project in Cursor
 │   │   └── *.zsh          # Zsh helper scripts sourced at shell startup
 │   ├── zed/
 │   │   ├── module.nix     # Zed editor + language servers
@@ -41,10 +53,9 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 │   ├── starship/
 │   │   ├── module.nix     # Starship wiring and theme links
 │   │   └── *.toml         # Starship theme files
-│   ├── mise/
-│   │   ├── module.nix     # Mise package + config link
-│   │   └── config.toml
-│   └── …                  # Additional app bundles follow the same pattern
+│   └── mise/
+│       ├── module.nix     # Mise package + config link
+│       └── config.toml
 └── docs/
     └── secrets-1password.md # 1Password CLI usage for secrets (no secrets in repo/store)
 ```
@@ -62,9 +73,9 @@ It holds machine-specific identity and is the only place personal information li
   my.user = {
     name           = "Your Name";
     email          = "you@personal.com";
-    workEmail      = "you@company.com";
     username       = "yourusername";
     githubUsername = "yourgithub";
+    sshSigningKey  = "ssh-ed25519 ...";
   };
 }
 ```
@@ -85,17 +96,6 @@ cp hosts/local.nix.example hosts/local.nix
 
 ---
 
-## Profiles
-
-| Profile  | Flake key  | Host file            | Extra modules      |
-| -------- | ---------- | -------------------- | ------------------ |
-| Personal | `personal` | `hosts/personal.nix` | —                  |
-| Work     | `work`     | `hosts/work.nix`     | `modules/work.nix` |
-
-The work profile overrides git `userEmail` with `my.user.workEmail`.
-
----
-
 ## Build, Lint, and Test Commands
 
 This is a **Nix Flakes** project using **Home Manager**. There are no traditional tests, but you can validate and build the configuration.
@@ -105,63 +105,37 @@ This is a **Nix Flakes** project using **Home Manager**. There are no traditiona
 ```bash
 # Dry-run validation (check for syntax errors)
 nix eval .#homeConfigurations.personal.pkgs --apply 'x: x.outPath' 2>&1 | head -5
-nix eval .#homeConfigurations.work.pkgs --apply 'x: x.outPath' 2>&1 | head -5
 
 # Or use home-manager's dry-run (more thorough)
 home-manager dry-activate --flake .#personal
-home-manager dry-activate --flake .#work
 ```
 
 ### Apply Configuration
 
 ```bash
-# Personal profile (default)
-dotfiles profile personal
+dotfiles switch
 home-manager switch --flake .#personal
-
-# Work profile
-dotfiles profile work
-home-manager switch --flake .#work
 ```
 
 ### Nix Formatting and Linting
 
 ```bash
-# Format Nix files (installed via nix fmt or nix run nixfmt --)
 nix fmt
 
-# Check Nix syntax and evaluate flake (validates all modules)
-nix build .#packages.aarch64-darwin.dummy --show-trace || true
-
-# Evaluate a specific configuration to catch errors early
 nix eval .#homeConfigurations.personal.config.system.buildHomeGenerationPath --apply 'x: x' 2>&1 | head -20
-```
-
-### Useful Debug Commands
-
-```bash
-# Show all options for a module
-home-manager option -m home.packages
-
-# List generated files without applying
-home-manager generations
-
-# Check what packages would be installed
-nix profile list --flake .#personal
 ```
 
 ---
 
 ## Code Style Guidelines
 
-This is a declarative **Nix/ NixOS** configuration repository using Home Manager. Follow these conventions:
+This is a declarative **Nix / NixOS** configuration repository using Home Manager. Follow these conventions:
 
 ### General Principles
 
 - Use **declarative configuration** over imperative scripts
 - Prefer **module composition** (imports) over duplication
 - Keep files focused: one logical concern per file
-- Use descriptive names for options and variables
 
 ### Nix Language Conventions
 
@@ -169,54 +143,35 @@ This is a declarative **Nix/ NixOS** configuration repository using Home Manager
 
 - 2-space indentation
 - Align attributes within attribute sets when it improves readability
-- Use trailing commas in attribute sets and lists (Nix style)
 - Maximum line length: 100 characters (soft limit)
 
 **Imports:**
 
 - Use `./relative/path` for local module imports
 - Put imports at the top of files
-- Group imports logically (stdlib first, then local modules)
 
 **Types:**
 
 - Always declare option types: `type = types.str`, `type = types.listOf types.str`, etc.
-- Use `types.str`, `types.int`, `types.bool`, `types.path`, `types.listOf`, `types.attrsOf`
 - Provide sensible defaults with `default = ...;`
 - Add `description = "...";` for every option
 
 **Naming:**
 
-- Use `snake_case` for variable and option names (e.g., `home.packages`, `enableZshIntegration`)
-- Use `PascalCase` for Nix library functions (e.g., `lib.mkOption`, `lib.mkIf`)
-- Prefix boolean options with `enable` or `disable` (e.g., `enable`, `enableCompletion`)
-
-**Error Handling:**
-
-- Use `lib.mkIf` for conditional config (evaluates to Nix `null` if false)
-- Use `lib.mkWhen` for platform-specific config
-- Use `lib.mkForce` to override values set by imported modules
-- Use `lib.mkDefault` to provide a default that users can override
-- Use `lib.optional` / `lib.optionalString` for conditional inclusion
+- Use `snake_case` for variable and option names
+- Use `PascalCase` for Nix library functions
+- Prefix boolean options with `enable` or `disable`
 
 **Pattern Examples:**
 
 ```nix
-# Option with type and description
-my.option.name = mkOption {
-  type = types.str;
-  description = "Description of what this option does.";
-  example = "example-value";
-};
+# Out-of-store symlink (allows tools to mutate their own config)
+xdg.configFile."zed/settings.json".source =
+  config.lib.file.mkOutOfStoreSymlink
+    "${config.home.homeDirectory}/.config/dotfiles/apps/zed/settings.json";
 
 # Conditional config
 home.packages = lib.mkIf config.my.enableTools (with pkgs; [ foo bar ]);
-
-# Platform-specific
-programs.zsh.enable = lib.mkIf stdenv.isDarwin true;
-
-# Override in work profile
-programs.git.userEmail = lib.mkForce config.my.user.workEmail;
 ```
 
 ### Module Structure Template
@@ -246,32 +201,4 @@ let inherit (lib) mkOption types mkIf; in
 - No emails, usernames, tokens, API keys, or absolute paths in committed files
 - `apps/` files are symlinked out-of-store when tools need mutable config — they may contain non-sensitive config like themes or model names, but never credentials
 - Secrets (API keys, tokens) belong in environment variables or a secrets manager (e.g. 1Password CLI); see [docs/secrets-1password.md](docs/secrets-1password.md)
-- Home Manager config and the Nix store must not contain secrets; use 1Password + `op run` / wrapper scripts
 - `hosts/local.nix` is the only sanctioned location for personal identity values
-
----
-
-## Key Patterns
-
-**Out-of-store symlinks** (allows tools to mutate their own config):
-
-```nix
-xdg.configFile."zed/settings.json".source =
-  config.lib.file.mkOutOfStoreSymlink
-    "${config.home.homeDirectory}/.config/dotfiles/apps/zed/settings.json";
-```
-
-**Work profile override** (force a value set by a base module):
-
-```nix
-programs.git.userEmail = lib.mkForce config.my.user.workEmail;
-```
-
-## Editor Setup
-
-For VS Code / Zed, add this to enable Nix language support:
-
-- **Zed**: Built-in Nix support via tree-sitter
-- **VS Code**: Install `Nix IDE` or `Nix language server` extension
-
-Configure your editor to use `nixfmt` for formatting on save.

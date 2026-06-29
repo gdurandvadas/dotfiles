@@ -34,9 +34,9 @@ cd ~/.config/dotfiles
 cp hosts/local.nix.example hosts/local.nix
 ```
 
-Edit `hosts/local.nix` and fill in your name, emails, username, and GitHub handle. This file is gitignored and never committed.
+Edit `hosts/local.nix` and fill in your name, email, username, and GitHub handle. This file is gitignored and never committed.
 
-### 4. Apply a profile
+### 4. Apply
 
 **Option A — Makefile bootstrap (recommended for first-time)**. From the repo directory:
 
@@ -44,19 +44,15 @@ Edit `hosts/local.nix` and fill in your name, emails, username, and GitHub handl
 make bootstrap
 ```
 
-This checks that Nix is installed, ensures `hosts/local.nix` exists (copies from example if not), ensures you are signed in to 1Password (prompts `op signin` if needed), then runs `nix run .#switch-personal`. After the first run, use the `dotfiles` CLI or make targets for updates.
+This checks that Nix is installed, ensures `hosts/local.nix` exists (copies from example if not), ensures you are signed in to 1Password (prompts `op signin` if needed), then runs `nix run .#switch`.
 
-**Option B — Home Manager only** (no nix-darwin). From the repo directory:
+**Option B — Home Manager only** (no nix-darwin):
 
 ```sh
-# Personal
-nix run .#switch-personal
-
-# Work
-nix run .#switch-work
+nix run .#switch
 ```
 
-Use `--impure` when calling `home-manager` directly because `local.nix` is loaded from a path outside the store. The flake apps (`nix run .#switch-personal` / `.#switch-work`) use the flake’s home-manager input so the version stays in one place.
+Use `--impure` when calling `home-manager` directly because `local.nix` is loaded from a path outside the store. The flake app (`nix run .#switch`) uses the flake's home-manager input so the version stays in one place.
 
 **Option C — nix-darwin (workstation)**. One-time bootstrap (run from this repo):
 
@@ -68,8 +64,7 @@ nix run nix-darwin# -- switch --flake "$DOTFILES_DIR#workstation" --impure
 After that, the flake installs the `dotfiles` CLI. For updates:
 
 ```sh
-dotfiles profile personal
-dotfiles profile work
+dotfiles switch
 dotfiles workstation rebuild
 ```
 

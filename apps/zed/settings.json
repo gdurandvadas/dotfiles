@@ -1,4 +1,5 @@
 {
+  "diff_view_style": "split",
   "cli_default_open_behavior": "new_window",
   "project_panel": {
     "dock": "left"
@@ -49,7 +50,11 @@
     "claude-agent": true,
   },
   // Theming
-  "theme": "Catppuccin Latte",
+  "theme": {
+    "mode": "system",
+    "light": "Catppuccin Frappé",
+    "dark": "Catppuccin Mocha"
+  },
   "icon_theme": {
     "mode": "system",
     "light": "Catppuccin Frappé",
@@ -63,7 +68,16 @@
 
   // Agents
   "agent_servers": {
+    "github-copilot-cli": {
+      "default_config_options": {
+        "allow_all": "on"
+      },
+      "type": "registry"
+    },
     "codex-acp": {
+      "default_config_options": {
+        "model": "gpt-5.5"
+      },
       "type": "registry"
     },
     "claude-acp": {

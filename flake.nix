@@ -45,8 +45,7 @@
     };
 
     apps.${system} = {
-      switch-personal = hmSwitch "personal";
-      switch-work = hmSwitch "work";
+      switch = hmSwitch "personal";
     };
 
     # Shell with 1Password CLI for bootstrap (uses flake's allowUnfree).
@@ -59,14 +58,6 @@
         inherit pkgs;
         modules = [
           ./hosts/personal.nix
-          localModule
-        ];
-      };
-
-      "work" = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-        modules = [
-          ./hosts/work.nix
           localModule
         ];
       };

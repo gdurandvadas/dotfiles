@@ -8,12 +8,7 @@ let inherit (lib) mkOption types; in
     };
     email = mkOption {
       type = types.str;
-      description = "Personal email used for git commits.";
-    };
-    workEmail = mkOption {
-      type = types.str;
-      default = "";
-      description = "Work email, overrides personal email in the work profile.";
+      description = "Email used for git commits.";
     };
     username = mkOption {
       type = types.str;

@@ -9,6 +9,7 @@
     ./apps/zed/module.nix
     ./apps/mise/module.nix
     ./apps/tools/module.nix
+    ./apps/opencode/module.nix
   ];
 
   programs.home-manager.enable = true;
