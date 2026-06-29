@@ -18,11 +18,7 @@
   outputs = { self, nixpkgs, home-manager, darwin, ... }:
   let
     system = "aarch64-darwin";
-    unfree = import ./unfree-packages.nix;
-    pkgs = import nixpkgs {
-      inherit system;
-      config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfree.base;
-    };
+    pkgs = import nixpkgs { inherit system; };
     # local.nix is gitignored — referenced via absolute path so Nix doesn't
     # require it to be Git-tracked. Requires --impure at evaluation time.
     # Uses DOTFILES_DIR env var so the path resolves correctly even when
@@ -46,11 +42,6 @@
 
     apps.${system} = {
       switch = hmSwitch "personal";
-    };
-
-    # Shell with 1Password CLI for bootstrap (uses flake's allowUnfree).
-    devShells.${system}.bootstrap = pkgs.mkShell {
-      buildInputs = [ pkgs._1password-cli ];
     };
 
     homeConfigurations = {

@@ -4,12 +4,7 @@
 DOTFILES_DIR ?= $(HOME)/.config/dotfiles
 REPOS ?= $(shell find . -maxdepth 2 -name .git -type d | sed 's|^\./||; s|/\.git$$||; s|^\.git$$|.|' | grep -v '^\.$$')
 
-.PHONY: bootstrap update sync-default new repo-status
-
-bootstrap:
-	@command -v nix >/dev/null 2>&1 || { echo "Nix not found. Install from: https://github.com/DeterminateSystems/nix-installer"; exit 1; }
-	@test -f $(DOTFILES_DIR)/hosts/local.nix || { cp $(DOTFILES_DIR)/hosts/local.nix.example $(DOTFILES_DIR)/hosts/local.nix; echo "Created hosts/local.nix from example. Edit it with your identity, then run: make bootstrap"; exit 1; }
-	@nix develop $(DOTFILES_DIR)#bootstrap --command op account list >/dev/null 2>&1 || { echo "Signing in to 1Password..."; nix develop $(DOTFILES_DIR)#bootstrap --command op signin; }
+.PHONY: update sync-default new repo-status
 
 update:
 	@DOTFILES_DIR="$(DOTFILES_DIR)" bash "$(DOTFILES_DIR)/apps/scripts/dotfiles.sh" update
