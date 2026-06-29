@@ -19,14 +19,13 @@ usage() {
   echo "  workstation rebuild - darwin-rebuild switch --flake $DOTFILES#workstation --impure"
   echo "  update              - nix flake update, then home-manager switch"
   echo "                        Use --darwin to also darwin-rebuild switch."
-  echo "                        Refuses nixpkgs source builds."
+  echo "                        Refuses nixpkgs source builds and input mismatches."
   exit 1
 }
 
 case "${1:-}" in
   switch)
-    ensure_binary_cache_switch "$DOTFILES" personal "dotfiles switch"
-    exec env DOTFILES_SKIP_BINARY_GUARD=1 nix run "$DOTFILES#switch" -- "${@:2}"
+    exec nix run "$DOTFILES#switch" -- "${@:2}"
     ;;
   update)
     flake_args=()

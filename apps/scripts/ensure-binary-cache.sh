@@ -15,6 +15,7 @@ is_allowed_local_build() {
       home-manager | \
       home-manager-* | \
       home-configuration-reference-manpage | \
+      hm-switch | \
       hm_* | \
       hm-*)
       return 0
@@ -58,6 +59,13 @@ ensure_binary_cache_switch() {
     printf '  - %s\n' "${local_builds[@]}" >&2
     echo "" >&2
     echo "Try again later, update fewer inputs, or pin nixpkgs to a cached revision." >&2
+    return 1
+  fi
+
+  if grep -q 'Using mismatched versions' "$dry_run_log"; then
+    echo "" >&2
+    echo "$context: refusing to apply a Home Manager / Nixpkgs release mismatch." >&2
+    echo "Update nixpkgs together with home-manager, or wait for cached binaries." >&2
     return 1
   fi
 }
