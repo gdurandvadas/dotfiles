@@ -1,26 +1,31 @@
 { pkgs, config, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/.config/dotfiles/apps/opencode";
-  mkLink = path: {
-    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/${path}";
-    force = true;
-  };
 in {
   # opencode binary is managed by Homebrew (anomalyco/tap/opencode).
 
-  xdg.configFile = {
-    "opencode/config.json" = mkLink "config.vavo.json";
-    "opencode/AGENTS.md"   = mkLink "AGENTS.md";
-    "opencode/agents"      = mkLink "agents";
-    "opencode/tools"       = mkLink "tools";
-    "opencode/plugins"     = mkLink "plugins";
-    "opencode/skills"      = mkLink "skills";
-    "opencode/workflows"   = mkLink "workflows";
+  xdg.configFile."opencode/config.jsonc" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/config.jsonc";
+    force = true;
   };
 
-  home.activation.opencode-deps = config.lib.dag.entryAfter [ "writeBoundary" ] ''
-    if command -v bun >/dev/null 2>&1; then
-      cd "${dotfiles}" && bun install --frozen-lockfile 2>/dev/null || bun install 2>/dev/null
-    fi
-  '';
+  xdg.configFile."opencode/opencode.jsonc" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/config.jsonc";
+    force = true;
+  };
+
+  xdg.configFile."opencode/agents" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/agents";
+    force = true;
+  };
+
+  xdg.configFile."opencode/commands" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/commands";
+    force = true;
+  };
+
+  xdg.configFile."opencode/skills" = {
+    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/skills";
+    force = true;
+  };
 }

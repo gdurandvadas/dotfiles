@@ -1,0 +1,66 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "model": "anthropic/claude-sonnet-4-6",
+    "small_model": "anthropic/claude-haiku-4-5",
+    "autoupdate": true,
+    "server": {
+        "port": 4096
+    },
+    "permission": {
+        "read": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "list": "allow",
+        "edit": "allow",
+        "external_directory": "allow",
+        "clickup_*": "deny",
+        "bash": {
+            "*": "ask",
+            "git *": "allow",
+            "git reset*": "deny",
+            "git clean*": "deny",
+            "git checkout --*": "deny",
+            "git restore*": "deny",
+            "git push --force*": "deny",
+            "git push -f*": "deny",
+            "git * --force*": "deny",
+            "git * -f*": "deny",
+            "rm": "ask",
+            "rm *": "ask",
+            "sudo": "deny",
+            "sudo *": "deny"
+        },
+        "skill": {
+            "*": "allow",
+            "work-*": "allow"
+        }
+    },
+    "tools": {
+        "clickup_*": false
+    },
+    "mcp": {
+        "clickup": {
+            "type": "remote",
+            "url": "{env:CLICKUP_MCP_URL}",
+            "enabled": true,
+            "timeout": 10000,
+            "oauth": false,
+            "headers": {
+                "Authorization": "Bearer {env:CLICKUP_MCP_TOKEN}"
+            }
+        }
+    },
+    "provider": {
+        "anthropic": {
+            "options": {
+                "baseURL": "{env:ANTHROPIC_BASE_URL}/v1",
+                "apiKey": "{env:ANTHROPIC_AUTH_TOKEN}"
+            },
+            "models": {
+                "claude-sonnet-4-6": {},
+                "claude-opus-4-7": {},
+                "claude-haiku-4-5": {}
+            }
+        }
+    }
+}

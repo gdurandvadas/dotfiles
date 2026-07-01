@@ -2,6 +2,7 @@
   home.sessionVariables = {
     XDG_CONFIG_HOME = "$HOME/.config";
     PROJECTS_DIR    = "$HOME/Development";
+    CLICKUP_MCP_URL = "https://mcp.clickup.com/mcp";
   };
 
   home.sessionPath = [ "$HOME/.local/bin" ];
@@ -20,6 +21,15 @@
     source "$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
 
     source <(fzf --zsh)
+
+    # Load vavo AI environment variables safely
+    if command -v vavo >/dev/null 2>&1; then
+      if vavo_out=$(vavo ai export --env dev 2>&1); then
+        eval "$vavo_out"
+      else
+        echo "[warning] vavo ai export failed: $vavo_out" >&2
+      fi
+    fi
 
     for f in ''${HOME}/.zsh/*.zsh(N); do source "$f"; done
   '';

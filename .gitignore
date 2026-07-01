@@ -4,3 +4,4 @@ hosts/local.nix
 .dotfiles-profile
 .cursor
 node_modules
+reference
