@@ -2,7 +2,7 @@
 name: research
 description: Primary research agent for complex problems. Spawns investigate subagents, reads code and MCPs, writes architecture and design docs as markdown only.
 mode: primary
-model: openai/gpt-4o
+model: openai/gpt-5.5
 permission:
   read: allow
   grep: allow

@@ -10,6 +10,7 @@
     ./apps/mise/module.nix
     ./apps/tools/module.nix
     ./apps/opencode/module.nix
+    ./apps/crush/module.nix
   ];
 
   programs.home-manager.enable = true;

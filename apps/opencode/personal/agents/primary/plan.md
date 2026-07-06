@@ -2,7 +2,7 @@
 name: plan
 description: Primary planning agent. Reads research and design docs, delegates scoped investigation, writes persistent implementation plans to docs/plans.
 mode: primary
-model: openai/gpt-4o
+model: openai/gpt-5.5
 permission:
   read: allow
   grep: allow

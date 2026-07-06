@@ -14,8 +14,10 @@ let
   c = pkgs.writeShellScriptBin "c" (builtins.readFile ./c.sh);
   oc-pers = pkgs.writeShellScriptBin "oc-pers" (builtins.readFile ./oc-pers.sh);
   oc-work = pkgs.writeShellScriptBin "oc-work" (builtins.readFile ./oc-work.sh);
+  cr-pers = pkgs.writeShellScriptBin "cr-pers" (builtins.readFile ./cr-pers.sh);
+  cr-work = pkgs.writeShellScriptBin "cr-work" (builtins.readFile ./cr-work.sh);
 in {
-  home.packages = [ dotfiles-apply dotfiles z c oc-pers oc-work ];
+  home.packages = [ dotfiles-apply dotfiles z c oc-pers oc-work cr-pers cr-work ];
 
   home.file.".zsh/theme-switch.zsh".source = ./theme-switch.zsh;
   home.file.".zsh/mise.zsh".source         = ./mise.zsh;

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://charm.land/crush.json",
+  "providers": {
+    "anthropic": {
+      "type": "anthropic",
+      "base_url": "${ANTHROPIC_BASE_URL:?set ANTHROPIC_BASE_URL}/v1",
+      "api_key": "${ANTHROPIC_AUTH_TOKEN:?set ANTHROPIC_AUTH_TOKEN}",
+      "extra_headers": {
+        "anthropic-version": "2023-06-01"
+      }
+    }
+  },
+  "options": {
+    "skills_paths": [
+      "$HOME/.config/crush-work/skills"
+    ]
+  },
+  "permissions": {
+    "allowed_tools": [
+      "view",
+      "ls",
+      "grep",
+      "glob",
+      "edit"
+    ]
+  }
+}

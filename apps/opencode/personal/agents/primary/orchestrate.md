@@ -2,7 +2,7 @@
 name: orchestrate
 description: Primary execution orchestrator. Reads plans, delegates atomic work to code subagents, parallelizes when safe. Never edits files directly.
 mode: primary
-model: openai/gpt-4o
+model: openai/gpt-5.5
 permission:
   read: allow
   grep: allow

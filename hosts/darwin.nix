@@ -37,7 +37,7 @@
       upgrade    = true;
       cleanup    = "zap";
     };
-    taps = [ "anomalyco/tap" ];
+    taps = [ "anomalyco/tap" "charmbracelet/tap" ];
     brews = [
       "git"
       "fzf"
@@ -59,6 +59,7 @@
       "zsh-autosuggestions"
       "zsh-syntax-highlighting"
       "anomalyco/tap/opencode"
+      "charmbracelet/tap/crush"
     ];
     casks = [
       "brave-browser"
