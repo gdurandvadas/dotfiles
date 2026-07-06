@@ -18,9 +18,9 @@ If `$1` is empty, ask the user for the task ID and stop.
 3. Read `.opencode/work/$1.json` if present
 4. Find and checkout the work branch (prefer state, else search git branches for task ID)
 5. `git pull --ff-only` when branch tracks remote
-6. Load plan from state, `docs/plans/`, or ClickUp comments
+6. Load plan from state, chat history, or ClickUp comments
 7. Post resume comment to ClickUp with `[AI-generated — agent: work]` and current git status
 8. Update session state `last_resumed_at`
-9. Hand off to `@orchestrate` with task summary, plan path, completed plan tasks, and open items
+9. Hand off to `@orchestrate` with task summary, plan reference, completed plan tasks, and open items
 
-Do not implement product code. Do not hand off without confirmed branch and plan path.
+Do not implement product code. Do not hand off without confirmed branch.

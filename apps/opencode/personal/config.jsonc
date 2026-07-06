@@ -7,15 +7,23 @@
         "port": 4097
     },
     "permission": {
-        "read": "allow",
+        "read": {
+            "*": "allow",
+            "*.env": "deny",
+            "*.env.*": "deny",
+            "*.env.example": "allow"
+        },
         "grep": "allow",
         "glob": "allow",
         "list": "allow",
         "edit": "allow",
-        "external_directory": "allow",
+        "external_directory": {
+            "*": "deny",
+            "~/Development/personal/**": "allow",
+            "~/Development/arai/**": "allow"
+        },
         "bash": {
-            "*": "ask",
-            "git *": "allow",
+            "*": "allow",
             "git reset*": "deny",
             "git clean*": "deny",
             "git checkout --*": "deny",
@@ -24,8 +32,8 @@
             "git push -f*": "deny",
             "git * --force*": "deny",
             "git * -f*": "deny",
-            "rm": "ask",
-            "rm *": "ask",
+            "rm": "deny",
+            "rm *": "deny",
             "sudo": "deny",
             "sudo *": "deny"
         }

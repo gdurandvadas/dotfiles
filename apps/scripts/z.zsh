@@ -36,7 +36,7 @@ z() {
     return 1
   fi
 
-  cd "${target}" && zeditor -- "${target}"
+  cd "${target}" && zed -- "${target}"
 }
 
 _z() {

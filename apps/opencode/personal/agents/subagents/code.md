@@ -10,8 +10,7 @@ permission:
   list: allow
   edit: allow
   bash:
-    "*": ask
-    "git *": allow
+    "*": allow
     "git reset*": deny
     "git clean*": deny
     "git checkout --*": deny
@@ -20,8 +19,8 @@ permission:
     "git push -f*": deny
     "git * --force*": deny
     "git * -f*": deny
-    rm: ask
-    "rm *": ask
+    rm: deny
+    "rm *": deny
     sudo: deny
     "sudo *": deny
   task: deny

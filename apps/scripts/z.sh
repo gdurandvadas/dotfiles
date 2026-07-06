@@ -48,7 +48,7 @@ main() {
     exit 1
   fi
 
-  exec zeditor -- "${target}"
+  exec zed -- "${target}"
 }
 
 main "$@"
