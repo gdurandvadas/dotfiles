@@ -1,31 +1,14 @@
-{ pkgs, config, ... }:
+{ config, ... }:
 let
   dotfiles = "${config.home.homeDirectory}/.config/dotfiles/apps/opencode";
+  link = target: {
+    source = config.lib.file.mkOutOfStoreSymlink target;
+    force = true;
+  };
 in {
   # opencode binary is managed by Homebrew (anomalyco/tap/opencode).
+  # Launch via oc-work / oc-pers — each sets OPENCODE_CONFIG and OPENCODE_CONFIG_DIR.
 
-  xdg.configFile."opencode/config.jsonc" = {
-    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/config.jsonc";
-    force = true;
-  };
-
-  xdg.configFile."opencode/opencode.jsonc" = {
-    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/config.jsonc";
-    force = true;
-  };
-
-  xdg.configFile."opencode/agents" = {
-    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/agents";
-    force = true;
-  };
-
-  xdg.configFile."opencode/commands" = {
-    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/commands";
-    force = true;
-  };
-
-  xdg.configFile."opencode/skills" = {
-    source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/skills";
-    force = true;
-  };
+  xdg.configFile."opencode-work" = link "${dotfiles}/work";
+  xdg.configFile."opencode-personal" = link "${dotfiles}/personal";
 }

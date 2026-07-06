@@ -1,0 +1,44 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "model": "openai/gpt-4o",
+    "small_model": "openai/gpt-4o-mini",
+    "autoupdate": true,
+    "server": {
+        "port": 4097
+    },
+    "permission": {
+        "read": "allow",
+        "grep": "allow",
+        "glob": "allow",
+        "list": "allow",
+        "edit": "allow",
+        "external_directory": "allow",
+        "bash": {
+            "*": "ask",
+            "git *": "allow",
+            "git reset*": "deny",
+            "git clean*": "deny",
+            "git checkout --*": "deny",
+            "git restore*": "deny",
+            "git push --force*": "deny",
+            "git push -f*": "deny",
+            "git * --force*": "deny",
+            "git * -f*": "deny",
+            "rm": "ask",
+            "rm *": "ask",
+            "sudo": "deny",
+            "sudo *": "deny"
+        }
+    },
+    "provider": {
+        "openai": {
+            "options": {
+                "apiKey": "{env:PERSONAL_OPENAI_API_KEY}"
+            },
+            "models": {
+                "gpt-4o": {},
+                "gpt-4o-mini": {}
+            }
+        }
+    }
+}
