@@ -28,6 +28,31 @@ oc-pers --agent default    # explicit
 
 An **initiative** is a bounded unit of work with a distinct start and end, tracked by ID under `docs/initiatives/` in the **target project** (not in dotfiles).
 
+```mermaid
+flowchart TD
+  start["/initiative-start"] --> driver["@initiative"]
+  cont["/initiative-continue"] --> driver
+  driver -->|"creates folder + initiative.json"| folder["docs/initiatives/NNNN-slug/"]
+
+  folder --> research["@research"]
+  folder --> plan["@plan"]
+  folder --> orch["@orchestrate"]
+  folder --> audit["@audit"]
+
+  research -->|"research.md"| folder
+  plan -->|"plan.md"| folder
+  orch -->|"code changes"| git["git"]
+  audit -->|"audit.md + status done"| folder
+
+  research <-->|"loop freely"| plan
+  plan --> orch
+  orch --> audit
+
+  default["@default standalone"] -.->|"small changes, no docs"| git
+```
+
+Phases are lenses over one shared folder — not a rigid pipeline. `@research` and `@plan` can loop; `@orchestrate` and `@audit` generally follow planning and implementation.
+
 ### Commands
 
 ```bash
