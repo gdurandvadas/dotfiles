@@ -4,8 +4,25 @@
     "model": "openai/gpt-5.5",
     "small_model": "openai/gpt-5.4-mini",
     "autoupdate": true,
+    "agent": {
+        "plan": {
+            "disable": true
+        }
+    },
     "server": {
         "port": 4097
+    },
+    "mcp": {
+        "github": {
+            "type": "remote",
+            "url": "https://api.githubcopilot.com/mcp/",
+            "enabled": true,
+            "oauth": false,
+            "timeout": 10000,
+            "headers": {
+                "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+            }
+        }
     },
     "permission": {
         "read": {

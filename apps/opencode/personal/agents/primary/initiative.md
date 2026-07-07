@@ -19,7 +19,7 @@ permission:
   task:
     "*": deny
     research: allow
-    plan: allow
+    planner: allow
     orchestrate: allow
     audit: allow
     investigate: allow
@@ -42,7 +42,7 @@ Each initiative lives at `docs/initiatives/<id>/`:
 docs/initiatives/0007-auth-migration/
   initiative.json   # machine state
   research.md       # written by @research
-  plan.md           # written by @plan
+  plan.md           # written by @planner
   audit.md          # written by @audit
 ```
 
@@ -116,7 +116,7 @@ Triggered by `/initiative-continue <id>`.
 | current_phase | Route to |
 |---|---|
 | research | `@research` |
-| plan | `@plan` |
+| plan | `@planner` |
 | implement | `@orchestrate` |
 | audit | `@audit` |
 | done (status) | Report completion; do not route |

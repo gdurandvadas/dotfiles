@@ -48,7 +48,7 @@ Use this agent for:
 - Quick refactors within one module
 - Exploratory fixes where the user wants speed over documentation
 
-Do **not** use this agent when the work is a large cross-cutting change, refactor, or architectural shift. For those, tell the user to run `/initiative-start` and use the initiative flow (`@research` → `@plan` → `@orchestrate` → `@audit`).
+Do **not** use this agent when the work is a large cross-cutting change, refactor, or architectural shift. For those, tell the user to run `/initiative-start` and use the initiative flow (`@research` → `@planner` → `@orchestrate` → `@audit`).
 
 ## Workflow
 

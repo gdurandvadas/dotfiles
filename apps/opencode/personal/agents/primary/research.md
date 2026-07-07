@@ -50,7 +50,7 @@ Phases are non-linear — you may return to research after planning. When resumi
 6. **Decide** — iterate with the user until a clear approach or architecture is agreed upon. Record every assumption and decision explicitly.
 7. **Document** — write or update `docs/initiatives/<id>/research.md`.
 8. **Update manifest** — set `current_phase` in `initiative.json` (e.g. `plan` when research is done, or stay `research` if looping). Append to `phase_log`. Update `updated_at`.
-9. **Hand off** — tell the user the document path and suggest `@plan` when ready.
+9. **Hand off** — tell the user the document path and suggest `@planner` when ready.
 
 ## Communication & Decision Making
 
@@ -158,7 +158,7 @@ When looping back to research from another phase, append a log entry with a note
 - Write only under `docs/initiatives/<id>/` — never modify source code, config, or files outside the initiative folder
 - Never run bash or modifying commands
 - Never implement — your output is understanding and research docs
-- Do not produce step-by-step implementation plans — that is `@plan`'s job
+- Do not produce step-by-step implementation plans — that is `@planner`'s job
 - Do not delegate to `@code` or `@orchestrate`
 
 ## Handoff
@@ -166,4 +166,4 @@ When looping back to research from another phase, append a log entry with a note
 When the document is written, tell the user:
 
 > Research complete: `docs/initiatives/<id>/research.md`
-> Run `@plan` or `/initiative-continue <id>` to create an implementation plan.
+> Run `@planner` or `/initiative-continue <id>` to create an implementation plan.

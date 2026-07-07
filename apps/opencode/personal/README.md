@@ -2,7 +2,7 @@
 
 Personal OpenCode environment for everyday development and structured initiative work. Launched via `oc-pers` (symlinked from dotfiles to `~/.config/opencode-personal`).
 
-Uses OpenAI (`gpt-5.5` primary, `gpt-5.4-mini` subagents). Default landing agent is `default`.
+Uses OpenAI (`gpt-5.5` primary, `gpt-5.4-mini` subagents). Default landing agent is `default`. OpenCode's built-in read-only `plan` agent is disabled — initiative planning uses `@planner` instead.
 
 ## Two Flows
 
@@ -35,23 +35,23 @@ flowchart TD
   driver -->|"creates folder + initiative.json"| folder["docs/initiatives/NNNN-slug/"]
 
   folder --> research["@research"]
-  folder --> plan["@plan"]
+  folder --> planner["@planner"]
   folder --> orch["@orchestrate"]
   folder --> audit["@audit"]
 
   research -->|"research.md"| folder
-  plan -->|"plan.md"| folder
+  planner -->|"plan.md"| folder
   orch -->|"code changes"| git["git"]
   audit -->|"audit.md + status done"| folder
 
-  research <-->|"loop freely"| plan
-  plan --> orch
+  research <-->|"loop freely"| planner
+  planner --> orch
   orch --> audit
 
   default["@default standalone"] -.->|"small changes, no docs"| git
 ```
 
-Phases are lenses over one shared folder — not a rigid pipeline. `@research` and `@plan` can loop; `@orchestrate` and `@audit` generally follow planning and implementation.
+Phases are lenses over one shared folder — not a rigid pipeline. `@research` and `@planner` can loop; `@orchestrate` and `@audit` generally follow planning and implementation.
 
 ### Commands
 
@@ -107,11 +107,11 @@ Phases are **lenses over one shared folder**, not a rigid pipeline. Any phase ca
 | Phase | Agent | Produces | Purpose |
 |-------|-------|----------|---------|
 | Research | `@research` | `research.md` | Investigate codebase + web, spar on options, record assumptions and decisions |
-| Plan | `@plan` | `plan.md` | Turn research into ordered tasks; ask before assuming |
+| Plan | `@planner` | `plan.md` | Turn research into ordered tasks; ask before assuming |
 | Implement | `@orchestrate` | code changes (git) | Delegate atomic work to `@code`; bump `initiative.json` |
 | Audit | `@audit` | `audit.md` | Reconcile plan vs reality; document blast radius; close initiative |
 
-You can also invoke phase agents directly: `@research`, `@plan`, `@orchestrate`, `@audit`.
+You can also invoke phase agents directly: `@research`, `@planner`, `@orchestrate`, `@audit`.
 
 ### What Each Doc Captures
 
@@ -128,13 +128,13 @@ Future refactors should read prior initiative `research.md` and `audit.md` befor
 Linear:
 
 ```
-/initiative-start → @research → @plan → @orchestrate → @audit → done
+/initiative-start → @research → @planner → @orchestrate → @audit → done
 ```
 
 Non-linear (normal):
 
 ```
-@research → @plan → @research (gap found) → @plan → @orchestrate → @audit
+@research → @planner → @research (gap found) → @planner → @orchestrate → @audit
 ```
 
 Resume anytime:
@@ -152,7 +152,7 @@ Resume anytime:
 | `default` | Standalone — investigate + implement, no docs |
 | `initiative` | Bootstrap — allocate ID, create folder, route to phase agents |
 | `research` | Investigation + web de-bias + assumptions/decisions |
-| `plan` | Implementation planning, persisted to `plan.md` |
+| `planner` | Implementation planning, persisted to `plan.md` |
 | `orchestrate` | Execution coordinator — delegates to `@code` |
 | `audit` | Post-implementation reconciliation + blast radius |
 
@@ -174,7 +174,7 @@ personal/
       default.md
       initiative.md
       research.md
-      plan.md
+      planner.md
       orchestrate.md
       audit.md
     subagents/
@@ -192,3 +192,21 @@ personal/
 - **Default agent:** `default_agent: "default"` in `config.jsonc`.
 - **External directories:** `~/Development/personal/**` and `~/Development/arai/**` are allowed.
 - **Destructive commands:** `git reset`, `git clean`, `git push --force`, `rm`, `sudo` are denied globally.
+
+## MCP — GitHub
+
+Remote GitHub MCP is configured at `https://api.githubcopilot.com/mcp/` with PAT auth (`oauth: false`).
+
+`oc-pers` exports `GITHUB_PERSONAL_ACCESS_TOKEN` automatically when `gh auth token` is available. Otherwise set it yourself:
+
+```bash
+export GITHUB_PERSONAL_ACCESS_TOKEN="$(op read 'op://Private/GitHub/credential')"
+oc-pers
+```
+
+Verify after launch:
+
+```bash
+opencode mcp list
+opencode mcp debug github
+```
