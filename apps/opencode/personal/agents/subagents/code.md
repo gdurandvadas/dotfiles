@@ -54,7 +54,40 @@ Deliver correct, minimal changes for a single delegated task. The orchestrator d
 2. Read only the files needed for this task
 3. Implement in small, reviewable steps
 4. Verify with relevant tests or commands
-5. Report what changed and how to verify
+5. Report what changed, how to verify, and the commit created (if any)
+
+## Commits
+
+When the delegation prompt includes a task ID, commit your changes before returning — unless the prompt says not to or the user has not approved committing.
+
+Use the **4-digit prefix** from the full task ID (e.g. `0008` from `0008-auth-migration`).
+
+Format:
+
+```
+<type>(<scope>): [<id>] <description>
+```
+
+- **type** — conventional commit type: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, etc.
+- **scope** — optional module or area (e.g. `auth`, `bff`)
+- **id** — 4-digit task prefix only (e.g. `[0008]`)
+- **description** — imperative, lowercase summary of the change
+
+Examples:
+
+```
+feat(auth): [0008] add password login handler
+fix(bff): [0008] handle expired session cookie
+refactor(core): [0008] extract auth service module
+```
+
+Rules:
+
+- One logical change per commit — match the delegated scope
+- Stage only files relevant to this delegation
+- Do not commit secrets, `.env`, or unrelated changes
+- If nothing should be committed yet, say so in **Blockers** instead of committing an empty or partial change
+- Never amend, force-push, or skip hooks unless the user explicitly asks
 
 ## Edit Tool Usage
 
@@ -76,6 +109,9 @@ Never pass undefined, null, or non-string types for these parameters.
 
 ## Verification
 - <commands run and results>
+
+## Commit
+- <full commit message, or "none — <reason>">
 
 ## Blockers
 - <anything that prevented completion, or empty if none>

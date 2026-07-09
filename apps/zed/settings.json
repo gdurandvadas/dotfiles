@@ -1,5 +1,5 @@
 {
-  "diff_view_style": "split",
+  "diff_view_style": "unified",
   "cli_default_open_behavior": "new_window",
   "project_panel": {
     "dock": "left"
@@ -70,7 +70,7 @@
   "agent_servers": {
     "github-copilot-cli": {
       "default_config_options": {
-        "model": "claude-opus-4.7",
+        "model": "claude-sonnet-4.6",
         "mode": "https://agentclientprotocol.com/protocol/session-modes#autopilot",
         "allow_all": "on"
       },
