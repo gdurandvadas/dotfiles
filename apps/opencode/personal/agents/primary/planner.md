@@ -2,7 +2,7 @@
 name: planner
 description: Task planning agent. Reads research, delegates investigation, writes plan.md to docs/tasks. Not OpenCode's read-only Plan agent.
 mode: primary
-model: openai/gpt-5.5
+model: openai/gpt-5.6-terra
 permission:
   read: allow
   grep: allow

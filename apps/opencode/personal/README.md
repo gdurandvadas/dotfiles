@@ -2,7 +2,7 @@
 
 Personal OpenCode environment for everyday development and structured task work. Launched via `oc-pers` (symlinked from dotfiles to `~/.config/opencode-personal`).
 
-Uses OpenAI (`gpt-5.5` primary, `gpt-5.4-mini` subagents). Default landing agent is `default`. OpenCode's built-in read-only `plan` agent is disabled — task planning uses `@planner` instead.
+Uses OpenAI: `gpt-5.6-sol` for orchestration and research, `gpt-5.6-terra` for audit, default, planning, and code, and `gpt-5.6-luna` for investigation. Default landing agent is `default`. OpenCode's built-in read-only `plan` agent is disabled — task planning uses `@planner` instead.
 
 ## Two Flows
 

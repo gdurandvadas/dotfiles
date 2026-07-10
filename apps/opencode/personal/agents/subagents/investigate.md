@@ -2,7 +2,7 @@
 name: investigate
 description: Read-only research subagent for scoped codebase, web, and MCP investigation. Returns evidence, not plans or code changes.
 mode: subagent
-model: openai/gpt-5.4-mini
+model: openai/gpt-5.6-luna
 permission:
   read: allow
   grep: allow

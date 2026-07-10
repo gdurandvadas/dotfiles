@@ -2,7 +2,7 @@
 name: audit
 description: Post-implementation review agent. Compares task research and plan to actual code changes, writes audit record with blast radius.
 mode: primary
-model: openai/gpt-5.5
+model: openai/gpt-5.6-terra
 permission:
   read: allow
   grep: allow

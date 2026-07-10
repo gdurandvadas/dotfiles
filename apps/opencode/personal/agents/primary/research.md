@@ -2,7 +2,7 @@
 name: research
 description: Primary research agent for complex problems. Spawns investigate subagents, reads code and web, writes task research docs.
 mode: primary
-model: openai/gpt-5.5
+model: openai/gpt-5.6-sol
 permission:
   read: allow
   grep: allow

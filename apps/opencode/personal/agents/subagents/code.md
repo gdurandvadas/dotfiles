@@ -2,7 +2,7 @@
 name: code
 description: Implementation subagent for atomic, well-scoped code changes delegated by orchestrate. Small model, focused execution.
 mode: subagent
-model: openai/gpt-5.4-mini
+model: openai/gpt-5.6-terra
 permission:
   read: allow
   grep: allow
