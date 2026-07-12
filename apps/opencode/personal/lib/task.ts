@@ -1,8 +1,9 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-export type TaskPhase = "research" | "plan" | "implement" | "audit";
+export type TaskPhase = "design" | "implement" | "audit";
 export type TaskStatus = "active" | "done";
+export type AuditVerdict = "pass" | "fail";
 
 export interface PhaseLogEntry {
   phase: TaskPhase;
@@ -18,9 +19,9 @@ export interface TaskManifest {
   created_at: string;
   updated_at: string;
   docs: {
-    research: string;
-    plan: string;
+    design: string;
     audit: string;
+    decisions: string;
   };
   phase_log: PhaseLogEntry[];
 }
@@ -29,9 +30,9 @@ export interface TaskStatusReport {
   manifest: TaskManifest;
   path: string;
   docs: {
-    research: boolean;
-    plan: boolean;
+    design: boolean;
     audit: boolean;
+    decisions: boolean;
   };
   suggestedAgent: string | null;
 }
@@ -39,6 +40,20 @@ export interface TaskStatusReport {
 const TASKS_DIR = "docs/tasks";
 const MANIFEST_FILE = "task.json";
 const ID_PATTERN = /^(\d{4})-([a-z0-9-]+)$/;
+const ALLOWED_TRANSITIONS: Record<TaskPhase, TaskPhase[]> = {
+  design: ["design", "implement"],
+  implement: ["design", "implement", "audit"],
+  audit: ["implement", "audit"],
+};
+const DESIGN_REQUIRED_SECTIONS = ["State Transition", "Removal Inventory"];
+const DECISIONS_REQUIRED_SECTIONS = [
+  "State Transition",
+  "Decisions",
+  "Removed",
+  "Blast Radius",
+  "Verification Evidence",
+  "Remaining Work",
+];
 
 export function taskCommitId(fullId: string): string {
   const match = fullId.match(ID_PATTERN);
@@ -135,6 +150,24 @@ function writeManifestFile(baseDir: string, id: string, manifest: TaskManifest):
   writeFileSync(manifestPath(baseDir, id), `${JSON.stringify(manifest, null, 2)}\n`, "utf-8");
 }
 
+function taskFilePath(baseDir: string, id: string, filename: string): string {
+  return join(tasksRoot(baseDir), id, filename);
+}
+
+function assertRequiredSections(filePath: string, sections: string[]): void {
+  if (!existsSync(filePath)) {
+    throw new Error(`Required document is missing: ${filePath}`);
+  }
+
+  const content = readFileSync(filePath, "utf-8");
+  const missing = sections.filter(
+    (section) => !new RegExp(`^##\\s+${section}\\s*$`, "m").test(content),
+  );
+  if (missing.length > 0) {
+    throw new Error(`Required document is missing sections: ${missing.join(", ")}`);
+  }
+}
+
 export function createTask(
   baseDir: string,
   description: string,
@@ -145,17 +178,17 @@ export function createTask(
     id,
     title: toTitle(description),
     status: "active",
-    current_phase: "research",
+    current_phase: "design",
     created_at: today,
     updated_at: today,
     docs: {
-      research: "research.md",
-      plan: "plan.md",
+      design: "design.md",
       audit: "audit.md",
+      decisions: "decisions.md",
     },
     phase_log: [
       {
-        phase: "research",
+        phase: "design",
         at: nowIso(),
         note: "initial scope",
       },
@@ -203,10 +236,8 @@ function suggestedAgentForPhase(phase: TaskPhase, status: TaskStatus): string | 
     return null;
   }
   switch (phase) {
-    case "research":
-      return "@research";
-    case "plan":
-      return "@planner";
+    case "design":
+      return "@design";
     case "implement":
       return "@orchestrate";
     case "audit":
@@ -218,9 +249,9 @@ export function readStatus(baseDir: string, id: string): TaskStatusReport {
   const manifest = readManifestFile(baseDir, id);
   const folder = join(tasksRoot(baseDir), id);
   const docs = {
-    research: existsSync(join(folder, manifest.docs.research)),
-    plan: existsSync(join(folder, manifest.docs.plan)),
+    design: existsSync(join(folder, manifest.docs.design)),
     audit: existsSync(join(folder, manifest.docs.audit)),
+    decisions: existsSync(join(folder, manifest.docs.decisions)),
   };
 
   return {
@@ -243,9 +274,26 @@ export function advancePhase(
   id: string,
   phase: TaskPhase,
   note: string,
-  options?: { close?: boolean },
 ): TaskManifest {
   const manifest = readManifestFile(baseDir, id);
+  if (manifest.status === "done") {
+    throw new Error(`Task is closed: ${id}`);
+  }
+  if (!ALLOWED_TRANSITIONS[manifest.current_phase].includes(phase)) {
+    throw new Error(`Cannot advance from ${manifest.current_phase} to ${phase}.`);
+  }
+  if (manifest.current_phase === "design" && phase === "implement") {
+    assertRequiredSections(
+      taskFilePath(baseDir, id, manifest.docs.design),
+      DESIGN_REQUIRED_SECTIONS,
+    );
+  }
+  if (manifest.current_phase === "implement" && phase === "audit") {
+    if (!existsSync(taskFilePath(baseDir, id, manifest.docs.design))) {
+      throw new Error(`Cannot advance to audit without ${manifest.docs.design}.`);
+    }
+  }
+
   manifest.current_phase = phase;
   manifest.updated_at = todayDate();
   manifest.phase_log.push({
@@ -254,10 +302,64 @@ export function advancePhase(
     note,
   });
 
-  if (options?.close || (phase === "audit" && note.toLowerCase().includes("closed"))) {
-    manifest.status = "done";
+  writeManifestFile(baseDir, id, manifest);
+  return manifest;
+}
+
+export function closeTask(
+  baseDir: string,
+  id: string,
+  options: {
+    verdict: AuditVerdict;
+    note: string;
+    foundationalBlockers: number;
+  },
+): TaskManifest {
+  const manifest = readManifestFile(baseDir, id);
+  if (manifest.status === "done") {
+    throw new Error(`Task is already closed: ${id}`);
+  }
+  if (manifest.current_phase !== "audit") {
+    throw new Error(`Task must be in audit before it can be closed; current phase: ${manifest.current_phase}.`);
+  }
+  if (!Number.isInteger(options.foundationalBlockers) || options.foundationalBlockers < 0) {
+    throw new Error("foundationalBlockers must be a non-negative integer.");
   }
 
+  if (options.verdict === "fail") {
+    manifest.current_phase = "implement";
+    manifest.updated_at = todayDate();
+    manifest.phase_log.push({
+      phase: "implement",
+      at: nowIso(),
+      note: `audit failed: ${options.note}`,
+    });
+    writeManifestFile(baseDir, id, manifest);
+    return manifest;
+  }
+
+  if (options.foundationalBlockers > 0) {
+    throw new Error("Cannot close a task with foundational blockers.");
+  }
+  assertRequiredSections(
+    taskFilePath(baseDir, id, manifest.docs.decisions),
+    DECISIONS_REQUIRED_SECTIONS,
+  );
+
+  for (const filename of [manifest.docs.design, manifest.docs.audit]) {
+    const filePath = taskFilePath(baseDir, id, filename);
+    if (existsSync(filePath)) {
+      unlinkSync(filePath);
+    }
+  }
+
+  manifest.status = "done";
+  manifest.updated_at = todayDate();
+  manifest.phase_log.push({
+    phase: "audit",
+    at: nowIso(),
+    note: `audit passed: ${options.note}`,
+  });
   writeManifestFile(baseDir, id, manifest);
   return manifest;
 }
@@ -272,7 +374,7 @@ export function formatCreateResult(result: { manifest: TaskManifest; path: strin
     `Commit prefix: [${taskCommitId(manifest.id)}]`,
     `Commit format: ${taskCommitFormat(manifest.id)}`,
     "",
-    "Switch to @research when you are ready to investigate.",
+    "Switch to @design when you are ready to design the work.",
   ].join("\n");
 }
 
@@ -290,9 +392,9 @@ export function formatStatusReport(report: TaskStatusReport): string {
     `Commit format: ${taskCommitFormat(manifest.id)}`,
     "",
     "Docs:",
-    `  - research.md: ${docs.research ? "present" : "missing"}`,
-    `  - plan.md: ${docs.plan ? "present" : "missing"}`,
+    `  - design.md: ${docs.design ? "present" : "missing"}`,
     `  - audit.md: ${docs.audit ? "present" : "missing"}`,
+    `  - decisions.md: ${docs.decisions ? "present" : "missing"}`,
     "",
     "Recent phase log:",
     ...logLines,

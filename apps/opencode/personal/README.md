@@ -1,227 +1,165 @@
 # OpenCode — Personal Profile
 
-Personal OpenCode environment for everyday development and structured task work. Launched via `oc-pers` (symlinked from dotfiles to `~/.config/opencode-personal`).
+Personal OpenCode environment for everyday development and high-confidence task work. Launch it
+with `oc-pers`, which symlinks this configuration to `~/.config/opencode-personal`.
 
-Uses OpenAI: `gpt-5.6-sol` for orchestration and research, `gpt-5.6-terra` for audit, default, planning, and code, and `gpt-5.6-luna` for investigation. Default landing agent is `default`. OpenCode's built-in read-only `plan` agent is disabled — task planning uses `@planner` instead.
+The default agent is `@default`. Task-scale work uses `gpt-5.6-sol` for design and orchestration,
+and `gpt-5.6-terra` for audit and focused subagents. OpenCode's built-in read-only `plan` agent
+is disabled: `@design` owns the executable task design.
 
 ## Two Flows
 
-| Flow | When | Entry | Docs |
-|------|------|-------|------|
-| **Standalone** | Small, bounded changes — bugfixes, single-file edits, quick refactors | `oc-pers` (lands on `@default`) | None |
-| **Task** | Large changes, refactors, cross-cutting work needing memory and audit trail | `/task-start <description>` | `docs/tasks/<id>/` |
+| Flow | When | Entry | Persistent output |
+|---|---|---|---|
+| Standalone | Small, bounded edits and fixes | `oc-pers` (`@default`) | None |
+| Task | Cross-cutting work, refactors, or changes needing an auditable state transition | `/task-start <description>` | `docs/tasks/<id>/decisions.md` |
 
-The standalone flow is the default. The task flow is opt-in — use it when you need durable reasoning, human-in-the-loop decisions, and a record of what was actually built.
-
-## Standalone Flow (`default`)
-
-The `default` agent investigates and implements in one context. It may delegate to `@investigate` or `@code` if the task grows, but writes no task docs.
-
-If scope turns out to be task-scale, it will suggest `/task-start`.
-
-```bash
-oc-pers                    # lands on @default
-oc-pers --agent default    # explicit
-```
+The standalone flow is the default. Start a task when the work must replace an existing state,
+needs user decisions, or spans more than a single cohesive implementation slice.
 
 ## Task Flow
 
-A **task** is a bounded unit of work with a distinct start and end, tracked by ID under `docs/tasks/` in the **target project** (not in dotfiles).
-
-Bootstrap and status reporting are **deterministic** — handled by a plugin and custom tools with zero unprompted LLM research. Phase agents run only when you explicitly invoke them.
+A task is a bounded state transition in the target project, tracked under `docs/tasks/`. Its
+workflow separates temporary reasoning from durable facts: design and audit documents are
+scratchpads that are pruned after a passing audit; `decisions.md` survives as the compact record.
 
 ```mermaid
 flowchart TD
-  start["/task-start"] --> plugin["task plugin"]
-  cont["/task-continue"] --> plugin
-  plugin -->|"creates folder + task.json"| folder["docs/tasks/NNNN-slug/"]
-  plugin --> toast["TUI toast + status report"]
-
-  user["User invokes phase agent"] --> research["@research"]
-  research --> planner["@planner"]
-  planner --> orch["@orchestrate"]
-  orch --> audit["@audit"]
-
-  research -->|"research.md"| folder
-  planner -->|"plan.md"| folder
-  orch -->|"code changes"| git["git"]
-  audit -->|"audit.md + status done"| folder
-
-  research <-->|"loop freely"| planner
-  planner --> orch
-  orch --> audit
-
-  tools["task_* tools"] -.-> research
-  tools -.-> planner
-  tools -.-> orch
-  tools -.-> audit
-
-  default["@default standalone"] -.->|"small changes, no docs"| git
+  start["/task-start"] --> plugin["Task plugin"]
+  plugin --> folder["docs/tasks/NNNN-slug/task.json"]
+  user["User invokes phase agent"] --> design["@design"]
+  design -->|"gated design.md"| implement["@orchestrate + @code"]
+  implement -->|"target + removals + gate"| audit["@audit"]
+  audit -->|"failed audit"| implement
+  implement -->|"design invalidated"| design
+  audit -->|"passed audit"| decisions["decisions.md + task.json"]
+  audit -->|"passed audit"| prune["Prune design.md + audit.md"]
 ```
 
-Phases are lenses over one shared folder — not a rigid pipeline. `@research` and `@planner` can loop; `@orchestrate` and `@audit` generally follow planning and implementation.
+The deterministic task core enforces phase transitions:
+
+- `design → implement` requires a `design.md` with **State Transition** and
+  **Removal Inventory** sections.
+- `implement → audit` requires the plan of record to exist.
+- Only `task_close` can close a task. A passing close requires a complete `decisions.md` and zero
+  foundational blockers; it then prunes temporary documents.
+- A failing audit deterministically returns the task to implementation.
 
 ### Commands
 
 ```bash
-/task-start auth migration     # plugin: allocate ID, create folder (no auto-research)
-/task-continue 0007              # plugin: report phase/status
+/task-start auth migration
+/task-continue 0007
 /task-continue 0007-auth-migration
 ```
 
-After `/task-start`, switch to `@research` when you are ready to investigate.
+`/task-start` and `/task-continue` are plugin-backed and do not start research automatically.
+After creation, invoke `@design` when you are ready.
 
-### Commit Messages
+### Phases
 
-Implementation commits must tag the task using its **4-digit ID prefix**:
+| Phase | Agent | Temporary output | Purpose |
+|---|---|---|---|
+| Design | `@design` | `design.md` | Investigate, decide, define the state transition and removal inventory, name the authoritative gate, and create the plan of record |
+| Implement | `@orchestrate` | Code changes | Delegate atomic changes, execute removal inventory, and run the declared gate |
+| Audit | `@audit` | `audit.md` | Prove presence and absence, reconcile current guidance, then pass or fail the task |
 
-```
-<type>(<scope>): [<id>] <description>
-```
+You invoke phase agents explicitly: `@design`, `@orchestrate`, and `@audit`.
 
-Example for task `0008-auth-migration`:
+### Durable Task Record
 
-```
-feat(auth): [0008] add password login handler
-```
+At a successful close, only these remain:
 
-- **id** — 4-digit prefix from the task folder name (`0008`, not the full slug)
-- **type** — conventional commit type (`feat`, `fix`, `refactor`, `docs`, `test`, `chore`, …)
-- **scope** — optional module or area
-- `@code` commits during `@orchestrate`; `@audit` verifies commits in `git log`
-
-### Custom Tools
-
-Phase agents use deterministic tools instead of hand-editing `task.json`:
-
-| Tool | Purpose |
-|------|---------|
-| `task_create` | Create task (also used internally by plugin) |
-| `task_status` | Read manifest, doc presence, suggested next agent |
-| `task_list` | List all tasks |
-| `task_advance` | Update phase, append phase_log, optionally close |
-
-### On-Disk Layout
-
-```
+```text
 docs/tasks/0007-auth-migration/
-  task.json   # machine state — phase pointer, status, history
-  research.md       # foundations, assumptions, decisions
-  plan.md           # implementation plan
-  audit.md          # reconciliation, blast radius
+  task.json       # machine state, phase history, final status
+  decisions.md    # durable state transition, rationale, removals, blast radius, evidence
 ```
 
-### task.json
+`decisions.md` records:
 
-JSON holds machine state agents read and update. Markdown holds human-readable reasoning.
+- State transition and deliberately retained compatibility.
+- Decisions and rationale.
+- Superseded code, configuration, routes, dependencies, or terminology removed.
+- Blast radius and verification evidence.
+- Remaining work classified as business backlog, explicit compatibility, historical record, or
+  foundational blocker.
+
+Read a previous `decisions.md` for durable context. Do not treat historical task scratch documents
+as an architecture map.
+
+### `task.json`
 
 ```json
 {
   "id": "0007-auth-migration",
   "title": "Auth Migration",
   "status": "active",
-  "current_phase": "research",
-  "created_at": "2026-07-07",
-  "updated_at": "2026-07-07",
+  "current_phase": "design",
+  "created_at": "2026-07-12",
+  "updated_at": "2026-07-12",
   "docs": {
-    "research": "research.md",
-    "plan": "plan.md",
-    "audit": "audit.md"
+    "design": "design.md",
+    "audit": "audit.md",
+    "decisions": "decisions.md"
   },
   "phase_log": [
-    { "phase": "research", "at": "2026-07-07T09:00:00Z", "note": "initial scope" }
+    { "phase": "design", "at": "2026-07-12T09:00:00Z", "note": "initial scope" }
   ]
 }
 ```
 
 - `status`: `active` | `done`
-- `current_phase`: `research` | `plan` | `implement` | `audit`
-- `phase_log`: append-only — supports non-linear movement (e.g. `research → plan → research`)
+- `current_phase`: `design` | `implement` | `audit`
+- `phase_log`: append-only history, including returns to design or implementation.
 
-IDs are `NNNN-<kebab-slug>` (4-digit zero-padded sequence + slug). The next ID is allocated by scanning `docs/tasks/` for the highest existing number.
+### Custom Tools
 
-### Phases
+| Tool | Purpose |
+|---|---|
+| `task_create` | Allocate an ID, create the task folder, and write `task.json` |
+| `task_status` | Read task state, document presence, and suggested next agent |
+| `task_list` | List tasks with phase and status |
+| `task_advance` | Perform a validated phase transition |
+| `task_close` | Pass or fail audit; a pass validates durable evidence and prunes scratch docs |
 
-Phases are **lenses over one shared folder**, not a rigid pipeline. Any phase can loop; movement is recorded via `task_advance`.
+### Commit Messages
 
-| Phase | Agent | Produces | Purpose |
-|-------|-------|----------|---------|
-| Research | `@research` | `research.md` | Investigate codebase + web, spar on options, record assumptions and decisions |
-| Plan | `@planner` | `plan.md` | Turn research into ordered tasks; ask before assuming |
-| Implement | `@orchestrate` | code changes (git) | Delegate atomic work to `@code`; advance phase via tool |
-| Audit | `@audit` | `audit.md` | Reconcile plan vs reality; document blast radius; close task |
+Implementation commits use the task's 4-digit ID prefix:
 
-You invoke phase agents explicitly: `@research`, `@planner`, `@orchestrate`, `@audit`.
-
-`@research` waits for your direction before investigating — it does not auto-research on spawn.
-
-### What Each Doc Captures
-
-| Question | Answered in |
-|----------|-------------|
-| Why did we make this assumption? | `research.md` → Assumptions & Decisions |
-| Why did implementation deviate? | `audit.md` → Deviations & Rationale |
-| What breaks if we change this? | `audit.md` → Blast Radius |
-
-Future refactors should read prior task `research.md` and `audit.md` before touching code.
-
-### Typical Paths
-
-Linear:
-
-```
-/task-start → (you decide) → @research → @planner → @orchestrate → @audit → done
+```text
+<type>(<scope>): [<id>] <description>
 ```
 
-Non-linear (normal):
+Example: `feat(auth): [0008] add password login handler`
 
-```
-@research → @planner → @research (gap found) → @planner → @orchestrate → @audit
-```
-
-Check status anytime:
-
-```
-/task-continue 0007-auth-migration
-```
+`@code` commits atomic implementation work when asked; `@audit` verifies task-tagged commits
+where that convention applies.
 
 ## Agents
 
-### Primary
-
 | Agent | Role |
-|-------|------|
-| `default` | Standalone — investigate + implement, no docs |
-| `research` | Investigation + web de-bias + assumptions/decisions (waits for user direction) |
-| `planner` | Implementation planning, persisted to `plan.md` |
-| `orchestrate` | Execution coordinator — delegates to `@code` |
-| `audit` | Post-implementation reconciliation + blast radius |
-
-### Subagents
-
-| Agent | Role |
-|-------|------|
-| `investigate` | Read-only scoped research (codebase, web, MCP) |
-| `code` | Atomic implementation tasks delegated by `@orchestrate` |
+|---|---|
+| `default` | Standalone investigation and implementation, with no task documents |
+| `design` | User-guided investigation, decisions, removal inventory, and executable design |
+| `orchestrate` | Coordinates atomic implementation and verifies cleanup plus quality gates |
+| `audit` | Pass/fail state-transition gate and durable-record distiller |
+| `investigate` | Read-only scoped evidence gathering |
+| `code` | Atomic implementation delegated by `@orchestrate` |
 
 ## Directory Structure
 
-```
+```text
 personal/
-  README.md              # this file
-  config.jsonc           # OpenAI provider, default_agent, permissions
-  package.json           # @opencode-ai/plugin for tools/plugins
-  lib/
-    task.ts        # deterministic task core
-  plugins/
-    task.ts        # intercepts /task-start and /task-continue
-  tools/
-    task.ts        # task_create/status/list/advance tools
+  README.md
+  config.jsonc
+  lib/task.ts              # deterministic state machine and close contract
+  plugins/task.ts          # intercepts /task-start and /task-continue
+  tools/task.ts            # task_create/status/list/advance/close
   agents/
     primary/
       default.md
-      research.md
-      planner.md
+      design.md
       orchestrate.md
       audit.md
     subagents/
@@ -230,29 +168,19 @@ personal/
   commands/
     task-start.md
     task-continue.md
-  skills/                # (empty — add personal skills here)
 ```
 
 ## Configuration
 
-- **Launch:** `oc-pers` sets `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` to this directory.
-- **Default agent:** `default_agent: "default"` in `config.jsonc`.
-- **External directories:** `~/Development/personal/**` and `~/Development/arai/**` are allowed.
-- **Destructive commands:** `git reset`, `git clean`, `git push --force`, `rm`, `sudo` are denied globally.
-- **Plugins/tools:** OpenCode runs `bun install` at startup for `package.json` dependencies.
+- `oc-pers` sets `OPENCODE_CONFIG` and `OPENCODE_CONFIG_DIR` to this directory.
+- `default_agent: "default"` is configured in `config.jsonc`.
+- External projects under `~/Development/personal/**` and `~/Development/arai/**` are allowed.
+- Destructive commands (`git reset`, `git clean`, force push, `rm`, and `sudo`) are denied.
 
 ## MCP — GitHub
 
-Remote GitHub MCP is configured at `https://api.githubcopilot.com/mcp/` with PAT auth (`oauth: false`).
-
-`oc-pers` exports `GITHUB_PERSONAL_ACCESS_TOKEN` automatically when `gh auth token` is available. Otherwise set it yourself:
-
-```bash
-export GITHUB_PERSONAL_ACCESS_TOKEN="$(op read 'op://Private/GitHub/credential')"
-oc-pers
-```
-
-Verify after launch:
+Remote GitHub MCP is configured at `https://api.githubcopilot.com/mcp/` with PAT authentication.
+`oc-pers` exports `GITHUB_PERSONAL_ACCESS_TOKEN` from `gh auth token` when available.
 
 ```bash
 opencode mcp list

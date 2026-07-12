@@ -1,12 +1,14 @@
 import { tool } from "@opencode-ai/plugin";
 import {
   advancePhase,
+  closeTask,
   createTask,
   formatCreateResult,
   formatStatusReport,
   listTasks,
   readStatus,
   resolveTask,
+  type AuditVerdict,
   type TaskPhase,
 } from "../lib/task";
 
@@ -66,24 +68,40 @@ export const advance = tool({
   args: {
     id: tool.schema.string().describe("Task ID or numeric prefix"),
     phase: tool.schema
-      .enum(["research", "plan", "implement", "audit"])
+      .enum(["design", "implement", "audit"])
       .describe("Target phase"),
     note: tool.schema.string().describe("Reason for the phase transition"),
-    close: tool.schema
-      .boolean()
-      .optional()
-      .describe("Set status to done (use when closing after audit)"),
   },
   async execute(args, context) {
     try {
       const resolved = resolveTask(context.directory, args.id);
-      const manifest = advancePhase(
-        context.directory,
-        resolved,
-        args.phase as TaskPhase,
-        args.note,
-        { close: args.close },
-      );
+      const manifest = advancePhase(context.directory, resolved, args.phase as TaskPhase, args.note);
+      return formatStatusReport(readStatus(context.directory, manifest.id));
+    } catch (error) {
+      return `Error: ${error instanceof Error ? error.message : String(error)}`;
+    }
+  },
+});
+
+export const close = tool({
+  description:
+    "Resolve an audit verdict. A pass validates decisions.md and closes the task; a fail returns it to implement.",
+  args: {
+    id: tool.schema.string().describe("Task ID or numeric prefix"),
+    verdict: tool.schema.enum(["pass", "fail"]).describe("Audit result"),
+    note: tool.schema.string().describe("Evidence-backed audit conclusion"),
+    foundational_blockers: tool.schema
+      .number()
+      .describe("Number of unresolved foundational blockers"),
+  },
+  async execute(args, context) {
+    try {
+      const resolved = resolveTask(context.directory, args.id);
+      const manifest = closeTask(context.directory, resolved, {
+        verdict: args.verdict as AuditVerdict,
+        note: args.note,
+        foundationalBlockers: args.foundational_blockers,
+      });
       return formatStatusReport(readStatus(context.directory, manifest.id));
     } catch (error) {
       return `Error: ${error instanceof Error ? error.message : String(error)}`;

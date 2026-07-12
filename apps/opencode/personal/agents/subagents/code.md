@@ -53,7 +53,7 @@ Deliver correct, minimal changes for a single delegated task. The orchestrator d
 1. Restate the task and success criteria before editing
 2. Read only the files needed for this task
 3. Implement in small, reviewable steps
-4. Verify with relevant tests or commands
+4. Verify with the delegated authoritative gate or focused command
 5. Report what changed, how to verify, and the commit created (if any)
 
 ## Commits
@@ -108,7 +108,9 @@ Never pass undefined, null, or non-string types for these parameters.
 - `path/to/file` — <what changed>
 
 ## Verification
-- <commands run and results>
+- `<command>` — <risk or property exercised> — <result>
+- <former behavior proven unreachable/removed, when applicable>
+- <not run, with reason; omit only when nothing was skipped>
 
 ## Commit
 - <full commit message, or "none — <reason>">

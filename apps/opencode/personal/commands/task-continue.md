@@ -12,4 +12,4 @@ The plugin will:
 2. Read `task.json`
 3. Report `current_phase`, `status`, doc presence, and suggested next agent
 
-Do not spawn phase agents automatically. Invoke `@research`, `@planner`, `@orchestrate`, or `@audit` when you are ready.
+Do not spawn phase agents automatically. Invoke `@design`, `@orchestrate`, or `@audit` when you are ready.

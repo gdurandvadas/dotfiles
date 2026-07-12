@@ -10,6 +10,6 @@ Provide a short description after the command, e.g. `/task-start auth migration`
 The plugin will:
 1. Allocate the next task ID
 2. Create `docs/tasks/<id>/` and write `task.json`
-3. Report the created path and suggest `@research` when you are ready
+3. Report the created path and suggest `@design` when you are ready
 
 Do not investigate or spawn phase agents automatically.

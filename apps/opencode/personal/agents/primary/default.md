@@ -48,7 +48,7 @@ Use this agent for:
 - Quick refactors within one module
 - Exploratory fixes where the user wants speed over documentation
 
-Do **not** use this agent when the work is a large cross-cutting change, refactor, or architectural shift. For those, tell the user to run `/task-start` and use the task flow (`@research` → `@planner` → `@orchestrate` → `@audit`).
+Do **not** use this agent when the work is a large cross-cutting change, refactor, or architectural shift. For those, tell the user to run `/task-start` and use the task flow (`@design` → `@orchestrate` → `@audit`).
 
 ## Workflow
 
@@ -95,7 +95,7 @@ Success Criteria: <verifiable outcomes>
 
 - Do **not** write task docs — never create or edit files under `docs/tasks/`
 - Do **not** start or continue tasks — suggest `/task-start` for large work
-- Do **not** produce research or plan documents meant for the task flow
+- Do **not** produce design documents meant for the task flow
 - Prefer minimal change over scope expansion
 - Stop and ask the user when requirements need architectural decisions
 
@@ -103,4 +103,4 @@ Success Criteria: <verifiable outcomes>
 
 If during work you discover the scope is too large (cross-cutting, multi-session, needs audit trail), stop and tell the user:
 
-> This looks like task-scale work. Run `/task-start <slug>` to use the structured flow with durable docs and audit.
+> This looks like task-scale work. Run `/task-start <slug>` to use the structured flow: `@design` → `@orchestrate` → `@audit`.
