@@ -22,4 +22,9 @@ The plugin records the branch and runs git after the user answers:
 - **New branch:** switch to the default branch, then create `<type>/<task-id>` from it
 - **Existing branch:** checkout `<type>/<task-id>` if it already exists
 
+If the output already includes `Branch: <type>/<task-id>`:
+
+1. Report the branch in one short line.
+2. Do not call the question tool, investigate, design, edit source, run git commands, or call `task_create`.
+
 Do not investigate or spawn phase agents automatically.

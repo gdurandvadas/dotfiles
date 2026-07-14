@@ -52,6 +52,8 @@ The deterministic task core enforces phase transitions:
 
 ```bash
 /task-new auth migration
+/task-new auth migration --change-type=feat
+/task-new --name="auth migration" --change-type=feat --new-branch=true
 /task-continue 0007
 /task-continue 0007-auth-migration
 /task-run 0007-auth-migration
@@ -59,11 +61,11 @@ The deterministic task core enforces phase transitions:
 ```
 
 `/task-new` and `/task-continue` are plugin-backed and do not start research automatically.
-After creation, OpenCode's native **question** UI asks two things: new or existing branch, and change
-type (`feat`, `fix`, `doc`, `chore`, `refactor`, `perf`). The branch is built as
-`<type>/<id>-<description>` (e.g. `feat/0008-auth-migration`). New branches are always created from
-the default branch (`main` / `master` / `origin/HEAD`). After creation, invoke `@design` when you
-are ready.
+Pass `--change-type` (`feat`, `fix`, `doc`, `chore`, `refactor`, `perf`) to create or check out
+`<type>/<id>-<description>` without an LLM round-trip. Use `--new-branch=false` to check out an
+existing branch (default: `true`). Without `--change-type`, OpenCode's native **question** UI asks
+for branch choice and change type. New branches are always created from the default branch (`main` /
+`master` / `origin/HEAD`). After creation, invoke `@design` when you are ready.
 
 ### Phases
 

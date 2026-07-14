@@ -195,20 +195,56 @@ const TaskPlugin: Plugin = async (ctx) => {
 
       try {
         if (cmd === "task-new") {
-          const { description } = parseTaskNewArgs(input.arguments ?? "");
-          if (!description) {
+          const args = parseTaskNewArgs(input.arguments ?? "");
+          if (!args.description) {
             output.parts.length = 0;
             output.parts.push({
               type: "text",
-              text: "Error: provide a short description, e.g. /task-new auth migration",
+              text: [
+                "Error: provide a short description, e.g.",
+                "/task-new auth migration",
+                '/task-new --name="auth migration" --change-type=feat',
+              ].join("\n"),
             });
             return;
           }
 
-          const result = createTask(ctx.directory, description);
-          pendingBranchSetup.set(input.sessionID, { taskId: result.manifest.id });
+          const result = createTask(ctx.directory, args.description);
+          let branchNote: string | undefined;
 
-          const message = formatCreateResult(result, { branchPrompt: true });
+          if (args.changeType) {
+            const branch = formatTaskBranchName(args.changeType, result.manifest.id);
+            try {
+              branchNote = args.newBranch
+                ? await createBranchFromDefault(ctx.$, branch)
+                : await checkoutExistingBranch(ctx.$, branch);
+
+              setTaskBranch(ctx.directory, result.manifest.id, {
+                branch,
+                checkedOut: true,
+                note: branchNote,
+              });
+              result.manifest.branch = branch;
+              result.manifest.branch_checked_out = true;
+            } catch (error) {
+              const message = error instanceof Error ? error.message : String(error);
+              setTaskBranch(ctx.directory, result.manifest.id, {
+                branch,
+                checkedOut: false,
+                note: `branch setup failed: ${message}`,
+              });
+              result.manifest.branch = branch;
+              result.manifest.branch_checked_out = false;
+              branchNote = `branch setup failed: ${message}`;
+            }
+          } else {
+            pendingBranchSetup.set(input.sessionID, { taskId: result.manifest.id });
+          }
+
+          const message = formatCreateResult(result, {
+            branchPrompt: !args.changeType,
+            branchNote,
+          });
 
           try {
             await ctx.client.tui.showToast({

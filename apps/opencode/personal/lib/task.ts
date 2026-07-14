@@ -91,9 +91,101 @@ export function toTitle(description: string): string {
 export const CHANGE_TYPES = ["feat", "fix", "doc", "chore", "refactor", "perf"] as const;
 export type ChangeType = (typeof CHANGE_TYPES)[number];
 
-export function parseTaskNewArgs(raw: string): { description: string } {
-  const description = raw.trim();
-  return { description };
+export interface TaskNewArgs {
+  description: string;
+  changeType?: ChangeType;
+  newBranch: boolean;
+}
+
+function tokenizeTaskNewArgs(raw: string): string[] {
+  const tokens: string[] = [];
+  let current = "";
+  let quote: '"' | "'" | null = null;
+
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    if (quote) {
+      if (ch === quote) {
+        quote = null;
+      } else {
+        current += ch;
+      }
+      continue;
+    }
+
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      continue;
+    }
+
+    if (/\s/.test(ch)) {
+      if (current) {
+        tokens.push(current);
+        current = "";
+      }
+      continue;
+    }
+
+    current += ch;
+  }
+
+  if (current) {
+    tokens.push(current);
+  }
+
+  return tokens;
+}
+
+function parseBooleanFlag(raw: string, flag: string): boolean {
+  const normalized = raw.trim().toLowerCase();
+  if (normalized === "true" || normalized === "1" || normalized === "yes") {
+    return true;
+  }
+  if (normalized === "false" || normalized === "0" || normalized === "no") {
+    return false;
+  }
+  throw new Error(`Invalid value for ${flag}: ${raw}`);
+}
+
+export function parseTaskNewArgs(raw: string): TaskNewArgs {
+  const tokens = tokenizeTaskNewArgs(raw.trim());
+  const positional: string[] = [];
+  let nameFromFlag = "";
+  let changeType: ChangeType | undefined;
+  let newBranch = true;
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (!token.startsWith("--")) {
+      positional.push(token);
+      continue;
+    }
+
+    const eq = token.indexOf("=");
+    const key = eq >= 0 ? token.slice(2, eq) : token.slice(2);
+    const value = eq >= 0 ? token.slice(eq + 1) : tokens[++i];
+
+    if (value === undefined) {
+      throw new Error(`Missing value for --${key}`);
+    }
+
+    switch (key) {
+      case "name":
+        nameFromFlag = value;
+        break;
+      case "change-type":
+        changeType = parseChangeType(value);
+        break;
+      case "new-branch":
+        newBranch = parseBooleanFlag(value, "--new-branch");
+        break;
+      default:
+        throw new Error(`Unknown flag: --${key}`);
+    }
+  }
+
+  const description = (nameFromFlag || positional.join(" ")).trim();
+  return { description, changeType, newBranch };
 }
 
 export function formatTaskBranchName(changeType: ChangeType, taskId: string): string {
@@ -421,7 +513,7 @@ export function closeTask(
 
 export function formatCreateResult(
   result: { manifest: TaskManifest; path: string },
-  options?: { branchPrompt?: boolean },
+  options?: { branchPrompt?: boolean; branchNote?: string },
 ): string {
   const { manifest, path } = result;
   const lines = [
@@ -433,7 +525,21 @@ export function formatCreateResult(
     `Commit format: ${taskCommitFormat(manifest.id)}`,
   ];
 
-  if (options?.branchPrompt) {
+  if (manifest.branch) {
+    lines.push(`Branch: ${manifest.branch}`);
+    lines.push(
+      `Branch checked out: ${
+        manifest.branch_checked_out === undefined
+          ? "pending"
+          : manifest.branch_checked_out
+            ? "yes"
+            : "no"
+      }`,
+    );
+    if (options?.branchNote) {
+      lines.push(`Branch note: ${options.branchNote}`);
+    }
+  } else if (options?.branchPrompt) {
     lines.push(`Branch prompt: ${manifest.id}`);
     lines.push(`Branch format: <type>/${manifest.id}`);
   }
