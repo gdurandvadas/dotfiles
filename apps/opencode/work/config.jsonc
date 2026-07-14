@@ -53,8 +53,7 @@
     "provider": {
         "anthropic": {
             "options": {
-                "baseURL": "{env:ANTHROPIC_BASE_URL}/v1",
-                "apiKey": "{env:ANTHROPIC_AUTH_TOKEN}"
+                "apiKey": "{env:ANTHROPIC_API_KEY}"
             },
             "models": {
                 "claude-sonnet-4-6": {},

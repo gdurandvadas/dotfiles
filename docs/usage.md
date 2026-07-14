@@ -22,7 +22,7 @@ Nix never installs a runtime binary. Homebrew never writes a config file.
 | `z <project>`                              | Open a project in Zed                                                 |
 | `c <project>`                              | Open a project in Cursor                                              |
 | `oc-pers [--copilot\|--claude]`            | Launch OpenCode with personal config                                  |
-| `oc-work [--copilot\|--bedrock\|--claude]` | Launch OpenCode with work config                                      |
+| `oc-work`                                  | Launch OpenCode with work config                                      |
 
 > **When to use which apply command:**
 > - `dotfiles workstation apply` — canonical. Installs/upgrades brew packages AND applies config. Use this after adding a new brew package.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Launch OpenCode with work environment (Bedrock/Anthropic + ClickUp MCP).
+# Launch OpenCode with work environment (Anthropic + ClickUp MCP).
 # Usage: oc-work [opencode args...]
 
 set -e
