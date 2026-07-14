@@ -12,7 +12,7 @@ is disabled: `@design` owns the executable task design.
 | Flow | When | Entry | Persistent output |
 |---|---|---|---|
 | Standalone | Small, bounded edits and fixes | `oc-pers` (`@default`) | None |
-| Task | Cross-cutting work, refactors, or changes needing an auditable state transition | `/task-start <description>` | `docs/tasks/<id>/decisions.md` |
+| Task | Cross-cutting work, refactors, or changes needing an auditable state transition | `/task-new <description>` | `docs/tasks/<id>/decisions.md` |
 
 The standalone flow is the default. Start a task when the work must replace an existing state,
 needs user decisions, or spans more than a single cohesive implementation slice.
@@ -25,12 +25,15 @@ scratchpads that are pruned after a passing audit; `decisions.md` survives as th
 
 ```mermaid
 flowchart TD
-  start["/task-start"] --> plugin["Task plugin"]
+  start["/task-new"] --> plugin["Task plugin"]
   plugin --> folder["docs/tasks/NNNN-slug/task.json"]
   user["User invokes phase agent"] --> design["@design"]
-  design -->|"gated design.md"| implement["@orchestrate + @code"]
+  user --> run["/task-run or @run"]
+  design -->|"gated design.md"| implement["@implement + @code"]
+  run --> implement
   implement -->|"target + removals + gate"| audit["@audit"]
   audit -->|"failed audit"| implement
+  audit -->|"passed audit"| run
   implement -->|"design invalidated"| design
   audit -->|"passed audit"| decisions["decisions.md + task.json"]
   audit -->|"passed audit"| prune["Prune design.md + audit.md"]
@@ -48,23 +51,30 @@ The deterministic task core enforces phase transitions:
 ### Commands
 
 ```bash
-/task-start auth migration
+/task-new auth migration
 /task-continue 0007
 /task-continue 0007-auth-migration
+/task-run 0007-auth-migration
+/task-run 0007-auth-migration max=2
 ```
 
-`/task-start` and `/task-continue` are plugin-backed and do not start research automatically.
-After creation, invoke `@design` when you are ready.
+`/task-new` and `/task-continue` are plugin-backed and do not start research automatically.
+After creation, OpenCode's native **question** UI asks two things: new or existing branch, and change
+type (`feat`, `fix`, `doc`, `chore`, `refactor`, `perf`). The branch is built as
+`<type>/<id>-<description>` (e.g. `feat/0008-auth-migration`). New branches are always created from
+the default branch (`main` / `master` / `origin/HEAD`). After creation, invoke `@design` when you
+are ready.
 
 ### Phases
 
 | Phase | Agent | Temporary output | Purpose |
 |---|---|---|---|
 | Design | `@design` | `design.md` | Investigate, decide, define the state transition and removal inventory, name the authoritative gate, and create the plan of record |
-| Implement | `@orchestrate` | Code changes | Delegate atomic changes, execute removal inventory, and run the declared gate |
+| Implement | `@implement` | Code changes | Delegate atomic changes, execute removal inventory, and run the declared gate |
 | Audit | `@audit` | `audit.md` | Prove presence and absence, reconcile current guidance, then pass or fail the task |
 
-You invoke phase agents explicitly: `@design`, `@orchestrate`, and `@audit`.
+Use `/task-run <id>` or `@run` to supervise the bounded implement/audit loop. You can still invoke
+`@design`, `@implement`, and `@audit` individually when you want direct control.
 
 ### Durable Task Record
 
@@ -98,6 +108,8 @@ as an architecture map.
   "current_phase": "design",
   "created_at": "2026-07-12",
   "updated_at": "2026-07-12",
+  "branch": "feat/0007-auth-migration",
+  "branch_checked_out": true,
   "docs": {
     "design": "design.md",
     "audit": "audit.md",
@@ -111,6 +123,8 @@ as an architecture map.
 
 - `status`: `active` | `done`
 - `current_phase`: `design` | `implement` | `audit`
+- `branch`: git branch in `<type>/<id>-<description>` form (set after branch setup)
+- `branch_checked_out`: whether the branch was created or checked out at task creation
 - `phase_log`: append-only history, including returns to design or implementation.
 
 ### Custom Tools
@@ -142,10 +156,11 @@ where that convention applies.
 |---|---|
 | `default` | Standalone investigation and implementation, with no task documents |
 | `design` | User-guided investigation, decisions, removal inventory, and executable design |
-| `orchestrate` | Coordinates atomic implementation and verifies cleanup plus quality gates |
+| `run` | Supervises the bounded `@implement → @audit` loop |
+| `implement` | Coordinates atomic implementation and verifies cleanup plus quality gates |
 | `audit` | Pass/fail state-transition gate and durable-record distiller |
 | `investigate` | Read-only scoped evidence gathering |
-| `code` | Atomic implementation delegated by `@orchestrate` |
+| `code` | Atomic implementation delegated by `@implement` |
 
 ## Directory Structure
 
@@ -154,20 +169,22 @@ personal/
   README.md
   config.jsonc
   lib/task.ts              # deterministic state machine and close contract
-  plugins/task.ts          # intercepts /task-start and /task-continue
+  plugins/task.ts          # intercepts /task-new and /task-continue
   tools/task.ts            # task_create/status/list/advance/close
   agents/
     primary/
       default.md
       design.md
-      orchestrate.md
       audit.md
+      run.md
     subagents/
+      implement.md
       investigate.md
       code.md
   commands/
-    task-start.md
+    task-new.md
     task-continue.md
+    task-run.md
 ```
 
 ## Configuration

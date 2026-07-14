@@ -129,7 +129,7 @@ before the deterministic task tool allows implementation to begin.
 
 - Write only within `docs/tasks/<id>/`.
 - Never modify source code or run bash.
-- Do not delegate to `@code` or `@orchestrate`.
+- Do not delegate to `@code` or `@implement`.
 - Do not advance while material decisions or removal obligations are unknown.
 - Do not preserve a deprecated internal implementation merely because version control provides
   recovery or a public contract permits additive evolution.
@@ -139,4 +139,4 @@ before the deterministic task tool allows implementation to begin.
 When the design is complete, say:
 
 > Design complete: `docs/tasks/<id>/design.md`
-> Run `@orchestrate` or `/task-continue <id>` to execute it.
+> Run `@run`, standalone `@implement`, or `/task-continue <id>` to execute it.

@@ -18,6 +18,8 @@ export interface TaskManifest {
   current_phase: TaskPhase;
   created_at: string;
   updated_at: string;
+  branch?: string;
+  branch_checked_out?: boolean;
   docs: {
     design: string;
     audit: string;
@@ -84,6 +86,37 @@ export function toTitle(description: string): string {
     .split(/\s+/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
+}
+
+export const CHANGE_TYPES = ["feat", "fix", "doc", "chore", "refactor", "perf"] as const;
+export type ChangeType = (typeof CHANGE_TYPES)[number];
+
+export function parseTaskNewArgs(raw: string): { description: string } {
+  const description = raw.trim();
+  return { description };
+}
+
+export function formatTaskBranchName(changeType: ChangeType, taskId: string): string {
+  return `${changeType}/${taskId}`;
+}
+
+export function parseChangeType(raw: string): ChangeType {
+  const normalized = raw.trim().toLowerCase();
+  if (!(CHANGE_TYPES as readonly string[]).includes(normalized)) {
+    throw new Error(`Invalid change type: ${raw}`);
+  }
+  return normalized as ChangeType;
+}
+
+export function parseIsNewBranch(raw: string): boolean {
+  const normalized = raw.trim().toLowerCase();
+  if (normalized === "new branch" || normalized === "new") {
+    return true;
+  }
+  if (normalized === "existing branch" || normalized === "existing") {
+    return false;
+  }
+  throw new Error(`Invalid branch choice: ${raw}`);
 }
 
 function todayDate(): string {
@@ -200,6 +233,28 @@ export function createTask(
   return { manifest, path };
 }
 
+export function setTaskBranch(
+  baseDir: string,
+  id: string,
+  options: { branch: string; checkedOut: boolean; note: string },
+): TaskManifest {
+  const manifest = readManifestFile(baseDir, id);
+  manifest.branch = options.branch;
+  manifest.branch_checked_out = options.checkedOut;
+  manifest.updated_at = todayDate();
+  manifest.phase_log.push({
+    phase: manifest.current_phase,
+    at: nowIso(),
+    note: options.note,
+  });
+  writeManifestFile(baseDir, id, manifest);
+  return manifest;
+}
+
+export function listTasksByBranch(baseDir: string, branch: string): TaskStatusReport[] {
+  return listTasks(baseDir).filter((report) => report.manifest.branch === branch);
+}
+
 export function resolveTask(baseDir: string, idOrPrefix: string): string {
   const trimmed = idOrPrefix.trim();
   if (!trimmed) {
@@ -239,7 +294,7 @@ function suggestedAgentForPhase(phase: TaskPhase, status: TaskStatus): string | 
     case "design":
       return "@design";
     case "implement":
-      return "@orchestrate";
+      return "@implement";
     case "audit":
       return "@audit";
   }
@@ -364,18 +419,27 @@ export function closeTask(
   return manifest;
 }
 
-export function formatCreateResult(result: { manifest: TaskManifest; path: string }): string {
+export function formatCreateResult(
+  result: { manifest: TaskManifest; path: string },
+  options?: { branchPrompt?: boolean },
+): string {
   const { manifest, path } = result;
-  return [
+  const lines = [
     `Task created: ${manifest.id}`,
     `Title: ${manifest.title}`,
     `Path: ${path}/`,
     `Phase: ${manifest.current_phase} (${manifest.status})`,
     `Commit prefix: [${taskCommitId(manifest.id)}]`,
     `Commit format: ${taskCommitFormat(manifest.id)}`,
-    "",
-    "Switch to @design when you are ready to design the work.",
-  ].join("\n");
+  ];
+
+  if (options?.branchPrompt) {
+    lines.push(`Branch prompt: ${manifest.id}`);
+    lines.push(`Branch format: <type>/${manifest.id}`);
+  }
+
+  lines.push("", "Switch to @design when you are ready to design the work.");
+  return lines.join("\n");
 }
 
 export function formatStatusReport(report: TaskStatusReport): string {
@@ -390,6 +454,22 @@ export function formatStatusReport(report: TaskStatusReport): string {
     `Status: ${manifest.status}`,
     `Phase: ${manifest.current_phase}`,
     `Commit format: ${taskCommitFormat(manifest.id)}`,
+  ];
+
+  if (manifest.branch) {
+    lines.push(
+      `Branch: ${manifest.branch}`,
+      `Branch checked out: ${
+        manifest.branch_checked_out === undefined
+          ? "pending"
+          : manifest.branch_checked_out
+            ? "yes"
+            : "no"
+      }`,
+    );
+  }
+
+  lines.push(
     "",
     "Docs:",
     `  - design.md: ${docs.design ? "present" : "missing"}`,
@@ -398,7 +478,7 @@ export function formatStatusReport(report: TaskStatusReport): string {
     "",
     "Recent phase log:",
     ...logLines,
-  ];
+  );
 
   if (manifest.status === "done") {
     lines.push("", "Task is closed.");
