@@ -6,7 +6,7 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 
 ## Repository Structure
 
-```
+```text
 .
 ├── Makefile               # Bootstrap and switch targets
 ├── flake.nix              # Entry point — defines the personal profile
@@ -26,18 +26,24 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 │   │   └── module.nix     # Unfree/extra tools (1Password CLI, Brave, gh, claude-code, etc.)
 │   ├── opencode/
 │   │   ├── module.nix     # OpenCode package + Home Manager wiring
-│   │   ├── config.json    # Personal config (Copilot provider)
-│   │   ├── config.claude.json
-│   │   ├── config.work.*.json
-│   │   ├── agents/        # Agent prompts (personal, shared, work)
-│   │   ├── skills/        # Skill definitions
-│   │   ├── workflows/     # Workflow definitions
-│   │   └── tools/         # Custom tools
+│   │   ├── config.jsonc   # Personal OpenCode configuration
+│   │   ├── agents/        # Personal primary and subagent prompts
+│   │   ├── commands/      # Personal task commands
+│   │   ├── lib/           # Deterministic task state machine
+│   │   ├── plugins/       # Personal task command integration
+│   │   └── tools/         # Personal task tools
+│   ├── claude/
+│   │   ├── module.nix     # Claude Code Home Manager wiring
+│   │   ├── CLAUDE.md      # Work ADE instructions
+│   │   ├── agents/        # Work task subagents
+│   │   ├── commands/      # Work task slash commands
+│   │   ├── mcp/           # Local task MCP server
+│   │   └── mcp.json       # Env-configured MCP servers
 │   ├── scripts/
 │   │   ├── module.nix     # Custom scripts as Nix packages
 │   │   ├── dotfiles.sh    # Unified home-manager / darwin switch script
+│   │   ├── cl.sh          # Launch Claude Code with work MCP configuration
 │   │   ├── oc-pers.sh     # Launch OpenCode with personal config
-│   │   ├── oc-work.sh     # Launch OpenCode with work config
 │   │   ├── z.sh           # Open project in Zed
 │   │   ├── c.sh           # Open project in Cursor
 │   │   └── *.zsh          # Zsh helper scripts sourced at shell startup

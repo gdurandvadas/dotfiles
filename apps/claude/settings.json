@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "model": "claude-sonnet-4-6",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit",
+      "Write",
+      "Bash",
+      "mcp__task__*"
+    ],
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Bash(git reset*)",
+      "Bash(git clean*)",
+      "Bash(git checkout --*)",
+      "Bash(git restore*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git * --force*)",
+      "Bash(git * -f*)",
+      "Bash(rm)",
+      "Bash(rm *)",
+      "Bash(sudo)",
+      "Bash(sudo *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/guard.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

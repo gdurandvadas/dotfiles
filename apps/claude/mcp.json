@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "task": {
+      "type": "stdio",
+      "command": "bun",
+      "args": [
+        "run",
+        "${CLAUDE_MCP_DIR}/task-server/server.ts"
+      ]
+    },
+    "work": {
+      "type": "http",
+      "url": "${WORK_MCP_URL}",
+      "headers": {
+        "Authorization": "Bearer ${WORK_MCP_TOKEN}"
+      }
+    }
+  }
+}

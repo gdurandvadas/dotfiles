@@ -1,0 +1,99 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "default_agent": "default",
+    "model": "openai/gpt-5.6-sol",
+    "small_model": "openai/gpt-5.6-terra",
+    "autoupdate": true,
+    "agent": {
+        "plan": {
+            "disable": true
+        }
+    },
+    "server": {
+        "port": 4097
+    },
+    "lsp": {
+        "rust": {
+            "command": ["rust-analyzer"]
+        },
+        "gopls": {
+            "command": ["gopls"]
+        },
+        "typescript": {
+            "command": ["typescript-language-server", "--stdio"]
+        },
+        "yaml-ls": {
+            "command": ["yaml-language-server", "--stdio"]
+        },
+        "pyright": {
+            "command": ["pyright-langserver", "--stdio"]
+        },
+        "bash": {
+            "command": ["bash-language-server", "start"]
+        },
+        "json": {
+            "command": ["vscode-json-language-server", "--stdio"],
+            "extensions": [".json", ".jsonc"]
+        },
+        "sql": {
+            "command": ["sqls"],
+            "extensions": [".sql"]
+        }
+    },
+    "mcp": {
+        "github": {
+            "type": "remote",
+            "url": "https://api.githubcopilot.com/mcp/",
+            "enabled": true,
+            "oauth": false,
+            "timeout": 10000,
+            "headers": {
+                "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+            }
+        }
+    },
+    "permission": {
+        "read": {
+            "*": "allow",
+            "*.env": "deny",
+            "*.env.*": "deny",
+            "*.env.example": "allow"
+        },
+        "grep": "allow",
+        "glob": "allow",
+        "list": "allow",
+        "edit": "allow",
+        "task_*": "allow",
+        "external_directory": {
+            "*": "deny",
+            "~/Development/personal/**": "allow",
+            "~/Development/arai/**": "allow"
+        },
+        "bash": {
+            "*": "allow",
+            "git reset*": "deny",
+            "git clean*": "deny",
+            "git checkout --*": "deny",
+            "git restore*": "deny",
+            "git push --force*": "deny",
+            "git push -f*": "deny",
+            "git * --force*": "deny",
+            "git * -f*": "deny",
+            "rm": "deny",
+            "rm *": "deny",
+            "sudo": "deny",
+            "sudo *": "deny"
+        }
+    },
+    "provider": {
+        "openai": {
+            "options": {
+                "apiKey": "{env:PERSONAL_OPENAI_API_KEY}"
+            },
+            "models": {
+                "gpt-5.6-sol": {},
+                "gpt-5.6-terra": {}
+            }
+        }
+    }
+}

@@ -20,14 +20,19 @@
 │   │   └── module.nix     # Additional CLI/dev tools (unfree and extra)
 │   ├── opencode/
 │   │   ├── module.nix     # OpenCode package + Home Manager wiring
-│   │   ├── config.json    # Personal config (Copilot provider)
-│   │   ├── config.claude.json
-│   │   ├── config.work.*.json
-│   │   ├── agents/        # Agent prompts (personal, shared, work)
-│   │   ├── skills/        # Skill definitions
-│   │   ├── workflows/     # Workflow definitions
-│   │   ├── tools/         # Custom tools
-│   │   └── plugins/       # Plugins
+│   │   ├── config.jsonc   # Personal OpenCode configuration
+│   │   ├── agents/        # Personal primary and subagent prompts
+│   │   ├── commands/      # Personal task commands
+│   │   ├── lib/           # Deterministic task state machine
+│   │   ├── plugins/       # Personal task integration
+│   │   └── tools/         # Personal task tools
+│   ├── claude/
+│   │   ├── module.nix     # Claude Code Home Manager wiring
+│   │   ├── CLAUDE.md      # Work ADE instructions
+│   │   ├── agents/        # Work task subagents
+│   │   ├── commands/      # Work task slash commands
+│   │   ├── mcp/           # Local task MCP server
+│   │   └── mcp.json       # Env-configured MCP servers
 │   ├── alacritty/
 │   │   ├── module.nix     # Alacritty package + Home Manager wiring
 │   │   ├── alacritty.toml
@@ -52,8 +57,8 @@
 │       ├── dotfiles.sh       # Unified home-manager / darwin switch script
 │       ├── theme-switch.zsh  # Dark/light sync for Alacritty + Starship
 │       ├── mise.zsh          # Mise (polyglot runtime manager) integration
+│       ├── cl.sh              # Launch Claude Code with work MCP configuration
 │       ├── oc-pers.sh        # Launch OpenCode with personal config
-│       ├── oc-work.sh        # Launch OpenCode with work config
 │       ├── z.sh              # Open project in Zed
 │       └── c.sh              # Open project in Cursor
 └── docs/

@@ -21,8 +21,8 @@ Nix never installs a runtime binary. Homebrew never writes a config file.
 | `direnv allow`                             | Activate a project-local Nix dev environment (`.envrc`)               |
 | `z <project>`                              | Open a project in Zed                                                 |
 | `c <project>`                              | Open a project in Cursor                                              |
-| `oc-pers [--copilot\|--claude]`            | Launch OpenCode with personal config                                  |
-| `oc-work`                                  | Launch OpenCode with work config                                      |
+| `oc-pers`                                  | Launch OpenCode with personal configuration                           |
+| `cl`                                       | Launch Claude Code with the work ADE and configured MCP servers       |
 
 > **When to use which apply command:**
 > - `dotfiles workstation apply` — canonical. Installs/upgrades brew packages AND applies config. Use this after adding a new brew package.
@@ -68,4 +68,6 @@ Use `mise` — edit `apps/mise/config.toml` and run `mise install`. No rebuild n
 
 - **dioxus-cli (`dx`):** No brew formula yet. Install with `curl -fsSL https://dioxuslabs.com/install.sh | bash` or `cargo binstall dioxus-cli`.
 - **Zed:** Downloaded from the upstream binary on each `dotfiles apply` if a newer version is available.
-- **LSP servers** (gopls, rust-analyzer, etc.): managed automatically by Zed/Cursor when opening a file. No manual installation needed.
+- **LSP servers** (Zed/Cursor): managed automatically by the IDE when opening a file.
+- **LSP servers** (OpenCode personal): installed via Home Manager in `apps/opencode/module.nix`.
+  Apply with `dotfiles apply` (or `dotfiles workstation apply`).

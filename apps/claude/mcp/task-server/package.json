@@ -1,0 +1,16 @@
+{
+  "name": "claude-task-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "typescript": "latest"
+  }
+}
