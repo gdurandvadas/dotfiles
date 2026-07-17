@@ -12,7 +12,7 @@ is disabled: `@design` owns the executable task design.
 | Flow | When | Entry | Persistent output |
 |---|---|---|---|
 | Standalone | Small, bounded edits and fixes | `oc-pers` (`@default`) | None |
-| Task | Cross-cutting work, refactors, or changes needing an auditable state transition | `/task-new <description>` | `docs/tasks/<id>/decisions.md` |
+| Task | Cross-cutting work, refactors, or changes needing an auditable state transition | `/task-new <description> --change-type=<type>` | `docs/tasks/<id>/decisions.md` |
 
 The standalone flow is the default. Start a task when the work must replace an existing state,
 needs user decisions, or spans more than a single cohesive implementation slice.
@@ -51,21 +51,34 @@ The deterministic task core enforces phase transitions:
 ### Commands
 
 ```bash
-/task-new auth migration
 /task-new auth migration --change-type=feat
 /task-new --name="auth migration" --change-type=feat --new-branch=true
+/task-new auth migration --change-type=feat --new-branch=false
 /task-continue 0007
 /task-continue 0007-auth-migration
 /task-run 0007-auth-migration
 /task-run 0007-auth-migration max=2
 ```
 
-`/task-new` and `/task-continue` are plugin-backed and do not start research automatically.
-Pass `--change-type` (`feat`, `fix`, `doc`, `chore`, `refactor`, `perf`) to create or check out
-`<type>/<id>-<description>` without an LLM round-trip. Use `--new-branch=false` to check out an
-existing branch (default: `true`). Without `--change-type`, OpenCode's native **question** UI asks
-for branch choice and change type. New branches are always created from the default branch (`main` /
-`master` / `origin/HEAD`). After creation, invoke `@design` when you are ready.
+`/task-new` and `/task-continue` are plugin-backed and deterministic — no LLM questions, no branch
+prompts. `--change-type` (`feat`, `fix`, `doc`, `chore`, `refactor`, `perf`) is **required** and
+creates or checks out `<type>/<id>-<description>`. Use `--new-branch=false` to check out an
+existing branch (default: `true`). New branches are created atomically from the default branch
+(`git switch -c <task-branch> <main|master|origin/HEAD>`) so HEAD never stops on the default
+branch mid-setup. If branch setup fails, the task folder is rolled back.
+
+`/task-continue` always checks out the task's recorded branch before reporting status.
+
+### Branch enforcement
+
+Task work must never commit on the default branch:
+
+- Plugin blocks `git commit` on `main` / `master` (and any resolved default branch).
+- Task-tagged commits (`[NNNN]`) are refused unless HEAD equals that task's recorded branch.
+- `task_advance` to `implement` / `audit`, and a passing `task_close`, require HEAD on the task branch.
+- `@code` must verify `git branch --show-current` before committing.
+
+After creation, invoke `@design` when you are ready.
 
 ### Phases
 
@@ -133,7 +146,7 @@ as an architecture map.
 
 | Tool | Purpose |
 |---|---|
-| `task_create` | Allocate an ID, create the task folder, and write `task.json` |
+| `task_create` | Allocate an ID, create branch, write `task.json` (requires `change_type`) |
 | `task_status` | Read task state, document presence, and suggested next agent |
 | `task_list` | List tasks with phase and status |
 | `task_advance` | Perform a validated phase transition |
@@ -149,8 +162,8 @@ Implementation commits use the task's 4-digit ID prefix:
 
 Example: `feat(auth): [0008] add password login handler`
 
-`@code` commits atomic implementation work when asked; `@audit` verifies task-tagged commits
-where that convention applies.
+`@code` commits atomic implementation work when asked; commits on the default branch are blocked.
+`@audit` verifies task-tagged commits landed on the task branch where that convention applies.
 
 ## Agents
 

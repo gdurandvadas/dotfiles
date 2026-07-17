@@ -3,24 +3,51 @@ import {
   advancePhase,
   closeTask,
   createTask,
+  deleteTask,
   formatCreateResult,
   formatStatusReport,
+  formatTaskBranchName,
   listTasks,
+  parseChangeType,
   readStatus,
   resolveTask,
+  setTaskBranch,
+  setupTaskBranch,
   type AuditVerdict,
   type TaskPhase,
 } from "../lib/task";
 
 export const create = tool({
-  description: "Create a new task: allocate ID, create docs/tasks folder, write task.json.",
+  description:
+    "Create a new task with required change type and branch checkout. Prefer /task-new.",
   args: {
     description: tool.schema.string().describe("Short description used for title and slug"),
+    change_type: tool.schema
+      .enum(["feat", "fix", "doc", "chore", "refactor", "perf"])
+      .describe("Branch type prefix"),
+    new_branch: tool.schema
+      .boolean()
+      .describe("Create a new branch from the default branch (true) or check out existing (false)"),
   },
   async execute(args, context) {
     try {
+      const changeType = parseChangeType(args.change_type);
       const result = createTask(context.directory, args.description);
-      return formatCreateResult(result);
+      const branch = formatTaskBranchName(changeType, result.manifest.id);
+      try {
+        const branchNote = setupTaskBranch(context.directory, branch, args.new_branch);
+        setTaskBranch(context.directory, result.manifest.id, {
+          branch,
+          checkedOut: true,
+          note: branchNote,
+        });
+        result.manifest.branch = branch;
+        result.manifest.branch_checked_out = true;
+        return formatCreateResult(result, { branchNote });
+      } catch (error) {
+        deleteTask(context.directory, result.manifest.id);
+        throw error;
+      }
     } catch (error) {
       return `Error: ${error instanceof Error ? error.message : String(error)}`;
     }
@@ -28,7 +55,7 @@ export const create = tool({
 });
 
 export const status = tool({
-  description: "Read task manifest, doc presence, and suggested next phase agent.",
+  description: "Read task manifest, doc presence, branch HEAD check, and suggested next phase agent.",
   args: {
     id: tool.schema.string().describe("Task ID or numeric prefix (e.g. 0007 or 0007-auth-migration)"),
   },
@@ -64,7 +91,8 @@ export const list = tool({
 });
 
 export const advance = tool({
-  description: "Advance task phase: append phase_log, update current_phase and updated_at.",
+  description:
+    "Advance task phase. implement/audit advances require HEAD on the task branch.",
   args: {
     id: tool.schema.string().describe("Task ID or numeric prefix"),
     phase: tool.schema
@@ -85,7 +113,7 @@ export const advance = tool({
 
 export const close = tool({
   description:
-    "Resolve an audit verdict. A pass validates decisions.md and closes the task; a fail returns it to implement.",
+    "Resolve an audit verdict. A pass validates decisions.md and closes the task; a fail returns it to implement. Pass requires HEAD on the task branch.",
   args: {
     id: tool.schema.string().describe("Task ID or numeric prefix"),
     verdict: tool.schema.enum(["pass", "fail"]).describe("Audit result"),

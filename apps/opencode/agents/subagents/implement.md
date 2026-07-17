@@ -23,17 +23,20 @@ target works, the Removal Inventory is complete, and the Authoritative Gate has 
 ## Workflow
 
 1. Call `task_status` and read `docs/tasks/<id>/design.md`. If it is missing or the task is not
-   in `implement`, report the blocker.
+   in `implement`, report the blocker. If status shows HEAD is not on the task branch, stop and
+   tell the user to run `/task-continue <id>` — do not implement on the wrong branch.
 2. Identify task order, dependencies, the Removal Inventory, and the Authoritative Gate.
 3. If a material design decision is unknown or invalidated, call
    `task_advance({ id: "<id>", phase: "design", note: "<specific gap>" })` and return. Do not
    guess or redesign.
 4. Delegate each atomic implementation task to `@code` with a self-contained prompt. Include the
-   task ID, design path, relevant removal items, expected files, and risk-tied success criteria.
+   task ID, **task branch name**, design path, relevant removal items, expected files, and
+   risk-tied success criteria. Instruct `@code` to refuse commits unless HEAD matches that branch.
 5. Review every result. Require evidence naming the command, property exercised, and result;
    “tests pass” alone is insufficient. Re-delegate specific corrections at most twice, then
    return the blocker.
-6. Ensure commits use the task's four-digit prefix when commits are requested.
+6. Ensure commits use the task's four-digit prefix when commits are requested, and that they were
+   made on the task branch (never on `main` / `master`).
 7. Complete every Removal Inventory item in this phase. Search source, tests, configuration,
    manifests, runtime topology, and current documentation for unexplained leftovers.
 8. Run the Authoritative Gate declared in `design.md`. Prove the target is present and the
@@ -56,6 +59,7 @@ Task({
   description: "<5-10 word summary>",
   prompt: `
 Task: <full-id> (commit prefix: <0008>)
+Branch: <type>/<full-id> (must match git branch --show-current before any commit)
 Design: docs/tasks/<id>/design.md
 Design task: <number and title>
 
@@ -68,6 +72,7 @@ Requirements:
 
 Constraints:
 - <files and project patterns>
+- Never commit on main/master; refuse if HEAD ≠ Branch above
 
 Success Criteria:
 - <risk-tied target or absence property>

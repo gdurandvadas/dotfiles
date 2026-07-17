@@ -1,30 +1,22 @@
 ---
-description: Create a new task — allocate ID, branch setup, docs/tasks folder (handled by plugin)
+description: Create a new task — allocate ID, create branch, docs/tasks folder (handled by plugin)
 agent: default
 model: openai/gpt-5.6-terra
 ---
 
-The task plugin has already created the task above. Do only what follows.
+Handled deterministically by the task plugin. If you see this prompt, the plugin did not intercept
+the command.
 
-If the output contains `Branch prompt: <task-id>`:
+Required usage:
 
-1. Call the **question** tool once with **two** questions (in order):
-   - **header:** Branch
-     **question:** Is this a new branch?
-     **options:** New branch / Existing branch (single select, no custom answer)
-   - **header:** Type
-     **question:** What type of change is this?
-     **options:** feat / fix / doc / chore / refactor / perf (single select, no custom answer)
-2. After the user answers, report the resulting branch (`<type>/<task-id>`) in one short line.
-3. Do not investigate, design, edit source, run git commands, or call `task_create`.
+```text
+/task-new <description> --change-type=<feat|fix|doc|chore|refactor|perf>
+/task-new --name="<description>" --change-type=feat --new-branch=true
+/task-new auth migration --change-type=feat --new-branch=false
+```
 
-The plugin records the branch and runs git after the user answers:
-- **New branch:** switch to the default branch, then create `<type>/<task-id>` from it
-- **Existing branch:** checkout `<type>/<task-id>` if it already exists
+`--change-type` is required. `--new-branch` defaults to `true` (create from the default branch).
+Use `--new-branch=false` to check out an existing `<type>/<id>-…` branch.
 
-If the output already includes `Branch: <type>/<task-id>`:
-
-1. Report the branch in one short line.
-2. Do not call the question tool, investigate, design, edit source, run git commands, or call `task_create`.
-
-Do not investigate or spawn phase agents automatically.
+Reply with only the plugin result above. Do not ask questions, call tools, investigate, design,
+edit source, run git, or call `task_create`.

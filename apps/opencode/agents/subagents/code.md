@@ -58,7 +58,20 @@ Deliver correct, minimal changes for a single delegated task. The orchestrator d
 
 ## Commits
 
-When the delegation prompt includes a task ID, commit your changes before returning — unless the prompt says not to or the user has not approved committing.
+When the delegation prompt includes a task ID, commit your changes before returning — unless the
+prompt says not to or the user has not approved committing.
+
+**Hard rules before every commit:**
+
+1. Run `git branch --show-current`.
+2. Refuse to commit if HEAD is the default branch (`main` / `master`) or detached.
+3. Refuse to commit unless HEAD exactly matches the task branch from `task_status` /
+   the delegation prompt (e.g. `feat/0008-auth-migration`).
+4. If the branch is wrong, stop and report the blocker — do not switch branches yourself unless the
+   delegation explicitly says to.
+
+The plugin also blocks `git commit` on the default branch and blocks task-tagged commits on the
+wrong branch. Treat those errors as hard failures.
 
 Use the **4-digit prefix** from the full task ID (e.g. `0008` from `0008-auth-migration`).
 
@@ -88,7 +101,7 @@ Rules:
 - Do not commit secrets, `.env`, or unrelated changes
 - If nothing should be committed yet, say so in **Blockers** instead of committing an empty or partial change
 - Never amend, force-push, or skip hooks unless the user explicitly asks
-
+- Never commit on `main` / `master`
 ## Edit Tool Usage
 
 When calling the `edit` tool, always provide both `oldString` and `newString` as string values:

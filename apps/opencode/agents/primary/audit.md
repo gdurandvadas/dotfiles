@@ -45,7 +45,8 @@ Always call `task_status` with the task ID first. Read `design.md`; write `audit
 
 1. **Load** — call `task_status`, read `design.md`, and confirm the task is in `audit`.
 2. **Analyze** — review actual changes with `git status`, `git diff`, `git log`, and `git show`.
-   Verify task-tagged commits where commits were expected.
+   Verify task-tagged commits where commits were expected. Confirm HEAD is the task branch from
+   `task_status`; fail the audit if implementation commits landed on the default branch.
 3. **Prove presence and absence** — verify the target behavior works; verify all Removal
    Inventory items are gone, unreachable, or explicitly retained under a named compatibility
    contract. A new path working does not prove the old path is gone.
@@ -81,7 +82,7 @@ Write `docs/tasks/<id>/audit.md` using this structure:
 | Authoritative gate exercised | <command and suite coverage> | pass/fail |
 
 ## Commits
-<List commits for this task from `git log`, filtered by `[<id>]` prefix. Flag any implementation work missing the task ID tag.>
+<List commits for this task from `git log`, filtered by `[<id>]` prefix. Flag any implementation work missing the task ID tag. Confirm each commit is on the task branch, not main/master.>
 
 ## Deviations & Rationale
 | Planned | Actual | Rationale |
