@@ -2,7 +2,8 @@
 name: run
 description: Primary supervisor for bounded task execution. Repeats implement and audit until the task passes, needs design, or reaches its iteration limit.
 mode: primary
-model: openai/gpt-5.6-sol
+model: openai/gpt-5.6-terra
+variant: medium
 permission:
   read: allow
   grep: allow

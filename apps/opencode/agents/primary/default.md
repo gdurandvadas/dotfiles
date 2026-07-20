@@ -2,7 +2,8 @@
 name: default
 description: Standalone primary agent for everyday small changes. Investigates and implements in one context; may delegate to investigate/code if the task grows. Does not write task docs.
 mode: primary
-model: openai/gpt-5.6-terra
+model: openai/gpt-5.6-luna
+variant: medium
 permission:
   read: allow
   grep: allow

@@ -3,6 +3,7 @@ name: code
 description: Implementation subagent for atomic, well-scoped code changes delegated by implement. Small model, focused execution.
 mode: subagent
 model: openai/gpt-5.6-terra
+variant: light
 permission:
   read: allow
   grep: allow

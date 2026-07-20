@@ -2,7 +2,8 @@
 name: implement
 description: Execution subagent for a task design. Delegates atomic code work, completes cleanup, and advances coherent work to audit.
 mode: subagent
-model: openai/gpt-5.6-sol
+model: openai/gpt-5.6-luna
+variant: medium
 permission:
   read: allow
   grep: allow
@@ -24,7 +25,7 @@ target works, the Removal Inventory is complete, and the Authoritative Gate has 
 
 1. Call `task_status` and read `docs/tasks/<id>/design.md`. If it is missing or the task is not
    in `implement`, report the blocker. If status shows HEAD is not on the task branch, stop and
-   tell the user to run `/task-continue <id>` — do not implement on the wrong branch.
+   tell the user to run `/task-run <id>` — do not implement on the wrong branch.
 2. Identify task order, dependencies, the Removal Inventory, and the Authoritative Gate.
 3. If a material design decision is unknown or invalidated, call
    `task_advance({ id: "<id>", phase: "design", note: "<specific gap>" })` and return. Do not

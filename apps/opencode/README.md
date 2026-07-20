@@ -54,20 +54,19 @@ The deterministic task core enforces phase transitions:
 /task-new auth migration --change-type=feat
 /task-new --name="auth migration" --change-type=feat --new-branch=true
 /task-new auth migration --change-type=feat --new-branch=false
-/task-continue 0007
-/task-continue 0007-auth-migration
 /task-run 0007-auth-migration
 /task-run 0007-auth-migration max=2
 ```
 
-`/task-new` and `/task-continue` are plugin-backed and deterministic — no LLM questions, no branch
-prompts. `--change-type` (`feat`, `fix`, `doc`, `chore`, `refactor`, `perf`) is **required** and
+`/task-new` is plugin-backed and deterministic — no LLM questions or branch prompts.
+`--change-type` (`feat`, `fix`, `doc`, `chore`, `refactor`, `perf`) is **required** and
 creates or checks out `<type>/<id>-<description>`. Use `--new-branch=false` to check out an
 existing branch (default: `true`). New branches are created atomically from the default branch
 (`git switch -c <task-branch> <main|master|origin/HEAD>`) so HEAD never stops on the default
 branch mid-setup. If branch setup fails, the task folder is rolled back.
 
-`/task-continue` always checks out the task's recorded branch before reporting status.
+`/task-run` deterministically checks out the requested task's recorded branch before invoking
+`@run`; it then resumes from the task manifest's current phase.
 
 ### Branch enforcement
 
@@ -184,7 +183,7 @@ apps/opencode/
   README.md
   config.jsonc
   lib/task.ts              # deterministic state machine and close contract
-  plugins/task.ts          # intercepts /task-new and /task-continue
+  plugins/task.ts          # handles /task-new and prepares /task-run branches
   tools/task.ts            # task_create/status/list/advance/close
   agents/
     primary/
@@ -198,7 +197,6 @@ apps/opencode/
       code.md
   commands/
     task-new.md
-    task-continue.md
     task-run.md
 ```
 

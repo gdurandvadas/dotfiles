@@ -2,7 +2,8 @@
 name: audit
 description: Post-implementation pass/fail gate. Verifies the completed state transition, distills durable decisions, and either closes or returns work to implement.
 mode: subagent
-model: openai/gpt-5.6-terra
+model: openai/gpt-5.6-sol
+variant: high
 permission:
   read: allow
   grep: allow

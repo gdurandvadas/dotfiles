@@ -3,6 +3,7 @@ name: design
 description: Primary design agent for task-scale work. Investigates, makes decisions with the user, and records the executable plan of record.
 mode: primary
 model: openai/gpt-5.6-sol
+variant: medium
 permission:
   read: allow
   grep: allow
@@ -139,4 +140,4 @@ before the deterministic task tool allows implementation to begin.
 When the design is complete, say:
 
 > Design complete: `docs/tasks/<id>/design.md`
-> Run `@run`, standalone `@implement`, or `/task-continue <id>` to execute it.
+> Run `@run`, standalone `@implement`, or `/task-run <id>` to execute it.

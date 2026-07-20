@@ -341,14 +341,14 @@ export function assertOnTaskBranch(baseDir: string, id: string): void {
   }
   if (!manifest.branch_checked_out) {
     throw new Error(
-      `Task ${id} branch was never checked out. Run /task-continue ${id}.`,
+      `Task ${id} branch was never checked out. Run /task-run ${id}.`,
     );
   }
 
   const current = getCurrentBranch(baseDir);
   if (current !== manifest.branch) {
     throw new Error(
-      `On ${current || "(detached HEAD)"}, expected task branch ${manifest.branch}. Run /task-continue ${id}.`,
+      `On ${current || "(detached HEAD)"}, expected task branch ${manifest.branch}. Run /task-run ${id}.`,
     );
   }
 }
@@ -802,7 +802,7 @@ export function formatStatusReport(report: TaskStatusReport): string {
       lines.push("WARNING: on default branch — commits are blocked until you leave it.");
     } else if (report.git.onTaskBranch === false) {
       lines.push(
-        `WARNING: not on task branch. Run /task-continue ${manifest.id} before implement/audit.`,
+        `WARNING: not on task branch. Run /task-run ${manifest.id} before implement/audit.`,
       );
     }
   }

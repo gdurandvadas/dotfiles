@@ -5,10 +5,8 @@ import {
   createTask,
   deleteTask,
   formatCreateResult,
-  formatStatusReport,
   formatTaskBranchName,
   parseTaskNewArgs,
-  readStatus,
   resolveTask,
   setTaskBranch,
   setupTaskBranch,
@@ -58,7 +56,7 @@ const TaskPlugin: Plugin = async (ctx) => {
 
     "command.execute.before": async (input, output) => {
       const cmd = input.command;
-      if (cmd !== "task-new" && cmd !== "task-continue") {
+      if (cmd !== "task-new" && cmd !== "task-run") {
         return;
       }
 
@@ -103,30 +101,18 @@ const TaskPlugin: Plugin = async (ctx) => {
           return;
         }
 
-        output.parts.length = 0;
-
         const idArg = (input.arguments ?? "").trim().split(/\s+/)[0] ?? "";
-        if (!idArg) {
-          output.parts.push({
-            type: "text",
-            text: "Error: provide a task ID, e.g. /task-continue 0007-auth-migration",
-          });
+        if (cmd === "task-run") {
+          if (!idArg) {
+            return;
+          }
+
+          const resolved = resolveTask(ctx.directory, idArg);
+          const branchNote = checkoutTaskBranch(ctx.directory, resolved);
+          await toast(ctx, "Task ready", `${resolved} · ${branchNote}`, "info");
           return;
         }
 
-        const resolved = resolveTask(ctx.directory, idArg);
-        const branchNote = checkoutTaskBranch(ctx.directory, resolved);
-        const report = readStatus(ctx.directory, resolved);
-        const message = [formatStatusReport(report), "", `Branch note: ${branchNote}`].join("\n");
-
-        await toast(
-          ctx,
-          report.manifest.id,
-          `${report.manifest.status} · ${report.manifest.current_phase}`,
-          "info",
-        );
-
-        output.parts.push({ type: "text", text: message });
       } catch (error) {
         output.parts.length = 0;
         const message = error instanceof Error ? error.message : String(error);
