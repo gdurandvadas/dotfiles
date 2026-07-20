@@ -29,7 +29,7 @@ flowchart TD
   plugin --> folder["docs/tasks/NNNN-slug/task.json"]
   user["User invokes phase agent"] --> design["@design"]
   user --> run["/task-run or @run"]
-  design -->|"gated design.md"| implement["@implement + @code"]
+  design -->|"ready contract + design.md"| implement["@implement"]
   run --> implement
   implement -->|"target + removals + gate"| audit["@audit"]
   audit -->|"failed audit"| implement
@@ -39,11 +39,11 @@ flowchart TD
   audit -->|"passed audit"| prune["Prune design.md + audit.md"]
 ```
 
-The deterministic task core enforces phase transitions:
+The deterministic task core enforces phase transitions and typed evidence contracts:
 
-- `design → implement` requires a `design.md` with **State Transition** and
-  **Removal Inventory** sections.
-- `implement → audit` requires the plan of record to exist.
+- `design → implement` requires a `design.md` plus a ready schema-v2 contract defining risk,
+  change radius, path scope, acceptance criteria, and required evidence.
+- `implement → audit` requires the plan of record, in-scope changes, and passing evidence.
 - Only `task_close` can close a task. A passing close requires a complete `decisions.md` and zero
   foundational blockers; it then prunes temporary documents.
 - A failing audit deterministically returns the task to implementation.
@@ -75,7 +75,7 @@ Task work must never commit on the default branch:
 - Plugin blocks `git commit` on `main` / `master` (and any resolved default branch).
 - Task-tagged commits (`[NNNN]`) are refused unless HEAD equals that task's recorded branch.
 - `task_advance` to `implement` / `audit`, and a passing `task_close`, require HEAD on the task branch.
-- `@code` must verify `git branch --show-current` before committing.
+- `@implement` verifies `git branch --show-current` before committing.
 
 After creation, invoke `@design` when you are ready.
 
@@ -116,6 +116,7 @@ as an architecture map.
 
 ```json
 {
+  "schema_version": 2,
   "id": "0007-auth-migration",
   "title": "Auth Migration",
   "status": "active",
@@ -131,7 +132,32 @@ as an architecture map.
   },
   "phase_log": [
     { "phase": "design", "at": "2026-07-12T09:00:00Z", "note": "initial scope" }
-  ]
+  ],
+  "contract": {
+    "status": "ready",
+    "risk": "medium",
+    "change_radius": ["component"],
+    "allowed_paths": ["src/**", "docs/tasks/**"],
+    "forbidden_paths": ["src/generated/**"],
+    "acceptance_criteria": ["component behavior is proven"],
+    "required_evidence": [
+      { "id": "component", "kind": "test", "command": "ayni verify test --language rust --package demo", "proves": "component behavior" }
+    ]
+  },
+  "evidence": [],
+  "metrics": {
+    "total_ms": 5400000,
+    "phases": [
+      { "phase": "design", "visits": 1, "active_ms": 1800000 },
+      { "phase": "implement", "visits": 2, "active_ms": 3000000 },
+      { "phase": "audit", "visits": 2, "active_ms": 600000 }
+    ],
+    "repair_iterations": 1,
+    "evidence_runs": 3,
+    "evidence_pass": 2,
+    "evidence_fail": 1,
+    "computed_at": "2026-07-12T11:30:00Z"
+  }
 }
 ```
 
@@ -140,6 +166,12 @@ as an architecture map.
 - `branch`: git branch in `<type>/<id>-<description>` form (set after branch setup)
 - `branch_checked_out`: whether the branch was created or checked out at task creation
 - `phase_log`: append-only history, including returns to design or implementation.
+- `metrics`: derived timing and throughput signals, recomputed from `phase_log` and `evidence` on
+  every write and every read. Each phase is owned by one agent, so `active_ms` is that agent's
+  wall-clock working window (spanning any user idle between transitions — the honest signal a
+  file-based state machine can produce). `visits` counts phase entries; a return to a phase is a
+  fresh visit, so `repair_iterations` (implement re-entries after a failed audit) falls out
+  directly. `total_ms` runs from the first log entry to the last (closed) or to now (active).
 
 ### Custom Tools
 
@@ -148,6 +180,8 @@ as an architecture map.
 | `task_create` | Allocate an ID, create branch, write `task.json` (requires `change_type`) |
 | `task_status` | Read task state, document presence, and suggested next agent |
 | `task_list` | List tasks with phase and status |
+| `task_contract` | Set or upgrade typed scope, risk, acceptance, and evidence requirements |
+| `task_evidence` | Record one declared command result and optional artifact |
 | `task_advance` | Perform a validated phase transition |
 | `task_close` | Pass or fail audit; a pass validates durable evidence and prunes scratch docs |
 
@@ -161,7 +195,7 @@ Implementation commits use the task's 4-digit ID prefix:
 
 Example: `feat(auth): [0008] add password login handler`
 
-`@code` commits atomic implementation work when asked; commits on the default branch are blocked.
+`@implement` commits cohesive sequential implementation work; commits on the default branch are blocked.
 `@audit` verifies task-tagged commits landed on the task branch where that convention applies.
 
 ## Agents
@@ -174,7 +208,6 @@ Example: `feat(auth): [0008] add password login handler`
 | `implement` | Coordinates atomic implementation and verifies cleanup plus quality gates |
 | `audit` | Pass/fail state-transition gate and durable-record distiller |
 | `investigate` | Read-only scoped evidence gathering |
-| `code` | Atomic implementation delegated by `@implement` |
 
 ## Directory Structure
 

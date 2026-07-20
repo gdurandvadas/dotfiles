@@ -5,16 +5,22 @@ import {
   createTask,
   deleteTask,
   formatCreateResult,
+  formatDuration,
   formatStatusReport,
   formatTaskBranchName,
   listTasks,
   parseChangeType,
   readStatus,
+  recordTaskEvidence,
   resolveTask,
+  setTaskContract,
   setTaskBranch,
   setupTaskBranch,
   type AuditVerdict,
   type TaskPhase,
+  type ChangeRadius,
+  type EvidenceResult,
+  type TaskRisk,
 } from "../lib/task";
 
 export const create = tool({
@@ -81,12 +87,59 @@ export const list = tool({
       return reports
         .map((report) => {
           const { manifest } = report;
-          return `${manifest.id} — ${manifest.title} [${manifest.status}, ${manifest.current_phase}]`;
+          const elapsed = manifest.metrics ? ` · ${formatDuration(manifest.metrics.total_ms)}` : "";
+          return `${manifest.id} — ${manifest.title} [${manifest.status}, ${manifest.current_phase}]${elapsed}`;
         })
         .join("\n");
     } catch (error) {
       return `Error: ${error instanceof Error ? error.message : String(error)}`;
     }
+  },
+});
+
+export const contract = tool({
+  description: "Upgrade or set the typed task contract. Ready contracts gate implementation.",
+  args: {
+    id: tool.schema.string(),
+    status: tool.schema.enum(["draft", "ready"]),
+    risk: tool.schema.enum(["low", "medium", "high"]),
+    change_radius: tool.schema.array(tool.schema.enum(["local", "component", "service", "system", "operational"])),
+    allowed_paths: tool.schema.array(tool.schema.string()),
+    forbidden_paths: tool.schema.array(tool.schema.string()),
+    acceptance_criteria: tool.schema.array(tool.schema.string()),
+    required_evidence: tool.schema.array(tool.schema.object({
+      id: tool.schema.string(), kind: tool.schema.string(), command: tool.schema.string(), proves: tool.schema.string(),
+    })),
+  },
+  async execute(args, context) {
+    try {
+      const id = resolveTask(context.directory, args.id);
+      setTaskContract(context.directory, id, {
+        status: args.status, risk: args.risk as TaskRisk,
+        change_radius: args.change_radius as ChangeRadius[], allowed_paths: args.allowed_paths,
+        forbidden_paths: args.forbidden_paths, acceptance_criteria: args.acceptance_criteria,
+        required_evidence: args.required_evidence,
+      });
+      return formatStatusReport(readStatus(context.directory, id));
+    } catch (error) { return `Error: ${error instanceof Error ? error.message : String(error)}`; }
+  },
+});
+
+export const evidence = tool({
+  description: "Record the result of one command declared by the task contract.",
+  args: {
+    id: tool.schema.string(), requirement_id: tool.schema.string(), command: tool.schema.string(),
+    result: tool.schema.enum(["pass", "fail", "not_run"]), artifact: tool.schema.string().optional(), note: tool.schema.string(),
+  },
+  async execute(args, context) {
+    try {
+      const id = resolveTask(context.directory, args.id);
+      recordTaskEvidence(context.directory, id, {
+        requirement_id: args.requirement_id, command: args.command,
+        result: args.result as EvidenceResult, artifact: args.artifact, note: args.note,
+      });
+      return formatStatusReport(readStatus(context.directory, id));
+    } catch (error) { return `Error: ${error instanceof Error ? error.message : String(error)}`; }
   },
 });
 

@@ -69,23 +69,6 @@
 
   // Agents
   "agent_servers": {
-    "github-copilot-cli": {
-      "default_config_options": {
-        "model": "auto",
-        "mode": "https://agentclientprotocol.com/protocol/session-modes#autopilot",
-        "allow_all": "on"
-      },
-      "type": "registry"
-    },
-    "codex-acp": {
-      "default_config_options": {
-        "model": "gpt-5.5"
-      },
-      "type": "registry"
-    },
-    "claude-acp": {
-      "type": "registry",
-    },
   },
 
   // Language-specific settings

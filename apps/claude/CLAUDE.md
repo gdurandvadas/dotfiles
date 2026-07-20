@@ -14,10 +14,10 @@ compatibility, the removal inventory, and the authoritative quality gate.
 The task workflow is:
 
 1. `/task-new` creates `docs/tasks/<id>/task.json` and its branch boundary.
-2. `/design` writes the executable plan of record, including State Transition and Removal
-   Inventory, then advances the task to implementation.
-3. `implement` delegates atomic source changes to `code`, completes removals, and runs the
-   authoritative gate.
+2. `/design` writes the executable plan of record, sets the schema-v2 risk/scope/evidence contract,
+   and advances the task to implementation.
+3. `implement` edits sequentially, completes removals, records the task contract's evidence, and
+   runs the authoritative completion gate.
 4. `audit` proves target presence and former-state absence. It either returns work to implementation
    or writes `decisions.md` and closes the task.
 

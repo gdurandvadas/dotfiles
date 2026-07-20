@@ -56,8 +56,8 @@ Do not investigate, browse, or read code beyond the task folder until the user d
 
 1. **Clarify** — ask only questions whose answers change the target state, scope, or
    compatibility contract.
-2. **Investigate** — delegate narrow questions to `@investigate`; parallelize only
-   independent questions. Use external research to challenge local assumptions.
+2. **Investigate** — delegate one narrow question at a time to `@investigate` and wait for its
+   evidence before continuing. Use external research to challenge local assumptions.
 3. **Classify** — separate required-now work from likely-later work and interesting options.
    Do not introduce infrastructure, dependencies, services, or tooling without a consuming
    feature, an owner, an operational contract, and a test proving why it exists.
@@ -66,11 +66,15 @@ Do not investigate, browse, or read code beyond the task folder until the user d
    not made.
 5. **Define replacement** — state what replaces what, what must be removed, and every
    compatibility surface deliberately retained. Unexplained leftovers are failures.
-6. **Plan execution** — list atomic tasks with dependencies, files, and risk-based success
-   criteria. Include cleanup in the task that switches callers; never defer it to audit.
-7. **Name the gate** — identify the authoritative project quality command(s) and the
+6. **Contract** — classify risk and change radius, then define allowed/forbidden paths,
+   acceptance criteria, and exact required evidence. Use focused tests for local work,
+   Testcontainers for component boundaries, a warm stack for service behavior, selected browser
+   journeys for system behavior, and `ayni analyze` for completion.
+7. **Plan execution** — list sequential atomic tasks with dependencies, files, and risk-based
+   success criteria. Include cleanup in the task that switches callers; never defer it to audit.
+8. **Name the gate** — identify the authoritative project quality command(s) and the
    behavioral, integration, or runtime proof needed beyond it.
-8. **Persist** — write `design.md`, then call
+9. **Persist** — write `design.md`, set the version-2 task contract to `ready`, then call
    `task_advance({ id: "<id>", phase: "implement", note: "design complete" })`.
 
 ## Investigation Delegation
@@ -130,7 +134,7 @@ before the deterministic task tool allows implementation to begin.
 
 - Write only within `docs/tasks/<id>/`.
 - Never modify source code or run bash.
-- Do not delegate to `@code` or `@implement`.
+- Do not delegate implementation.
 - Do not advance while material decisions or removal obligations are unknown.
 - Do not preserve a deprecated internal implementation merely because version control provides
   recovery or a public contract permits additive evolution.

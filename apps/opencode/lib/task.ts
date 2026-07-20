@@ -13,6 +13,35 @@ import { join } from "node:path";
 export type TaskPhase = "design" | "implement" | "audit";
 export type TaskStatus = "active" | "done";
 export type AuditVerdict = "pass" | "fail";
+export type TaskRisk = "low" | "medium" | "high";
+export type ChangeRadius = "local" | "component" | "service" | "system" | "operational";
+export type EvidenceResult = "pass" | "fail" | "not_run";
+
+export interface RequiredEvidence {
+  id: string;
+  kind: string;
+  command: string;
+  proves: string;
+}
+
+export interface TaskContract {
+  status: "draft" | "ready";
+  risk: TaskRisk;
+  change_radius: ChangeRadius[];
+  allowed_paths: string[];
+  forbidden_paths: string[];
+  acceptance_criteria: string[];
+  required_evidence: RequiredEvidence[];
+}
+
+export interface EvidenceRecord {
+  requirement_id: string;
+  command: string;
+  result: EvidenceResult;
+  artifact?: string;
+  note: string;
+  recorded_at: string;
+}
 
 export interface PhaseLogEntry {
   phase: TaskPhase;
@@ -20,7 +49,26 @@ export interface PhaseLogEntry {
   note: string;
 }
 
+/** Wall-clock time and visit count attributed to a single phase (i.e. its owning agent). */
+export interface PhaseMetrics {
+  phase: TaskPhase;
+  visits: number;
+  active_ms: number;
+}
+
+/** Derived timing and throughput signals for a task, computed from phase_log and evidence. */
+export interface TaskMetrics {
+  total_ms: number;
+  phases: PhaseMetrics[];
+  repair_iterations: number;
+  evidence_runs: number;
+  evidence_pass: number;
+  evidence_fail: number;
+  computed_at: string;
+}
+
 export interface TaskManifest {
+  schema_version?: 1 | 2;
   id: string;
   title: string;
   status: TaskStatus;
@@ -35,6 +83,9 @@ export interface TaskManifest {
     decisions: string;
   };
   phase_log: PhaseLogEntry[];
+  contract?: TaskContract;
+  evidence?: EvidenceRecord[];
+  metrics?: TaskMetrics;
 }
 
 export interface TaskStatusReport {
@@ -70,6 +121,75 @@ const DECISIONS_REQUIRED_SECTIONS = [
   "Verification Evidence",
   "Remaining Work",
 ];
+
+function assertNonEmpty(values: string[], label: string): void {
+  if (values.length === 0 || values.some((value) => !value.trim())) {
+    throw new Error(`${label} must contain non-empty values.`);
+  }
+}
+
+function assertReadyContract(manifest: TaskManifest): TaskContract {
+  if (manifest.schema_version !== 2 || !manifest.contract) {
+    throw new Error("Active legacy task must be upgraded with task_contract before implementation.");
+  }
+  const contract = manifest.contract;
+  if (contract.status !== "ready") throw new Error("Task contract must be ready before implementation.");
+  assertNonEmpty(contract.change_radius, "change_radius");
+  assertNonEmpty(contract.allowed_paths, "allowed_paths");
+  assertNonEmpty(contract.acceptance_criteria, "acceptance_criteria");
+  if (contract.required_evidence.length === 0) {
+    throw new Error("required_evidence must contain at least one entry.");
+  }
+  const ids = new Set<string>();
+  for (const item of contract.required_evidence) {
+    if (!item.id.trim() || !item.kind.trim() || !item.command.trim() || !item.proves.trim()) {
+      throw new Error("Each required evidence item needs id, kind, command, and proves.");
+    }
+    if (ids.has(item.id)) throw new Error(`Duplicate evidence id: ${item.id}`);
+    ids.add(item.id);
+  }
+  return contract;
+}
+
+function assertRequiredEvidence(manifest: TaskManifest): void {
+  const contract = assertReadyContract(manifest);
+  const records = manifest.evidence ?? [];
+  const missing = contract.required_evidence.filter((requirement) => {
+    const latest = records.filter((record) => record.requirement_id === requirement.id).at(-1);
+    return latest?.result !== "pass" || latest.command !== requirement.command;
+  });
+  if (missing.length > 0) {
+    throw new Error(`Required evidence has not passed: ${missing.map((item) => item.id).join(", ")}`);
+  }
+}
+
+function globMatches(path: string, pattern: string): boolean {
+  const escaped = pattern
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replaceAll("**", "\0")
+    .replaceAll("*", "[^/]*")
+    .replaceAll("?", "[^/]")
+    .replaceAll("\0", ".*");
+  return new RegExp(`^${escaped}$`).test(path);
+}
+
+function changedPaths(baseDir: string): string[] {
+  const base = resolveDefaultBranch(baseDir);
+  const committed = git(baseDir, ["diff", "--name-only", `${base}...HEAD`]).split("\n");
+  const staged = git(baseDir, ["diff", "--cached", "--name-only"]).split("\n");
+  const unstaged = git(baseDir, ["diff", "--name-only"]).split("\n");
+  const untracked = git(baseDir, ["ls-files", "--others", "--exclude-standard"]).split("\n");
+  return [...new Set([...committed, ...staged, ...unstaged, ...untracked].map((path) => path.trim()).filter(Boolean))];
+}
+
+function assertTaskScope(baseDir: string, manifest: TaskManifest): void {
+  const contract = assertReadyContract(manifest);
+  const violations = changedPaths(baseDir).filter((path) =>
+    contract.forbidden_paths.some((pattern) => globMatches(path, pattern)) ||
+    !contract.allowed_paths.some((pattern) => globMatches(path, pattern)),
+  );
+  if (violations.length) throw new Error(`Changed paths violate task contract: ${violations.join(", ")}`);
+}
 
 export function taskCommitId(fullId: string): string {
   const match = fullId.match(ID_PATTERN);
@@ -474,9 +594,72 @@ function readManifestFile(baseDir: string, id: string): TaskManifest {
   return JSON.parse(readFileSync(filePath, "utf-8")) as TaskManifest;
 }
 
+const METRIC_PHASES: TaskPhase[] = ["design", "implement", "audit"];
+
+/**
+ * Derive timing and throughput metrics from the append-only phase_log. Each phase is owned by one
+ * agent, so time attributed to a phase is that agent's wall-clock working window (spanning any user
+ * idle in between — the honest signal a file-based state machine can produce). Consecutive same-phase
+ * entries collapse into one visit; a return to a phase counts as a fresh visit, so implement re-entries
+ * after a failed audit surface as repair iterations. For closed tasks the window ends at the final log
+ * entry; for active tasks it ends at `nowMs`.
+ */
+export function computeTaskMetrics(manifest: TaskManifest, nowMs: number = Date.now()): TaskMetrics {
+  const log = manifest.phase_log ?? [];
+  const active: Record<TaskPhase, number> = { design: 0, implement: 0, audit: 0 };
+  const visits: Record<TaskPhase, number> = { design: 0, implement: 0, audit: 0 };
+  const endMs = manifest.status === "done" && log.length ? Date.parse(log[log.length - 1].at) : nowMs;
+
+  for (let i = 0; i < log.length; i++) {
+    const entry = log[i];
+    const startMs = Date.parse(entry.at);
+    const nextMs = i + 1 < log.length ? Date.parse(log[i + 1].at) : endMs;
+    if (Number.isFinite(startMs) && Number.isFinite(nextMs)) {
+      active[entry.phase] += Math.max(0, nextMs - startMs);
+    }
+    if (i === 0 || log[i - 1].phase !== entry.phase) {
+      visits[entry.phase] += 1;
+    }
+  }
+
+  const startMs = log.length ? Date.parse(log[0].at) : nowMs;
+  const total_ms = Number.isFinite(startMs) ? Math.max(0, endMs - startMs) : 0;
+  const evidence = manifest.evidence ?? [];
+
+  return {
+    total_ms,
+    phases: METRIC_PHASES.map((phase) => ({ phase, visits: visits[phase], active_ms: active[phase] })),
+    repair_iterations: Math.max(0, visits.implement - 1),
+    evidence_runs: evidence.length,
+    evidence_pass: evidence.filter((record) => record.result === "pass").length,
+    evidence_fail: evidence.filter((record) => record.result === "fail").length,
+    computed_at: new Date(nowMs).toISOString(),
+  };
+}
+
+export function formatDuration(ms: number): string {
+  if (!Number.isFinite(ms) || ms <= 0) return "0s";
+  const totalSeconds = Math.round(ms / 1000);
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  if (totalMinutes < 60) {
+    const seconds = totalSeconds % 60;
+    return seconds ? `${totalMinutes}m ${seconds}s` : `${totalMinutes}m`;
+  }
+  const totalHours = Math.floor(totalMinutes / 60);
+  if (totalHours < 24) {
+    const minutes = totalMinutes % 60;
+    return minutes ? `${totalHours}h ${minutes}m` : `${totalHours}h`;
+  }
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  return hours ? `${days}d ${hours}h` : `${days}d`;
+}
+
 function writeManifestFile(baseDir: string, id: string, manifest: TaskManifest): void {
   const dir = join(tasksRoot(baseDir), id);
   mkdirSync(dir, { recursive: true });
+  manifest.metrics = computeTaskMetrics(manifest);
   writeFileSync(manifestPath(baseDir, id), `${JSON.stringify(manifest, null, 2)}\n`, "utf-8");
 }
 
@@ -505,6 +688,7 @@ export function createTask(
   const id = allocateId(baseDir, description);
   const today = todayDate();
   const manifest: TaskManifest = {
+    schema_version: 2,
     id,
     title: toTitle(description),
     status: "active",
@@ -523,11 +707,50 @@ export function createTask(
         note: "initial scope",
       },
     ],
+    contract: {
+      status: "draft",
+      risk: "low",
+      change_radius: ["local"],
+      allowed_paths: [],
+      forbidden_paths: [],
+      acceptance_criteria: [],
+      required_evidence: [],
+    },
+    evidence: [],
   };
 
   writeManifestFile(baseDir, id, manifest);
   const path = join(TASKS_DIR, id);
   return { manifest, path };
+}
+
+export function setTaskContract(baseDir: string, id: string, contract: TaskContract): TaskManifest {
+  const manifest = readManifestFile(baseDir, id);
+  if (manifest.status === "done") throw new Error(`Task is closed: ${id}`);
+  const upgraded: TaskManifest = { ...manifest, schema_version: 2, contract, evidence: manifest.evidence ?? [] };
+  if (contract.status === "ready") assertReadyContract(upgraded);
+  upgraded.updated_at = todayDate();
+  upgraded.phase_log.push({ phase: upgraded.current_phase, at: nowIso(), note: `task contract ${contract.status}` });
+  writeManifestFile(baseDir, id, upgraded);
+  return upgraded;
+}
+
+export function recordTaskEvidence(
+  baseDir: string,
+  id: string,
+  record: Omit<EvidenceRecord, "recorded_at">,
+): TaskManifest {
+  const manifest = readManifestFile(baseDir, id);
+  const contract = assertReadyContract(manifest);
+  const requirement = contract.required_evidence.find((item) => item.id === record.requirement_id);
+  if (!requirement) throw new Error(`Unknown evidence requirement: ${record.requirement_id}`);
+  if (record.command !== requirement.command) {
+    throw new Error(`Evidence command does not match contract for ${record.requirement_id}.`);
+  }
+  manifest.evidence = [...(manifest.evidence ?? []), { ...record, recorded_at: nowIso() }];
+  manifest.updated_at = todayDate();
+  writeManifestFile(baseDir, id, manifest);
+  return manifest;
 }
 
 export function setTaskBranch(
@@ -599,6 +822,7 @@ function suggestedAgentForPhase(phase: TaskPhase, status: TaskStatus): string | 
 
 export function readStatus(baseDir: string, id: string): TaskStatusReport {
   const manifest = readManifestFile(baseDir, id);
+  manifest.metrics = computeTaskMetrics(manifest);
   const folder = join(tasksRoot(baseDir), id);
   const docs = {
     design: existsSync(join(folder, manifest.docs.design)),
@@ -652,11 +876,14 @@ export function advancePhase(
       taskFilePath(baseDir, id, manifest.docs.design),
       DESIGN_REQUIRED_SECTIONS,
     );
+    assertReadyContract(manifest);
   }
   if (manifest.current_phase === "implement" && phase === "audit") {
     if (!existsSync(taskFilePath(baseDir, id, manifest.docs.design))) {
       throw new Error(`Cannot advance to audit without ${manifest.docs.design}.`);
     }
+    assertRequiredEvidence(manifest);
+    assertTaskScope(baseDir, manifest);
   }
 
   if (phase === "implement" || phase === "audit") {
@@ -708,6 +935,8 @@ export function closeTask(
   }
 
   assertOnTaskBranch(baseDir, id);
+  assertRequiredEvidence(manifest);
+  assertTaskScope(baseDir, manifest);
 
   if (options.foundationalBlockers > 0) {
     throw new Error("Cannot close a task with foundational blockers.");
@@ -817,6 +1046,26 @@ export function formatStatusReport(report: TaskStatusReport): string {
     "Recent phase log:",
     ...logLines,
   );
+
+  if (manifest.metrics) {
+    const metrics = manifest.metrics;
+    lines.push("", "Metrics:", `  - Total elapsed: ${formatDuration(metrics.total_ms)}`);
+    for (const phase of metrics.phases) {
+      if (phase.visits > 0) {
+        lines.push(
+          `  - ${phase.phase}: ${formatDuration(phase.active_ms)} (${phase.visits} visit${phase.visits === 1 ? "" : "s"})`,
+        );
+      }
+    }
+    if (metrics.repair_iterations > 0) {
+      lines.push(`  - Repair iterations: ${metrics.repair_iterations}`);
+    }
+    if (metrics.evidence_runs > 0) {
+      lines.push(
+        `  - Evidence: ${metrics.evidence_runs} run${metrics.evidence_runs === 1 ? "" : "s"} (${metrics.evidence_pass} pass, ${metrics.evidence_fail} fail)`,
+      );
+    }
+  }
 
   if (manifest.status === "done") {
     lines.push("", "Task is closed.");
