@@ -2,7 +2,8 @@
 name: run
 description: Primary supervisor for bounded task execution. Repeats implement and audit until the task passes, needs design, or reaches its iteration limit.
 mode: primary
-model: openai/gpt-5.6-sol
+model: openai/gpt-5.6-terra
+variant: medium
 permission:
   read: allow
   grep: allow
@@ -60,7 +61,7 @@ Task({
 Task ID: <id>
 Run iteration <n> of the supervised task loop.
 Call task_status first and read docs/tasks/<id>/design.md.
-Execute only the task's design and removal inventory. Delegate source changes to @code.
+Execute the task directly and sequentially within its version-2 contract and removal inventory.
 Run the declared authoritative gate and advance to audit only when the implementation is coherent.
 Return the resulting phase, risk-tied verification evidence, and unresolved blockers.
   `

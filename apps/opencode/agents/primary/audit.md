@@ -2,7 +2,8 @@
 name: audit
 description: Post-implementation pass/fail gate. Verifies the completed state transition, distills durable decisions, and either closes or returns work to implement.
 mode: subagent
-model: openai/gpt-5.6-terra
+model: openai/gpt-5.6-sol
+variant: high
 permission:
   read: allow
   grep: allow
@@ -151,7 +152,7 @@ the task is complete.
 
 - Write only under `docs/tasks/<id>/` — never modify source code
 - Read-only bash access (`git diff`, `git log`, `git status`, `git show`). Do not run modifying commands.
-- Do not delegate to `@code` or `@implement`
+- Do not delegate implementation
 - Never close a task with a foundational inconsistency as deferred future work
 
 ## Handoff

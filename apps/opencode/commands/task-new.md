@@ -1,7 +1,8 @@
 ---
 description: Create a new task — allocate ID, create branch, docs/tasks folder (handled by plugin)
 agent: default
-model: openai/gpt-5.6-terra
+model: openai/gpt-5.6-luna
+variant: light
 ---
 
 Handled deterministically by the task plugin. If you see this prompt, the plugin did not intercept

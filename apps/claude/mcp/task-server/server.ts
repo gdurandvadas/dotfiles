@@ -93,6 +93,32 @@ server.registerTool(
   ({ id, phase, note }) => toolResult(() => task.advance(baseDir, task.resolveTask(baseDir, id), phase, note)),
 );
 server.registerTool(
+  "contract",
+  {
+    description: "Upgrade or set the typed task contract.",
+    inputSchema: {
+      id: z.string(), status: z.enum(["draft", "ready"]), risk: z.enum(["low", "medium", "high"]),
+      change_radius: z.array(z.enum(["local", "component", "service", "system", "operational"])),
+      allowed_paths: z.array(z.string()), forbidden_paths: z.array(z.string()), acceptance_criteria: z.array(z.string()),
+      required_evidence: z.array(z.object({ id: z.string(), kind: z.string(), command: z.string(), proves: z.string() })),
+    },
+  },
+  ({ id, status, risk, change_radius, allowed_paths, forbidden_paths, acceptance_criteria, required_evidence }) =>
+    toolResult(() => task.setContract(baseDir, task.resolveTask(baseDir, id), { status, risk, change_radius, allowed_paths, forbidden_paths, acceptance_criteria, required_evidence })),
+);
+server.registerTool(
+  "evidence",
+  {
+    description: "Record one task-contract evidence result.",
+    inputSchema: {
+      id: z.string(), requirement_id: z.string(), command: z.string(), result: z.enum(["pass", "fail", "not_run"]),
+      artifact: z.string().optional(), note: z.string(),
+    },
+  },
+  ({ id, requirement_id, command, result: evidenceResult, artifact, note }) =>
+    toolResult(() => task.recordEvidence(baseDir, task.resolveTask(baseDir, id), { requirement_id, command, result: evidenceResult, artifact, note })),
+);
+server.registerTool(
   "close",
   {
     description: "Close a passing audit or return a failing audit to implementation.",
