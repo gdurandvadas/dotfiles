@@ -89,8 +89,11 @@ After creation, invoke `@design` when you are ready.
 | Implement | `@implement` | Code changes | Delegate atomic changes, execute removal inventory, and run the declared gate |
 | Audit | `@audit` | `audit.md` | Prove presence and absence, reconcile current guidance, then pass or fail the task |
 
-Use `/task-run <id>` or `@run` to supervise the bounded implement/audit loop. You can still invoke
-`@design`, `@implement`, and `@audit` individually when you want direct control.
+Use `/task-run <id>` or `@run` to supervise the bounded implement/audit loop. `@run` keeps
+re-delegating `@implement` while the phase stays `implement` with actionable residual work (up to
+three attempts per audit iteration) and only stops for design returns, exhausted budgets, or an
+explicit human decision via `question`. You can still invoke `@design`, `@implement`, and `@audit`
+individually when you want direct control.
 
 ### Durable Task Record
 
@@ -206,7 +209,7 @@ Example: `feat(auth): [0008] add password login handler`
 |---|---|
 | `default` | Standalone investigation and implementation, with no task documents |
 | `design` | User-guided investigation, decisions, removal inventory, and executable design |
-| `run` | Supervises the bounded `@implement → @audit` loop |
+| `run` | Supervises the bounded `@implement → @audit` loop; re-delegates actionable implement residuals and asks via `question` only for human decisions |
 | `implement` | Coordinates atomic implementation and verifies cleanup plus quality gates |
 | `audit` | Pass/fail state-transition gate and durable-record distiller |
 | `investigate` | Read-only scoped evidence gathering |
