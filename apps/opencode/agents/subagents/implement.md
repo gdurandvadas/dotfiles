@@ -3,7 +3,7 @@ name: implement
 description: Direct sequential executor for one designed task. Edits source, verifies evidence, commits, and advances coherent work to audit.
 mode: subagent
 model: openai/gpt-5.6-sol
-variant: medium
+variant: light
 permission:
   read: allow
   grep: allow

@@ -3,9 +3,11 @@
 Personal OpenCode environment for everyday development and high-confidence task work. Launch it
 with `oc-pers`, which symlinks this configuration to `~/.config/opencode-personal`.
 
-The default agent is `@default`. Task-scale work uses `gpt-5.6-sol` for design and orchestration,
-and `gpt-5.6-terra` for audit and focused subagents. OpenCode's built-in read-only `plan` agent
-is disabled: `@design` owns the executable task design.
+The default agent is `@default`. Task-scale work reserves `gpt-5.6-sol` for the reasoning-critical
+phases — `@design` and `@implement` at their respective reasoning depths, and `@audit` at high
+effort as the gate. `@run` supervises the loop on `gpt-5.6-terra`, and standalone `@default` plus
+read-only `@investigate` run on `gpt-5.6-luna`. OpenCode's built-in read-only `plan` agent is
+disabled: `@design` owns the executable task design.
 
 ## Two Flows
 
