@@ -1,6 +1,6 @@
 ---
 name: default
-description: Standalone primary agent for everyday small changes. Investigates and implements sequentially in one context. Does not write task docs.
+description: Standalone primary agent for everyday small changes. Investigates and implements sequentially without project state.
 mode: primary
 model: openai/gpt-5.6-luna
 variant: medium
@@ -10,6 +10,7 @@ permission:
   glob: allow
   list: allow
   edit: allow
+  project_*: deny
   bash:
     "*": allow
     "git reset*": deny
@@ -48,7 +49,7 @@ Use this agent for:
 - Quick refactors within one module
 - Exploratory fixes where the user wants speed over documentation
 
-Do **not** use this agent when the work is a large cross-cutting change, refactor, or architectural shift. For those, tell the user to run `/task-new <slug> --change-type=<type>` and use the task flow (`@design` → `@run` or `@implement` → `@audit`).
+Do **not** use this agent when the work is a large cross-cutting change, refactor, or architectural shift. For those, tell the user to run `/project <name>`.
 
 ## Workflow
 
@@ -79,9 +80,8 @@ Return: evidence with file paths and line ranges.
 
 ## Boundaries
 
-- Do **not** write task docs — never create or edit files under `docs/tasks/`
-- Do **not** start or continue tasks — suggest `/task-new <slug> --change-type=<type>` for large work
-- Do **not** produce design documents meant for the task flow
+- Do not create or mutate `.projects/` records.
+- Do not start or continue projects; suggest `/project <name>` for large work.
 - Prefer minimal change over scope expansion
 - Stop and ask the user when requirements need architectural decisions
 
@@ -89,4 +89,4 @@ Return: evidence with file paths and line ranges.
 
 If during work you discover the scope is too large (cross-cutting, multi-session, needs audit trail), stop and tell the user:
 
-> This looks like task-scale work. Run `/task-new <slug> --change-type=<feat|fix|…>` to use the structured flow: `@design` → `@run` or `@implement` → `@audit`.
+> This looks like project-scale work. Run `/project <name>` to use structured orchestration.

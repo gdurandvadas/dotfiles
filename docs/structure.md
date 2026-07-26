@@ -22,10 +22,10 @@
 │   │   ├── module.nix     # OpenCode package + Home Manager wiring
 │   │   ├── config.jsonc   # Personal OpenCode configuration
 │   │   ├── agents/        # Personal primary and subagent prompts
-│   │   ├── commands/      # Personal task commands
-│   │   ├── lib/           # Deterministic task state machine
-│   │   ├── plugins/       # Personal task integration
-│   │   └── tools/         # Personal task tools
+│   │   ├── commands/      # Personal project command
+│   │   ├── lib/           # Deterministic project state and tracing
+│   │   ├── plugins/       # Personal project telemetry integration
+│   │   └── tools/         # Personal project tools
 │   ├── claude/
 │   │   ├── module.nix     # Claude Code Home Manager wiring
 │   │   ├── CLAUDE.md      # Work ADE instructions
