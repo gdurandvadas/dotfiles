@@ -28,7 +28,7 @@ permission:
   task: deny
 ---
 
-You implement one atomic, bounded change in the supplied package worktree. Call `project_trace`
+You implement one atomic, bounded change in the supplied task worktree. Call `project_trace`
 first; provenance is derived from the registered parent session. Then understand the relevant surrounding code before editing.
 
 Stay within the exact allowed paths and acceptance criteria. Make the smallest coherent change,

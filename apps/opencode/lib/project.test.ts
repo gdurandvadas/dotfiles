@@ -1,101 +1,356 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as project from "./project";
 
 const roots: string[] = [];
-const worktrees: string[] = [];
+const externalWorktrees: string[] = [];
+
 afterEach(() => {
-  for (const worktree of worktrees.splice(0)) rmSync(worktree, { recursive: true, force: true });
-  for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
+  for (const worktree of externalWorktrees.splice(0)) {
+    rmSync(worktree, { recursive: true, force: true });
+  }
+  for (const root of roots.splice(0)) {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
 
 function repository(): string {
-  const root = mkdtempSync(join(tmpdir(), "project-runtime-")); roots.push(root);
-  const git = (...args: string[]) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
-  git("init", "-b", "main"); git("config", "user.email", "project@example.invalid"); git("config", "user.name", "Project test"); git("config", "commit.gpgsign", "false");
-  writeFileSync(join(root, "README.md"), "fixture\n"); git("add", "README.md"); git("commit", "-m", "fixture"); return root;
+  const root = mkdtempSync(join(tmpdir(), "project-runtime-"));
+  roots.push(root);
+  const run = (...args: string[]) =>
+    execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  run("init", "-b", "main");
+  run("config", "user.email", "project@example.invalid");
+  run("config", "user.name", "Project test");
+  run("config", "commit.gpgsign", "false");
+  writeFileSync(join(root, "README.md"), "fixture\n");
+  run("add", "README.md");
+  run("commit", "-m", "fixture");
+  return root;
 }
-const packageRequirement = { id: "unit", level: "package" as const, command: ["true"], proves: "package is green", covers: ["src/a.ts"] };
-const finalRequirement = { id: "final", level: "final" as const, command: ["true"], proves: "integration is green", covers: ["src/**"] };
-function nodes(): project.ProjectNode[] {
-  return [{
-    id: "financial-views", title: "Financial views", status: "ready", depends_on: [], allowed_paths: ["src/a.ts"], forbidden_paths: [],
-    discovery_paths: ["src/*.test.ts"], acceptance_criteria: ["a exists"], required_evidence: [packageRequirement, finalRequirement],
-  }];
-}
-function git(base: string, ...args: string[]): string { return execFileSync("git", args, { cwd: base, encoding: "utf8" }).trim(); }
 
-describe("project runtime", () => {
-  test("creates local ignored state and an untyped project branch", () => {
-    const base = repository(); const manifest = project.createProject(base, "income overhaul");
-    expect(manifest.id).toBe("0001-income-overhaul"); expect(manifest.integration_branch).toBe("project/0001-income-overhaul");
+function git(base: string, ...args: string[]): string {
+  return execFileSync("git", args, { cwd: base, encoding: "utf8" }).trim();
+}
+
+const taskEvidence: project.EvidenceRequirement = {
+  id: "unit",
+  level: "task",
+  command: ["true"],
+  proves: "the task is green",
+  covers: ["src/a.ts"],
+};
+
+const milestoneEvidence: project.EvidenceRequirement = {
+  id: "integration",
+  level: "milestone",
+  command: ["true"],
+  proves: "the milestone is green",
+  covers: ["src/**"],
+};
+
+function task(
+  id = "financial-views",
+  allowedPaths = ["src/a.ts"],
+): project.ProjectTask {
+  return {
+    id,
+    title: id,
+    status: "ready",
+    depends_on: [],
+    allowed_paths: allowedPaths,
+    forbidden_paths: [],
+    discovery_paths: ["src/**"],
+    acceptance_criteria: [`${id} is complete`],
+    required_evidence: [taskEvidence],
+  };
+}
+
+function milestones(): project.ProjectMilestone[] {
+  return [
+    {
+      id: "engine-foundation",
+      title: "Engine foundation",
+      status: "pending",
+      depends_on: [],
+      acceptance_criteria: ["the engine foundation is integrated"],
+      required_evidence: [milestoneEvidence],
+      tasks: [task()],
+    },
+    {
+      id: "engine-release",
+      title: "Engine release",
+      status: "pending",
+      depends_on: ["engine-foundation"],
+      acceptance_criteria: ["the engine release is verified"],
+      required_evidence: [{
+        ...milestoneEvidence,
+        id: "release",
+      }],
+      tasks: [],
+    },
+  ];
+}
+
+function commitTask(worktree: string, path = "src/a.ts"): void {
+  mkdirSync(join(worktree, "src"), { recursive: true });
+  writeFileSync(join(worktree, path), "export const a = 1;\n");
+  git(worktree, "add", path);
+  git(
+    worktree,
+    "-c",
+    "commit.gpgsign=false",
+    "commit",
+    "-m",
+    "feat(engine): add view state",
+  );
+}
+
+describe("milestone project runtime", () => {
+  test("creates schema-v3 ignored state and a project branch", () => {
+    const base = repository();
+    const manifest = project.createProject(base, "income overhaul");
+    expect(manifest.schema_version).toBe(3);
+    expect(manifest.id).toBe("0001-income-overhaul");
+    expect(manifest.integration_branch).toBe("project/0001-income-overhaul");
     expect(existsSync(join(base, ".projects", manifest.id, "project.json"))).toBe(true);
-    expect(readFileSync(join(base, ".projects", ".gitignore"), "utf8")).toBe("**\n!.gitignore\n");
-    expect(git(base, "check-ignore", ".projects/0001-income-overhaul/project.json")).toBe(".projects/0001-income-overhaul/project.json");
+    expect(readFileSync(join(base, ".projects", ".gitignore"), "utf8"))
+      .toBe("**\n!.gitignore\n");
+    expect(git(base, "check-ignore", ".projects/0001-income-overhaul/project.json"))
+      .toBe(".projects/0001-income-overhaul/project.json");
     expect(() => git(base, "check-ignore", ".projects/.gitignore")).toThrow();
   });
 
-  test("dispatches, verifies, merges, and closes a package", () => {
-    const base = repository(); const manifest = project.createProject(base, "income overhaul"); project.setProjectPlan(base, manifest.id, nodes());
-    const dispatched = project.dispatchProjectNode(base, manifest.id, "financial-views"); const item = dispatched.nodes[0]!; worktrees.push(item.worktree!);
-    mkdirSync(join(item.worktree!, "src"), { recursive: true }); writeFileSync(join(item.worktree!, "src", "a.ts"), "export const a = 1;\n");
-    git(item.worktree!, "add", "src/a.ts"); git(item.worktree!, "commit", "-m", "feat(financial): add view state");
-    project.verifyProjectRequirement(base, manifest.id, "unit", item.id); project.markProjectNodeVerified(base, manifest.id, item.id); project.mergeProjectNode(base, manifest.id, item.id);
-    project.verifyProjectRequirement(base, manifest.id, "final"); const closed = project.closeProject(base, manifest.id, "all integrated");
-    expect(closed.status).toBe("done"); expect(closed.nodes[0]?.status).toBe("merged");
-    expect(JSON.parse(readFileSync(join(base, ".projects", manifest.id, "project.json"), "utf8")).metrics).toBeUndefined();
+  test("runs tasks continuously and verifies at milestone boundaries", () => {
+    const base = repository();
+    const created = project.createProject(base, "income overhaul");
+    project.setProjectPlan(base, created.id, milestones());
+
+    let status = project.readProjectStatus(base, created.id);
+    expect(status.milestones.map((item) => item.status)).toEqual(["active", "pending"]);
+    expect(status.ready_tasks.map((item) => item.id)).toEqual(["financial-views"]);
+
+    const dispatched = project.dispatchProjectTask(base, created.id, "financial-views");
+    const running = dispatched.milestones[0]!.tasks[0]!;
+    externalWorktrees.push(running.worktree!);
+    commitTask(running.worktree!);
+    const taskResult = project.verifyProjectTaskRequirement(
+      base,
+      created.id,
+      "financial-views",
+      "unit",
+    );
+    expect(taskResult.evidence.result).toBe("pass");
+    project.markProjectTaskVerified(base, created.id, "financial-views");
+
+    git(base, "config", "commit.gpgsign", "true");
+    git(base, "config", "gpg.program", "/usr/bin/false");
+    project.mergeProjectTask(base, created.id, "financial-views");
+
+    status = project.readProjectStatus(base, created.id);
+    expect(status.milestones[0]?.status).toBe("verifying");
+    const firstGate = project.verifyProjectMilestone(
+      base,
+      created.id,
+      "engine-foundation",
+    );
+    expect(firstGate.result).toBe("pass");
+    expect(firstGate.manifest.milestones[1]?.status).toBe("verifying");
+
+    const secondGate = project.verifyProjectMilestone(
+      base,
+      created.id,
+      "engine-release",
+    );
+    expect(secondGate.result).toBe("pass");
+    const closed = project.closeProject(base, created.id, "all milestones passed");
+    expect(closed.status).toBe("done");
+    expect(closed.milestones.every((item) => item.status === "verified")).toBe(true);
   });
 
-  test("requeues clean broken packages and records unforeseen work", () => {
-    const base = repository(); const manifest = project.createProject(base, "income overhaul"); project.setProjectPlan(base, manifest.id, nodes());
-    const dispatched = project.dispatchProjectNode(base, manifest.id, "financial-views"); worktrees.push(dispatched.nodes[0]!.worktree!); project.beginReconciliation(base, manifest.id, "financial-views", "package metadata failed");
-    const requeued = project.requeueProjectNode(base, manifest.id, "financial-views", "restart from integration");
-    expect(requeued.nodes[0]?.status).toBe("ready"); expect(requeued.status).toBe("active");
-    const debt = { ...nodes()[0]!, id: "route-cleanup", title: "Route cleanup", required_evidence: [], depends_on: ["financial-views"] };
-    const amended = project.amendProjectNode(base, manifest.id, debt, "unforeseen legacy route");
-    expect(amended.nodes.map((item) => item.id)).toEqual(["financial-views", "route-cleanup"]);
-    expect(amended.decisions.at(-1)?.summary).toBe("Added unforeseen work");
+  test("corrects a failed milestone gate in place", () => {
+    const base = repository();
+    const created = project.createProject(base, "gate recovery");
+    const plan = milestones();
+    plan[0]!.tasks = [];
+    plan[0]!.required_evidence = [{
+      ...milestoneEvidence,
+      command: ["false"],
+      timeout_ms: 1_000,
+    }];
+    plan.splice(1);
+    project.setProjectPlan(base, created.id, plan);
+
+    const failed = project.verifyProjectMilestone(
+      base,
+      created.id,
+      "engine-foundation",
+    );
+    expect(failed.result).toBe("fail");
+    expect(failed.manifest.milestones[0]?.status).toBe("verifying");
+
+    project.updateEvidenceRequirement(
+      base,
+      created.id,
+      "milestone",
+      "engine-foundation",
+      { ...milestoneEvidence, command: ["true"], timeout_ms: 900_000 },
+      "correct the gate command and realistic timeout",
+    );
+    const passed = project.verifyProjectMilestone(
+      base,
+      created.id,
+      "engine-foundation",
+    );
+    expect(passed.result).toBe("pass");
+    expect(passed.manifest.decisions).toHaveLength(0);
+    expect(passed.manifest.evidence.filter((item) => item.invalidated_at)).toHaveLength(1);
   });
 
-  test("adopts validated work already integrated outside the package flow", () => {
-    const base = repository(); const manifest = project.createProject(base, "income overhaul"); project.setProjectPlan(base, manifest.id, nodes());
-    const before = git(base, "rev-parse", "HEAD"); mkdirSync(join(base, "src"), { recursive: true }); writeFileSync(join(base, "src", "a.ts"), "export const a = 1;\n");
-    git(base, "add", "src/a.ts"); git(base, "commit", "-m", "feat(financial): add adopted work"); const integrated = git(base, "rev-parse", "HEAD");
-    project.beginReconciliation(base, manifest.id, "financial-views", "manual cherry-pick");
-    const adopted = project.adoptIntegratedNode(base, manifest.id, "financial-views", before, integrated, "validated manual integration");
-    expect(adopted.nodes[0]?.status).toBe("merged"); expect(adopted.decisions.at(-1)).toMatchObject({ summary: "Adopted integrated work", base_revision: before, integrated_revision: integrated });
+  test("preserves attempts and skips stale branch collisions", () => {
+    const base = repository();
+    const created = project.createProject(base, "attempt recovery");
+    const plan = milestones();
+    plan.splice(1);
+    project.setProjectPlan(base, created.id, plan);
+
+    const first = project.dispatchProjectTask(base, created.id, "financial-views");
+    externalWorktrees.push(first.milestones[0]!.tasks[0]!.worktree!);
+    project.requeueProjectTask(
+      base,
+      created.id,
+      "financial-views",
+      "clean operational retry",
+    );
+    const replacement = task();
+    project.updateProjectTask(
+      base,
+      created.id,
+      "engine-foundation",
+      replacement,
+      "clarify the task contract",
+    );
+    const second = project.dispatchProjectTask(base, created.id, "financial-views");
+    const retried = second.milestones[0]!.tasks[0]!;
+    externalWorktrees.push(retried.worktree!);
+    expect(retried.attempt).toBe(2);
+    expect(retried.branch).toEndWith("-2");
   });
 
-  test("rejects overlapping package writes", () => {
-    const base = repository(); const manifest = project.createProject(base, "income overhaul");
-    project.setProjectPlan(base, manifest.id, [...nodes(), { ...nodes()[0]!, id: "other", title: "Other", required_evidence: [] }]);
-    const dispatched = project.dispatchProjectNode(base, manifest.id, "financial-views"); worktrees.push(dispatched.nodes[0]!.worktree!); expect(() => project.dispatchProjectNode(base, manifest.id, "other")).toThrow("overlaps");
+  test("returns compact status instead of the evidence and decision history", () => {
+    const base = repository();
+    const created = project.createProject(base, "compact state");
+    project.setProjectPlan(base, created.id, milestones());
+    project.recordProjectDecision(base, created.id, "Chosen behavior", "material reason");
+    const status = project.readProjectStatus(base, created.id);
+    expect(status).not.toHaveProperty("evidence");
+    expect(status).not.toHaveProperty("decisions");
+    expect(status.ready_tasks[0]?.id).toBe("financial-views");
+    expect(JSON.stringify(status).length).toBeLessThan(5_000);
   });
 
-  test("rejects dependency cycles and intersecting glob scopes", () => {
-    const base = repository(); const manifest = project.createProject(base, "income overhaul");
-    const first = { ...nodes()[0]!, id: "first", depends_on: ["second"], allowed_paths: ["src/*/a.ts"] };
-    const second = { ...nodes()[0]!, id: "second", depends_on: ["first"], allowed_paths: ["src/foo/*.ts"], required_evidence: [] };
-    expect(() => project.setProjectPlan(base, manifest.id, [first, second])).toThrow("cycle");
-    first.depends_on = []; second.depends_on = []; project.setProjectPlan(base, manifest.id, [first, second]);
-    const dispatched = project.dispatchProjectNode(base, manifest.id, "first"); worktrees.push(dispatched.nodes[0]!.worktree!);
-    expect(() => project.dispatchProjectNode(base, manifest.id, "second")).toThrow("overlaps");
+  test("rejects cross-milestone task dependencies and overlapping active writes", () => {
+    const base = repository();
+    const created = project.createProject(base, "safe graph");
+    const invalid = milestones();
+    invalid[1]!.tasks = [{
+      ...task("release-task", ["src/b.ts"]),
+      depends_on: ["financial-views"],
+      required_evidence: [{ ...taskEvidence, id: "release-unit" }],
+    }];
+    expect(() => project.setProjectPlan(base, created.id, invalid))
+      .toThrow("outside milestone");
+
+    const safeBase = repository();
+    const safeCreated = project.createProject(safeBase, "overlap graph");
+    const plan = milestones();
+    plan.splice(1);
+    plan[0]!.tasks.push({
+      ...task("other", ["src/**"]),
+      required_evidence: [{ ...taskEvidence, id: "other-unit" }],
+    });
+    project.setProjectPlan(safeBase, safeCreated.id, plan);
+    const first = project.dispatchProjectTask(
+      safeBase,
+      safeCreated.id,
+      "financial-views",
+    );
+    externalWorktrees.push(first.milestones[0]!.tasks[0]!.worktree!);
+    expect(() => project.dispatchProjectTask(safeBase, safeCreated.id, "other"))
+      .toThrow("overlaps");
   });
 
-  test("refuses post-verification commits and unsafe evidence commands", () => {
-    const base = repository(); const manifest = project.createProject(base, "income overhaul"); const plan = nodes();
-    plan[0]!.required_evidence = [{ ...packageRequirement, command: ["/bin/rm", "-rf", "build"] }]; project.setProjectPlan(base, manifest.id, plan);
-    const dispatched = project.dispatchProjectNode(base, manifest.id, "financial-views"); const item = dispatched.nodes[0]!; worktrees.push(item.worktree!);
-    expect(() => project.verifyProjectRequirement(base, manifest.id, "unit", item.id)).toThrow("Unsafe evidence");
+  test("refuses unsafe evidence and post-verification changes", () => {
+    const base = repository();
+    const created = project.createProject(base, "safe verification");
+    const plan = milestones();
+    plan.splice(1);
+    plan[0]!.tasks[0]!.required_evidence = [{
+      ...taskEvidence,
+      command: ["/bin/rm", "-rf", "build"],
+    }];
+    project.setProjectPlan(base, created.id, plan);
+    const dispatched = project.dispatchProjectTask(base, created.id, "financial-views");
+    const running = dispatched.milestones[0]!.tasks[0]!;
+    externalWorktrees.push(running.worktree!);
+    expect(() =>
+      project.verifyProjectTaskRequirement(base, created.id, "financial-views", "unit")
+    ).toThrow("Unsafe evidence");
 
-    const safeBase = repository(); const safeManifest = project.createProject(safeBase, "safe verification"); project.setProjectPlan(safeBase, safeManifest.id, nodes());
-    const safeDispatched = project.dispatchProjectNode(safeBase, safeManifest.id, "financial-views"); const safeItem = safeDispatched.nodes[0]!; worktrees.push(safeItem.worktree!);
-    mkdirSync(join(safeItem.worktree!, "src"), { recursive: true }); writeFileSync(join(safeItem.worktree!, "src", "a.ts"), "export const a = 1;\n");
-    git(safeItem.worktree!, "add", "src/a.ts"); git(safeItem.worktree!, "commit", "-m", "feat: initial"); project.verifyProjectRequirement(safeBase, safeManifest.id, "unit", safeItem.id); project.markProjectNodeVerified(safeBase, safeManifest.id, safeItem.id);
-    writeFileSync(join(safeItem.worktree!, "src", "a.ts"), "export const a = 2;\n"); git(safeItem.worktree!, "add", "src/a.ts"); git(safeItem.worktree!, "commit", "-m", "feat: changed later");
-    expect(() => project.mergeProjectNode(safeBase, safeManifest.id, safeItem.id)).toThrow("changed after verification");
+    const safeBase = repository();
+    const safeCreated = project.createProject(safeBase, "post verification");
+    const safePlan = milestones();
+    safePlan.splice(1);
+    project.setProjectPlan(safeBase, safeCreated.id, safePlan);
+    const safeDispatch = project.dispatchProjectTask(
+      safeBase,
+      safeCreated.id,
+      "financial-views",
+    );
+    const safeTask = safeDispatch.milestones[0]!.tasks[0]!;
+    externalWorktrees.push(safeTask.worktree!);
+    commitTask(safeTask.worktree!);
+    project.verifyProjectTaskRequirement(
+      safeBase,
+      safeCreated.id,
+      "financial-views",
+      "unit",
+    );
+    project.markProjectTaskVerified(safeBase, safeCreated.id, "financial-views");
+    writeFileSync(join(safeTask.worktree!, "src/a.ts"), "export const a = 2;\n");
+    git(safeTask.worktree!, "add", "src/a.ts");
+    git(
+      safeTask.worktree!,
+      "-c",
+      "commit.gpgsign=false",
+      "commit",
+      "-m",
+      "feat: changed later",
+    );
+    expect(() =>
+      project.mergeProjectTask(safeBase, safeCreated.id, "financial-views")
+    ).toThrow("changed after verification");
+  });
+
+  test("rejects old project schemas instead of carrying them forward", () => {
+    const base = repository();
+    mkdirSync(join(base, ".projects", "0001-old"), { recursive: true });
+    writeFileSync(
+      join(base, ".projects", "0001-old", "project.json"),
+      `${JSON.stringify({ schema_version: 2 })}\n`,
+    );
+    expect(() => project.readProjectManifest(base, "0001-old"))
+      .toThrow("unsupported schema 2");
+    expect(project.listProjects(base)).toEqual([]);
   });
 });

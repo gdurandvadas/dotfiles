@@ -7,4 +7,5 @@ Project name or ID: $ARGUMENTS
 
 Create a project when this is a new name, resume it when it resolves to an existing ID or numeric
 prefix, and list resumable projects when it is empty. Continue from authoritative state rather than
-requiring separate plan, run, reconciliation, or report commands.
+requiring separate plan, run, gate, or report commands. Keep advancing tasks and milestones until
+the project closes or a material user decision is required.
