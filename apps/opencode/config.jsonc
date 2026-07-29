@@ -15,13 +15,13 @@
             "disable": true
         },
         "explore": {
-            "disable": true
+            "disable": false
         },
         "plan": {
             "disable": true
         },
         "scout": {
-            "disable": true
+            "disable": false
         }
     },
     "server": {
@@ -56,18 +56,6 @@
         }
     },
     "formatter": true,
-    "mcp": {
-        "github": {
-            "type": "remote",
-            "url": "https://api.githubcopilot.com/mcp/",
-            "enabled": false,
-            "oauth": false,
-            "timeout": 10000,
-            "headers": {
-                "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}"
-            }
-        }
-    },
     "permission": {
         "*": "deny",
         "read": {
@@ -80,7 +68,7 @@
         "glob": "allow",
         "list": "allow",
         "edit": "deny",
-        "doom_loop": "ask",
+        "doom_loop": "allow",
         "project_*": "deny",
         "task": "deny",
         "external_directory": {

@@ -1,23 +1,23 @@
 ---
-description: Create, approve, execute, or resume a schema-v4 project
-agent: orchestrate
+description: Design, execute, validate, or resume a schema-v5 Project
+agent: project
 ---
 
 Project name or ID: $ARGUMENTS
 
-Create a project when this is a new name, resume it when it resolves to a schema-v4 ID or numeric
-prefix, and list current schema-v4 projects when it is empty. Earlier schemas are intentionally
-ignored.
+Use `project_open` to list schema-v5 projects when empty, resume when the argument resolves, or
+create a design record for a new name. Schema-v4 records are read-only history and are ignored.
 
-A new name is only a label. Immediately after creation, ask the user what they have in mind. Do
-not inspect the repository, invoke research, or infer requirements from the name before the user
-has described the work. Ask concise follow-up questions until the outcome, scope, exclusions,
-constraints, and success conditions are understood.
+For a new Project, treat the name only as a label. If the conversation does not already contain a
+substantive request, immediately ask what the user wants to achieve; do not inspect or research
+the repository from the title. If substantive context already exists, use it and ask only for
+material missing behavior or constraints. Research begins only after the Objective and observable
+success criteria are known.
 
-Only then read repository policy and present a complete plan—including preflight, task and
-milestone evidence plus an implementation tier and rationale for every task—for explicit user
-approval. Once approved, continue through dispatch, implementation, completion, and sequential
-gates until the project finishes or a material user decision is required. Keep the user informed
-between tool calls: announce each phase, identify the running check and its purpose, summarize
-meaningful live output and elapsed time while polling, and report passes, failures, merges, and
-the next action as they happen.
+Present one concise plan with milestones, ordered S/M/L tasks, dependencies, expected
+responsibility surfaces, focused checks, and exact repository-declared milestone commands. After
+research, store the first draft with `approved: false`; that creates its branch and worktree.
+Present it for approval, then store the approved revision with `approved: true` and continue
+autonomously through implementation, scope review, foreground validation, recovery, and draft-PR
+publication. Task adaptations inside the current milestone need no approval; a new or materially
+changed milestone does.

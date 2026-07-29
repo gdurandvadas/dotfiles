@@ -1,90 +1,87 @@
 # OpenCode Personal Profile
 
-Personal OpenCode configuration for bounded standalone work and durable schema-v4 projects. Launch
-it with `oc-pers`; Home Manager links this directory into the active configuration.
+Personal OpenCode configuration for efficient standalone work and autonomous schema-v5 Projects.
+Launch it with `oc-pers`; Home Manager links this directory into the active configuration.
 
-## Entry points
+## Two workflows
 
 | Flow | Entry | Use |
 |---|---|---|
-| Standalone | `@default` | One bounded change outside project state |
-| Project | `/project <name-or-id>` | Approved milestones, isolated tasks, and integration gates |
+| Standalone | `@default` | One bounded change without Project state |
+| Project | `/project <name-or-id>` | Objective-driven delivery through validated draft PR |
 
-`/project` is the complete project interface. A new name starts requirements discovery; an exact ID
-or numeric prefix resumes; no argument lists current v4 projects. Schema-v3 and earlier records are
-ignored and rejected when addressed directly. They are never migrated.
+`/project` lists current v5 Projects when empty, resumes an ID, or starts design for a new name.
+Older Project records stay untouched as read-only history and are not resumed or migrated.
+A new name is only a label: without substantive conversational context, Project asks for the
+Objective before any repository research.
 
-## Ownership
+## Product model
 
-OpenCode owns workflow safety, requirements approval, worktree isolation, scope enforcement,
-reasoning-tier routing, evidence execution, logs, integration, and recovery. The managed
-repository owns implementation, architecture, and verification policy through its root and
-applicable child `AGENTS.md` files.
+A Project has one Objective and one cumulative `project/<id>` worktree. The first complete draft
+plan creates that branch/worktree; approval activates the same plan rather than creating it later.
+It advances
+through milestones whose tasks are sized by reasoning risk:
 
-Planning reads those repository instructions and stores their exact evidence commands in the
-approved manifest. The runtime treats commands as opaque argument arrays; it contains no
-repository, framework, language, or command-name classification.
+- `implement-s` / Luna for an exact demonstrated pattern.
+- `implement-m` / Terra for ordinary bounded component or multi-file work.
+- `implement-l` / Sol for novel, ambiguous, architectural, or high-risk work.
 
-## Agents
+The `project` primary / Terra designs, routes, integrates, recovers, validates, and publishes. It
+uses native `explore` for local research and `scout` for external research. Implementers cannot
+delegate, mutate Project state, push, publish, read secrets, or run destructive Git operations.
+The bounded `default` primary remains available and has no Project or delegation permission.
 
-| Agent | Model | Responsibility |
-|---|---|---|
-| `default` | Terra | Standalone bounded work |
-| `orchestrate` | Terra | Requirements, planning, routing, state, integration, and recovery |
-| `investigate` | Luna | Narrow static read-only research |
-| `diagnose` | Terra | Failure reproduction and root-cause diagnosis without edits |
-| `implement-s` | Luna | Exact, low-ambiguity changes following an established pattern |
-| `implement-m` | Terra | Default ordinary component and multi-file implementation |
-| `implement-l` | Sol | Novel, cross-boundary, ambiguous, or high-risk implementation |
+## Autonomy boundary
 
-Only `orchestrate` may invoke subagents. Implementation agents cannot delegate. Native
-`permission.task` allowlists enforce this directly.
+The Objective, current milestone, repository policy, and reversibility define the working
+envelope. The Project proceeds without asking when a discovered change is necessary inside that
+envelope. This includes local Docker, tooling, test-harness, and prerequisite repairs required to
+continue.
 
-Every task stores `implementation_tier` and `tier_rationale`. The selected agent fetches its
-contract with `project_task_context`, reads repository instructions, and performs a pre-edit fit
-check. An undersized assignment returns `TIER_MISMATCH` with concrete new risks. The orchestrator
-then escalates upward in the same worktree. Tiers never downgrade, and partially completed work is
-preserved when new risk appears.
+When a task reaches another responsibility, `explore` performs an independent bird's-eye
+assessment of necessity, impact, affected responsibilities, alternatives, and compatibility.
+Necessary work stays in the current task or becomes another task. The user is asked only for:
 
-## Lifecycle
+- an Objective or observable-behavior change;
+- a new or materially changed milestone;
+- an explicit repository or user guardrail;
+- an irreversible or destructive action;
+- an unauthorized external system, credential, or publication;
+- a conflict between authoritative repository policies.
 
-```text
-approved plan
-    │
-    ├─ preflight checks, one at a time
-    │      └─ existing failure → explicit repair or exception choice
-    │
-    └─ milestone
-           ├─ dispatch → implement → complete and merge
-           ├─ dispatch → implement → complete and merge
-           └─ gates, one at a time → verified
-```
+User answers resume the same task. S → M → L escalation also preserves the same worktree and
+partial work.
 
-`project_dispatch` creates the worktree and returns the selected agent plus a compact task handle.
-`project_complete_task` checks cleanliness and scope, starts all declared task evidence once for
-the revision, and immediately returns their live log paths. Later calls poll the persisted jobs;
-after they pass, the same tool merges the task. Each running response supplies a new `poll_token`
-for the next call so legitimate polling does not trigger loop protection. There are no separate
-inspect, per-check verification, task-done, merge, report, or trace steps.
+## Execution and validation
 
-Milestone gates run sequentially as persisted background jobs and stop at the first failure.
-`project_verify_next` starts or polls one gate and always returns control with a live log path
-instead of waiting silently. Jobs survive an OpenCode restart, and a timeout terminates the full
-spawned process group. The failed gate remains priority, and a diagnostic agent identifies the
-root cause before one `gate-repair` contract is created. That repair reuses one worktree until the
-failed gate passes there diagnostically. After the cohesive repair merges, the integration
-revision runs the failed gate first and then every remaining stale gate once. Verification
-requires every gate to pass at the same revision.
+Tasks are sequential by default. The approved plan may declare an independent parallel group with
+no dependencies or overlapping expected surfaces. Those tasks receive temporary branches and
+worktrees from the same validated Project revision. Results compose into the cumulative worktree.
+Actual overlap or a merge conflict restores a clean authoritative worktree and automatically
+serializes the remaining work.
 
-Running responses include the check's purpose and command, its position in the current sequence,
-elapsed and remaining timeout, log activity, a concise recent-output tail, and a ready-to-present
-status message. The orchestrator reports that information between polls, plus every phase change,
-pass, failure, merge, and next action. Background execution therefore remains non-blocking without
-turning project work into an invisible polling loop.
+Implementers run focused checks and commit before returning one structured outcome:
+`IMPLEMENTED`, `RESEARCH_NEEDED`, `SCOPE_REVIEW`, `TIER_MISMATCH`, or `NEEDS_USER`.
+For completion, the clean assigned worktree HEAD is authoritative. A stale revision copied through
+an agent response is recorded and reconciled instead of blocking Project state.
 
-## State and logs
+Milestone validation uses the exact commands declared by repository policy. Commands run
+synchronously in the Project worktree and return on pass, failure, timeout, or interruption.
+There are no polling tokens, background runners, repair states, gate bindings, or evidence-owner
+hierarchies. A failure keeps the milestone active and returns diagnostics to implementation.
+Repeated failure fingerprints distinguish unchanged baseline failures from new or worsened ones;
+repository policy decides whether an unchanged unrelated baseline may continue. An allowed
+unchanged fingerprint is recorded through `project_report` and accepted only while it remains
+identical.
 
-Runtime data is repository-local and ignored without changing the repository root ignore file:
+A milestone pass records evidence at one cumulative revision. Completion requires every
+milestone and Objective criterion, a clean branch, `git push`, and `gh pr create --draft` against
+the captured base branch. Invalid GitHub authentication enters `waiting` with `gh auth login`;
+publication resumes after authentication is repaired.
+
+## State and tools
+
+Repository-local ignored state is intentionally small:
 
 ```text
 .projects/
@@ -92,24 +89,14 @@ Runtime data is repository-local and ignored without changing the repository roo
   <project-id>/
     project.json
     logs/
-      <attempt>.log
-    runs/
-      <persisted-background-job>.json
+      <foreground-validation>.log
 ```
 
-The manifest stores only approved contracts, state, material decisions, and compact evidence
-attempt summaries. Each evidence attempt records revision, result, duration, exit code, stable
-failure fingerprint, diagnostic tail, and its full ignored log path. Task checks default to five
-minutes; preflight and milestone checks default to fifteen minutes and may declare up to thirty
-minutes. There are no LLM step, token, reasoning, or variant budgets.
+The seven tools are `project_open`, `project_plan`, `project_status`, `project_next`,
+`project_context`, `project_report`, and `project_validate`. The manifest stores the Objective,
+plan history, milestones and tasks, scope assessments, focused checks, foreground evidence,
+questions and answers, failure fingerprints, and the draft PR URL.
 
-## Configuration
-
-- Terra is the default model and Luna is the small model.
-- Context compaction pruning is enabled.
-- Automatic updates are disabled because the executable is managed externally.
-- The optional remote source-control connector is disabled for project work.
-- Permissions are deny-first with explicit grants per agent.
-- Loop detection asks before continuing.
-- Built-in general-purpose agents are disabled in favor of this explicit set.
-- Restart OpenCode after configuration, agent, command, or tool changes.
+Configuration is deny-first, loop recovery is automatic for Project agents, native skills and
+language servers remain enabled, and source-control publication uses the installed `gh` CLI rather
+than a large GitHub MCP server.

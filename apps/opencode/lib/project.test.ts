@@ -14,16 +14,9 @@ import * as project from "./project";
 import * as projectTools from "../tools/project";
 
 const roots: string[] = [];
-const worktrees = new Set<string>();
 
 afterEach(() => {
-  for (const worktree of worktrees) {
-    rmSync(worktree, { recursive: true, force: true });
-  }
-  worktrees.clear();
-  for (const root of roots.splice(0)) {
-    rmSync(root, { recursive: true, force: true });
-  }
+  for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
 });
 
 function git(base: string, ...args: string[]): string {
@@ -31,8 +24,10 @@ function git(base: string, ...args: string[]): string {
 }
 
 function repository(files: Record<string, string> = {}): string {
-  const root = mkdtempSync(join(tmpdir(), "project-v4-"));
-  roots.push(root);
+  const container = mkdtempSync(join(tmpdir(), "project-v5-"));
+  const root = join(container, "repository");
+  mkdirSync(root);
+  roots.push(container);
   git(root, "init", "-b", "main");
   git(root, "config", "user.email", "project@example.invalid");
   git(root, "config", "user.name", "Project fixture");
@@ -43,600 +38,603 @@ function repository(files: Record<string, string> = {}): string {
     writeFileSync(join(root, path), content);
   }
   git(root, "add", ".");
-  git(root, "commit", "-m", "test fixture");
+  git(root, "commit", "-m", "fixture");
   return root;
 }
 
-function evidence(
-  id: string,
-  level: project.EvidenceLevel,
-  command = ["node", "-e", "process.exit(0)"],
-): project.EvidenceRequirement {
-  return { id, level, command, proves: `${id} passes` };
+function command(id: string, source = "process.exit(0)"): project.ValidationCommand {
+  return { id, command: ["node", "-e", source], proves: `${id} passes` };
 }
 
 function task(
-  id = "change",
+  id: string,
   tier: project.ImplementationTier = "m",
-  allowedPaths = ["src/change.ts"],
+  surfaces = [`src/${id}.ts`],
+  parallelGroup?: string,
 ): project.ProjectTaskInput {
   return {
     id,
     title: `Implement ${id}`,
-    kind: "normal",
     implementation_tier: tier,
-    tier_rationale: tier === "s"
-      ? "Exact local pattern with no design decisions"
-      : tier === "m"
-      ? "Ordinary bounded component change in known architecture"
-      : "Cross-boundary contract work requiring architectural reasoning",
+    tier_rationale: `${tier.toUpperCase()} is proportionate to this change`,
     depends_on: [],
-    allowed_paths: allowedPaths,
-    acceptance_criteria: [`${id} behaves as approved`],
-    required_evidence: [evidence("focused", "task")],
+    expected_surfaces: surfaces,
+    focused_checks: [command(`${id}-focused`)],
+    parallel_group: parallelGroup,
   };
 }
 
 function milestone(
-  tasks: project.ProjectTaskInput[] = [task()],
-  gates: project.EvidenceRequirement[] = [evidence("integration", "milestone")],
+  tasks: project.ProjectTaskInput[] = [task("change")],
+  validation: project.ValidationCommand[] = [command("milestone")],
 ): project.ProjectMilestoneInput {
   return {
     id: "delivery",
     title: "Delivery",
-    depends_on: [],
-    acceptance_criteria: ["The integrated outcome is proven"],
-    required_evidence: gates,
+    acceptance_criteria: ["The integrated behavior is proven"],
     tasks,
+    validation,
   };
 }
 
-function start(
+function approve(
   base: string,
-  options: {
-    preflight?: project.EvidenceRequirement[];
-    milestones?: project.ProjectMilestoneInput[];
-    name?: string;
-  } = {},
+  milestones: project.ProjectMilestoneInput[] = [milestone()],
 ): project.ProjectManifest {
-  const created = project.createProject(base, options.name ?? "sustainable workflow");
-  project.setProjectPlan(
-    base,
-    created.id,
-    options.preflight ?? [],
-    options.milestones ?? [milestone()],
-  );
-  return project.readProjectManifest(base, created.id);
+  const created = project.createProject(base, "autonomous delivery");
+  return project.setProjectPlan(base, created.id, {
+    objective: {
+      outcome: "Deliver the approved behavior",
+      acceptance_criteria: ["The behavior is observable"],
+      non_goals: ["Unrelated redesign"],
+      guardrails: ["Follow repository policy"],
+    },
+    milestones,
+    approved: true,
+  });
 }
 
-function track(handle: project.TaskHandle): project.TaskHandle {
-  worktrees.add(handle.worktree);
-  return handle;
+function commit(worktree: string, path: string, content = "export const done = true;\n"): string {
+  mkdirSync(dirname(join(worktree, path)), { recursive: true });
+  writeFileSync(join(worktree, path), content);
+  git(worktree, "add", path);
+  git(worktree, "commit", "-m", `feat: ${path}`);
+  return git(worktree, "rev-parse", "HEAD");
 }
 
-function commitFile(
-  base: string,
-  path: string,
-  content = "export const value = true;\n",
-): void {
-  mkdirSync(dirname(join(base, path)), { recursive: true });
-  writeFileSync(join(base, path), content);
-  git(base, "add", path);
-  git(base, "-c", "commit.gpgsign=false", "commit", "-m", `feat: ${path}`);
+function focused(taskId: string): project.FocusedCheckReport[] {
+  return [{
+    requirement_id: `${taskId}-focused`,
+    result: "pass",
+    command: ["node", "-e", "process.exit(0)"],
+    duration_ms: 1,
+  }];
 }
 
-async function settleTask(
-  base: string,
-  id: string,
-  taskId: string,
-): Promise<project.CompletionResult> {
-  for (let attempt = 0; attempt < 250; attempt += 1) {
-    const result = project.completeProjectTask(base, id, taskId);
-    if (result.result !== "evidence-running") return result;
-    await Bun.sleep(20);
-  }
-  throw new Error(`Timed out waiting for task evidence: ${taskId}`);
-}
-
-async function settleNext(
-  base: string,
-  id: string,
-): Promise<project.VerifyNextResult> {
-  for (let attempt = 0; attempt < 250; attempt += 1) {
-    const result = project.verifyProjectNext(base, id);
-    if (result.result !== "running") return result;
-    await Bun.sleep(20);
-  }
-  throw new Error(`Timed out waiting for project evidence: ${id}`);
-}
-
-describe("schema v4 and routing", () => {
-  test("creates ignored schema-v4 state and rejects every earlier schema", () => {
+describe("schema-v5 lifecycle", () => {
+  test("lists only v5 projects and creates an ignored design record", () => {
     const base = repository();
-    const created = project.createProject(base, "fresh system");
-    expect(created.schema_version).toBe(4);
+    mkdirSync(join(base, ".projects", "legacy"), { recursive: true });
+    writeFileSync(
+      join(base, ".projects", "legacy", "project.json"),
+      `${JSON.stringify({ schema_version: 4, id: "legacy" })}\n`,
+    );
+
+    const created = project.createProject(base, "Fresh Project");
+    expect(created.schema_version).toBe(5);
     expect(created.status).toBe("design");
-    expect(created.integration_branch).toBe(`project/${created.id}`);
-    expect(readFileSync(join(base, ".projects", ".gitignore"), "utf8"))
-      .toBe("**\n!.gitignore\n");
+    expect(project.listProjects(base).map((item) => item.id)).toEqual([created.id]);
+    expect(() => project.resolveProject(base, "legacy")).toThrow("schema-v5");
     expect(git(base, "check-ignore", `.projects/${created.id}/project.json`))
       .toBe(`.projects/${created.id}/project.json`);
-
-    for (const version of [1, 2, 3]) {
-      const id = `000${version}-legacy`;
-      mkdirSync(join(base, ".projects", id), { recursive: true });
-      writeFileSync(
-        join(base, ".projects", id, "project.json"),
-        `${JSON.stringify({ schema_version: version })}\n`,
-      );
-      expect(() => project.readProjectManifest(base, id))
-        .toThrow(`unsupported schema ${version}`);
-    }
-    expect(project.listProjects(base).map((item) => item.id)).toEqual([created.id]);
   });
 
-  test("validates tiers and escalates upward without replacing a clean worktree", () => {
+  test("initial approval creates one cumulative project worktree", () => {
     const base = repository();
-    const created = start(base, {
-      milestones: [milestone([task("small-change", "s")])],
+    const manifest = approve(base);
+    expect(manifest.status).toBe("active");
+    expect(manifest.project_branch).toBe(`project/${manifest.id}`);
+    expect(manifest.project_worktree).toBeTruthy();
+    expect(existsSync(manifest.project_worktree!)).toBe(true);
+    expect(git(manifest.project_worktree!, "branch", "--show-current"))
+      .toBe(manifest.project_branch);
+    expect(manifest.milestones[0]?.status).toBe("active");
+    expect(project.readProjectStatus(base, manifest.id).next_action)
+      .toContain("Start task change");
+  });
+
+  test("the first draft plan creates the branch before user approval", () => {
+    const base = repository();
+    const created = project.createProject(base, "planned branch");
+    const objective: project.ProjectObjective = {
+      outcome: "Deliver the planned behavior",
+      acceptance_criteria: ["The behavior is observable"],
+      non_goals: [],
+      guardrails: [],
+    };
+    const draft = project.setProjectPlan(base, created.id, {
+      objective,
+      milestones: [milestone()],
+      rationale: "Initial plan ready for review",
+      approved: false,
     });
-    const handle = track(project.dispatchProjectTask(base, created.id, "small-change"));
-    const escalated = project.escalateProjectTask(
-      base,
-      created.id,
-      "small-change",
-      "m",
-      "The local pattern hides a bounded multi-component consistency risk",
-    );
-    expect(escalated.worktree).toBe(handle.worktree);
-    expect(escalated.implementation_agent).toBe("implement-m");
-    expect(() =>
-      project.escalateProjectTask(base, created.id, "small-change", "s", "downgrade")
-    ).toThrow("only escalate upward");
-  });
+    expect(draft.status).toBe("design");
+    expect(draft.plan_revision).toBe(1);
+    expect(draft.plan_history[0]?.approved).toBe(false);
+    expect(draft.project_worktree).toBeTruthy();
+    expect(git(draft.project_worktree!, "branch", "--show-current"))
+      .toBe(draft.project_branch);
 
-  test("preserves partial edits during escalation and restricts context to the selected agent", () => {
-    const base = repository();
-    const created = start(base, {
-      milestones: [milestone([task("partial", "s")])],
+    const approved = project.setProjectPlan(base, created.id, {
+      objective,
+      milestones: [milestone()],
+      rationale: "User approved the draft",
+      approved: true,
     });
-    const handle = track(project.dispatchProjectTask(base, created.id, "partial"));
-    mkdirSync(join(handle.worktree, "src"), { recursive: true });
-    writeFileSync(join(handle.worktree, "src/change.ts"), "partial\n");
-
-    const escalated = project.escalateProjectTask(
-      base,
-      created.id,
-      "partial",
-      "l",
-      "A newly discovered public contract spans persistence and concurrency boundaries",
-    );
-    expect(escalated.worktree).toBe(handle.worktree);
-    expect(readFileSync(join(handle.worktree, "src/change.ts"), "utf8")).toBe("partial\n");
-    expect(() =>
-      project.readProjectTaskContext(base, created.id, "partial", "implement-s")
-    ).toThrow("assigned to implement-l");
-    const context = project.readProjectTaskContext(
-      base,
-      created.id,
-      "partial",
-      "implement-l",
-    );
-    expect(context.contract.tier_rationale).toContain("public contract");
-    expect(context.instructions.join(" ")).toContain("AGENTS.md");
+    expect(approved.status).toBe("active");
+    expect(approved.project_worktree).toBe(draft.project_worktree);
+    expect(approved.plan_revision).toBe(2);
   });
 
-  test("rejects invalid task tiers in an approved plan", () => {
+  test("task-plan changes inside the active milestone need no approval", () => {
     const base = repository();
-    const created = project.createProject(base, "invalid tier");
-    const invalid = task() as project.ProjectTaskInput & { implementation_tier: string };
-    invalid.implementation_tier = "xl";
-    expect(() =>
-      project.setProjectPlan(base, created.id, [], [milestone([invalid as project.ProjectTaskInput])])
-    ).toThrow("incomplete or invalid");
-  });
-});
-
-describe("task completion", () => {
-  test("runs every task check once, enforces scope, and merges cohesively", async () => {
-    const base = repository();
-    const contract = task();
-    contract.required_evidence = [
-      evidence("first", "task"),
-      evidence("second", "task"),
-    ];
-    const created = start(base, { milestones: [milestone([contract])] });
-    const handle = track(project.dispatchProjectTask(base, created.id, "change"));
-    commitFile(handle.worktree, "src/change.ts");
-
-    const completed = await settleTask(base, created.id, "change");
-    expect(completed.result).toBe("merged");
-    expect(completed.evidence.map((item) => item.requirement_id))
-      .toEqual(["first", "second"]);
-    expect(project.readProjectManifest(base, created.id).evidence).toHaveLength(2);
-    expect(git(base, "log", "-1", "--pretty=%s")).toBe("chore(project): integrate change");
-  });
-
-  test("rejects out-of-scope and dirty task worktrees before evidence", () => {
-    const base = repository();
-    const created = start(base);
-    const handle = track(project.dispatchProjectTask(base, created.id, "change"));
-    commitFile(handle.worktree, "outside.ts");
-    expect(() => project.completeProjectTask(base, created.id, "change"))
-      .toThrow("outside its contract");
-    expect(project.readProjectManifest(base, created.id).evidence).toHaveLength(0);
-
-    const dirtyBase = repository();
-    const dirtyCreated = start(dirtyBase);
-    const dirty = track(project.dispatchProjectTask(dirtyBase, dirtyCreated.id, "change"));
-    mkdirSync(join(dirty.worktree, "src"), { recursive: true });
-    writeFileSync(join(dirty.worktree, "src/change.ts"), "uncommitted\n");
-    expect(() => project.completeProjectTask(dirtyBase, dirtyCreated.id, "change"))
-      .toThrow("clean and committed");
-  });
-
-  test("persists complete logs, diagnostic tails, and stable failure fingerprints", async () => {
-    const base = repository();
-    const contract = task();
-    contract.required_evidence = [
-      evidence(
-        "failing",
-        "task",
-        ["node", "-e", "process.stderr.write('stable failure\\n');process.exit(7)"],
-      ),
-    ];
-    const created = start(base, { milestones: [milestone([contract])] });
-    const handle = track(project.dispatchProjectTask(base, created.id, "change"));
-    commitFile(handle.worktree, "src/change.ts");
-
-    const first = await settleTask(base, created.id, "change");
-    const second = project.completeProjectTask(base, created.id, "change");
-    expect(first.result).toBe("evidence-failed");
-    expect(second.result).toBe("evidence-failed");
-    expect(first.evidence[0]?.failure_fingerprint)
-      .toBe(second.evidence[0]?.failure_fingerprint);
-    expect(project.readProjectManifest(base, created.id).evidence).toHaveLength(1);
-    expect(first.evidence[0]?.diagnostic_tail).toContain("stable failure");
-    const log = join(base, first.evidence[0]!.log_path);
-    expect(existsSync(log)).toBe(true);
-    expect(readFileSync(log, "utf8")).toContain("stable failure");
-  });
-});
-
-describe("preflight", () => {
-  test("starts evidence immediately, exposes a live log, and finalizes by polling", async () => {
-    const base = repository();
-    const slow = evidence(
-      "observable",
-      "preflight",
-      [
-        "node",
-        "-e",
-        "process.stdout.write('started\\n');setTimeout(()=>process.exit(0),400)",
-      ],
-    );
-    const created = start(base, { preflight: [slow] });
-    const started = Date.now();
-    const running = project.verifyProjectNext(base, created.id);
-    expect(running.result).toBe("running");
-    expect(Date.now() - started).toBeLessThan(250);
-    expect(running.running_evidence?.requirement_id).toBe("observable");
-    expect(running.poll_token).toBeTruthy();
-    expect(project.readProjectManifest(base, created.id).active_evidence).toHaveLength(1);
-
-    await Bun.sleep(2);
-    const polled = project.verifyProjectNext(base, created.id);
-    expect(polled.result).toBe("running");
-    expect(polled.poll_token).not.toBe(running.poll_token);
-
-    await Bun.sleep(150);
-    const liveLog = join(base, running.running_evidence!.log_path);
-    expect(readFileSync(liveLog, "utf8")).toContain("started");
-    const report = project.readProjectStatus(base, created.id);
-    const progress = report.running_evidence[0]!;
-    expect(progress.status_message).toContain("preflight check 1/1");
-    expect(progress.proves).toBe("observable passes");
-    expect(progress.command[0]).toBe("node");
-    expect(progress.elapsed_ms).toBeGreaterThan(0);
-    expect(progress.timeout_remaining_ms).toBeLessThan(progress.timeout_ms);
-    expect(progress.log_size_bytes).toBeGreaterThan(0);
-    expect(progress.activity).toBe("active");
-    expect(progress.last_output_at).toBeTruthy();
-    expect(progress.quiet_for_ms).toBeLessThan(30_000);
-    expect(progress.recent_output).toContain("started");
-    expect(report.next_action).toContain("Report the progress to the user");
-
-    const completed = await settleNext(base, created.id);
-    expect(completed.result).toBe("pass");
-    expect(project.readProjectManifest(base, created.id).active_evidence).toEqual([]);
-  });
-
-  test("times out the background process group and records the diagnostic", async () => {
-    const base = repository();
-    const hanging = evidence(
-      "bounded",
-      "preflight",
-      [
-        "node",
-        "-e",
-        [
-          "require('child_process').spawn(process.execPath,",
-          "['-e','setInterval(()=>{},1000)'],{stdio:'ignore'});",
-          "setInterval(()=>{},1000)",
-        ].join(""),
-      ],
-    );
-    hanging.timeout_ms = 250;
-    const created = start(base, { preflight: [hanging] });
-    const failed = await settleNext(base, created.id);
-    expect(failed.result).toBe("fail");
-    expect(failed.evidence?.diagnostic_tail).toContain("timed out after 250ms");
-    expect(failed.evidence?.duration_ms).toBeLessThan(5_000);
-  });
-
-  test("runs preflight sequentially before activating product tasks", async () => {
-    const base = repository();
-    const created = start(base, {
-      preflight: [
-        evidence("baseline-one", "preflight"),
-        evidence("baseline-two", "preflight"),
-      ],
+    const manifest = approve(base);
+    const revised = project.setProjectPlan(base, manifest.id, {
+      objective: manifest.objective!,
+      milestones: [milestone([task("change"), task("follow-up", "s")])],
+      rationale: "Discovery split the local work into two clearer steps",
     });
-    expect(project.readProjectStatus(base, created.id).ready_tasks).toHaveLength(0);
-    const first = await settleNext(base, created.id);
-    expect(first.evidence?.requirement_id).toBe("baseline-one");
-    expect(project.readProjectStatus(base, created.id).ready_tasks).toHaveLength(0);
-    const second = await settleNext(base, created.id);
-    expect(second.evidence?.requirement_id).toBe("baseline-two");
-    expect(second.manifest.preflight.status).toBe("passed");
-    expect(second.manifest.ready_tasks.map((item) => item.id)).toEqual(["change"]);
+    expect(revised.status).toBe("active");
+    expect(revised.plan_revision).toBe(2);
+    expect(revised.milestones[0]?.tasks.map((item) => item.id))
+      .toEqual(["change", "follow-up"]);
   });
 
-  test("pauses on baseline failure and records an explicit approved exception", async () => {
+  test("a new milestone waits for approval and resumes without replacing work", () => {
     const base = repository();
-    const created = start(base, {
-      preflight: [
-        evidence("baseline", "preflight", ["node", "-e", "process.exit(9)"]),
-      ],
-    });
-    const failed = await settleNext(base, created.id);
-    expect(failed.result).toBe("fail");
-    expect(failed.manifest.status).toBe("blocked");
-    expect(failed.manifest.next_action).toContain("approved exception");
-
-    const resolved = project.resolveProjectPreflight(
-      base,
-      created.id,
-      "exception",
-      "The user accepts this known baseline failure for this project only",
-    );
-    expect(resolved.preflight.status).toBe("excepted");
-    expect(resolved.ready_tasks.map((item) => item.id)).toEqual(["change"]);
-    expect(project.readProjectManifest(base, created.id).decisions[0]?.summary)
-      .toContain("Approved preflight exception");
-  });
-
-  test("repairs a failing baseline and reruns it at the new integration revision", async () => {
-    const base = repository();
-    const baseline = evidence(
-      "baseline",
-      "preflight",
-      ["node", "-e", "process.exit(require('fs').existsSync('baseline.flag')?0:4)"],
-    );
-    const created = start(base, { preflight: [baseline] });
-    await settleNext(base, created.id);
-    const repair = task("repair-baseline", "m", ["baseline.flag"]);
-    repair.kind = "gate-repair";
-    project.resolveProjectPreflight(
-      base,
-      created.id,
-      "repair",
-      "The baseline itself must be restored before product work",
-      repair,
-    );
-    const handle = track(project.dispatchProjectTask(base, created.id, "repair-baseline"));
-    commitFile(handle.worktree, "baseline.flag", "fixed\n");
-    const completed = await settleTask(base, created.id, "repair-baseline");
-    expect(completed.result).toBe("merged");
-    const verified = await settleNext(base, created.id);
-    expect(verified.result).toBe("pass");
-    expect(verified.manifest.preflight.status).toBe("passed");
-    expect(verified.manifest.ready_tasks.map((item) => item.id)).toEqual(["change"]);
-  });
-});
-
-describe("sequential milestone gates and cohesive repair", () => {
-  test("stops at failure, reuses one repair worktree, and proves all gates at one revision", async () => {
-    const base = repository();
-    const gates = [
-      evidence("warmup", "milestone"),
-      evidence(
-        "behavior",
-        "milestone",
-        ["node", "-e", "process.exit(require('fs').existsSync('gate.flag')?0:7)"],
-      ),
-      evidence("remaining", "milestone"),
-    ];
-    const created = start(base, { milestones: [milestone([], gates)] });
-    expect((await settleNext(base, created.id)).evidence?.requirement_id).toBe("warmup");
-    const failed = await settleNext(base, created.id);
-    expect(failed.evidence?.requirement_id).toBe("behavior");
-    expect(failed.manifest.milestones[0]?.status).toBe("repairing");
-    expect(project.readProjectManifest(base, created.id).evidence).toHaveLength(2);
-
-    const repair = task("repair-gate", "m", ["gate.flag", "note.txt"]);
-    repair.kind = "gate-repair";
-    project.createGateRepair(
-      base,
-      created.id,
-      "delivery",
-      repair,
-      "The behavior gate proves the required marker is absent at integration",
-    );
-    const handle = track(project.dispatchProjectTask(base, created.id, "repair-gate"));
-    const updatedRepair = { ...repair, tier_rationale: "Same root cause, clarified contract" };
-    project.createGateRepair(
-      base,
-      created.id,
-      "delivery",
-      updatedRepair,
-      "Further inspection confirms the same missing-marker root cause",
-    );
-    const reused = project.readProjectTaskContext(
-      base,
-      created.id,
-      "repair-gate",
-      "implement-m",
-    );
-    expect(reused.handle.worktree).toBe(handle.worktree);
-
-    commitFile(handle.worktree, "note.txt", "diagnostic attempt\n");
-    const diagnosticFailure = await settleTask(base, created.id, "repair-gate");
-    expect(diagnosticFailure.result).toBe("evidence-failed");
-    const initialFingerprint = failed.evidence!.failure_fingerprint;
-    expect(diagnosticFailure.evidence.at(-1)?.failure_fingerprint).toBe(initialFingerprint);
-
-    commitFile(handle.worktree, "gate.flag", "fixed\n");
-    const merged = await settleTask(base, created.id, "repair-gate");
-    expect(merged.result).toBe("merged");
-
-    const priority = await settleNext(base, created.id);
-    expect(priority.evidence?.requirement_id).toBe("behavior");
-    const staleWarmup = await settleNext(base, created.id);
-    expect(staleWarmup.evidence?.requirement_id).toBe("warmup");
-    const remaining = await settleNext(base, created.id);
-    expect(remaining.evidence?.requirement_id).toBe("remaining");
-    expect(remaining.manifest.status).toBe("done");
-
-    const manifest = project.readProjectManifest(base, created.id);
-    const verifiedRevision = manifest.milestones[0]!.verified_revision;
-    for (const gate of gates) {
-      const latest = manifest.evidence.filter((attempt) =>
-        attempt.owner_type === "milestone" &&
-        attempt.owner_id === "delivery" &&
-        attempt.requirement_id === gate.id
-      ).at(-1);
-      expect(latest?.result).toBe("pass");
-      expect(latest?.revision).toBe(verifiedRevision);
-    }
-  });
-});
-
-describe("generic contracts and configuration", () => {
-  test("allows owner-scoped evidence IDs and executes arbitrary repository-declared commands", async () => {
-    const base = repository({
-      "AGENTS.md": [
-        "# Repository instructions",
-        "",
-        "Use this exact command for all verification:",
-        "`node scripts/repository-check.mjs`",
-        "",
-      ].join("\n"),
-      "scripts/repository-check.mjs": "process.exit(0);\n",
-    });
-    const exact = ["node", "scripts/repository-check.mjs"];
-    const contract = task();
-    contract.required_evidence = [evidence("verify", "task", exact)];
-    const created = start(base, {
-      preflight: [evidence("verify", "preflight", exact)],
+    const manifest = approve(base);
+    const waiting = project.setProjectPlan(base, manifest.id, {
+      objective: manifest.objective!,
       milestones: [
-        milestone([contract], [evidence("verify", "milestone", exact)]),
+        milestone(),
+        { ...milestone([task("later")]), id: "later", title: "Later" },
       ],
+      rationale: "A newly discovered responsibility requires another outcome gate",
     });
-    expect((await settleNext(base, created.id)).result).toBe("pass");
-    const handle = track(project.dispatchProjectTask(base, created.id, "change"));
-    commitFile(handle.worktree, "src/change.ts");
-    expect((await settleTask(base, created.id, "change")).result).toBe("merged");
-    expect((await settleNext(base, created.id)).result).toBe("pass");
-    const owners = project.readProjectManifest(base, created.id).evidence
-      .filter((attempt) => attempt.requirement_id === "verify")
-      .map((attempt) => `${attempt.owner_type}:${attempt.owner_id}`);
-    expect(owners).toContain("preflight:preflight");
-    expect(owners).toContain("task:change");
-    expect(owners).toContain("milestone:delivery");
+    expect(waiting.status).toBe("waiting");
+    expect(waiting.waiting?.kind).toBe("plan_approval");
+
+    const resumed = project.setProjectPlan(base, manifest.id, {
+      objective: manifest.objective!,
+      milestones: [
+        milestone(),
+        { ...milestone([task("later")]), id: "later", title: "Later" },
+      ],
+      approved: true,
+      rationale: "User approved the milestone revision",
+    });
+    expect(resumed.status).toBe("active");
+    expect(resumed.project_worktree).toBe(manifest.project_worktree);
+  });
+});
+
+describe("adaptive execution", () => {
+  test("S to M to L escalation preserves the same worktree and partial edits", () => {
+    const base = repository();
+    const manifest = approve(base, [milestone([task("small", "s")])]);
+    const handle = project.startProjectTasks(base, manifest.id)[0]!;
+    mkdirSync(join(handle.worktree, "src"), { recursive: true });
+    writeFileSync(join(handle.worktree, "src/small.ts"), "partial\n");
+
+    const medium = project.reportProject(base, manifest.id, {
+      kind: "tier_mismatch",
+      task_id: "small",
+      rationale: "The behavior spans a component boundary",
+    });
+    const large = project.reportProject(base, manifest.id, {
+      kind: "tier_mismatch",
+      task_id: "small",
+      rationale: "The contract requires architectural reasoning",
+    });
+    expect(medium.task?.implementation_tier).toBe("m");
+    expect(large.task?.implementation_tier).toBe("l");
+    expect(large.handle?.worktree).toBe(handle.worktree);
+    expect(readFileSync(join(handle.worktree, "src/small.ts"), "utf8")).toBe("partial\n");
   });
 
-  test("uses native task permissions, exact model tiers, and no LLM budgets", () => {
+  test("research and local environment scope expansion resume the same task", () => {
+    const base = repository();
+    const manifest = approve(base);
+    const handle = project.startProjectTasks(base, manifest.id)[0]!;
+    project.reportProject(base, manifest.id, {
+      kind: "research_needed",
+      task_id: "change",
+      rationale: "Need authoritative API behavior",
+    });
+    const scoped = project.reportProject(base, manifest.id, {
+      kind: "scope_review",
+      task_id: "change",
+      assessment: {
+        necessary: true,
+        impact: "Repairs the local Docker readiness check",
+        affected_responsibilities: ["development environment"],
+        local_alternatives: ["none that preserve the milestone"],
+        compatibility: "No production behavior change",
+        category: "local_prerequisite",
+        added_surfaces: ["docker-compose.yml"],
+      },
+    });
+    expect(scoped.manifest.status).toBe("active");
+    expect(scoped.task?.status).toBe("running");
+    expect(scoped.task?.expected_surfaces).toContain("docker-compose.yml");
+    expect(scoped.handle?.worktree).toBe(handle.worktree);
+  });
+
+  test("user questions wait and answers resume the same running task", () => {
+    const base = repository();
+    const manifest = approve(base);
+    const handle = project.startProjectTasks(base, manifest.id)[0]!;
+    const waiting = project.reportProject(base, manifest.id, {
+      kind: "needs_user",
+      task_id: "change",
+      question: "Which observable behavior is authoritative?",
+      rationale: "The repository policies conflict",
+    });
+    expect(waiting.manifest.status).toBe("waiting");
+    const resumed = project.reportProject(base, manifest.id, {
+      kind: "user_answer",
+      answer: "Preserve the public contract",
+    });
+    expect(resumed.manifest.status).toBe("active");
+    expect(resumed.task?.status).toBe("running");
+    expect(resumed.handle?.worktree).toBe(handle.worktree);
+  });
+
+  test("focused checks are recorded and implementation commits on the project worktree", () => {
+    const base = repository();
+    const manifest = approve(base);
+    const handle = project.startProjectTasks(base, manifest.id)[0]!;
+    const revision = commit(handle.worktree, "src/change.ts");
+    const result = project.reportProject(base, manifest.id, {
+      kind: "implemented",
+      task_id: "change",
+      revision,
+      focused_checks: [{
+        requirement_id: "change-focused",
+        result: "pass",
+        command: ["node", "-e", "process.exit(0)"],
+        duration_ms: 4,
+      }],
+    });
+    expect(result.task?.status).toBe("committed");
+    expect(result.task?.focused_check_reports).toHaveLength(1);
+    expect(result.manifest.milestones[0]?.status).toBe("active");
+  });
+
+  test("a stale reported revision reconciles to the clean assigned worktree HEAD", () => {
+    const base = repository();
+    const manifest = approve(base);
+    const handle = project.startProjectTasks(base, manifest.id)[0]!;
+    const reported = commit(handle.worktree, "src/change.ts");
+    const actual = commit(handle.worktree, "src/follow-up.ts");
+    const result = project.reportProject(base, manifest.id, {
+      kind: "implemented",
+      task_id: "change",
+      revision: reported,
+      focused_checks: focused("change"),
+    });
+    expect(result.task?.status).toBe("committed");
+    expect(result.task?.revision).toBe(actual);
+    expect(result.manifest.project_revision).toBe(actual);
+    expect(result.manifest.events.some((event) =>
+      event.kind === "revision_reconciled"
+    )).toBe(true);
+  });
+});
+
+describe("parallel composition", () => {
+  test("independent tasks get temporary worktrees and compose into the project worktree", () => {
+    const base = repository();
+    const manifest = approve(base, [
+      milestone([
+        task("left", "m", ["src/left.ts"], "pair"),
+        task("right", "m", ["src/right.ts"], "pair"),
+      ]),
+    ]);
+    const handles = project.startProjectTasks(base, manifest.id);
+    expect(handles).toHaveLength(2);
+    expect(new Set(handles.map((item) => item.worktree)).size).toBe(2);
+    for (const handle of handles) {
+      const revision = commit(handle.worktree, `src/${handle.task_id}.ts`);
+      project.reportProject(base, manifest.id, {
+        kind: "implemented",
+        task_id: handle.task_id,
+        revision,
+        focused_checks: focused(handle.task_id),
+      });
+    }
+    const current = project.readProjectManifest(base, manifest.id);
+    expect(current.milestones[0]?.tasks.every((item) => item.status === "committed"))
+      .toBe(true);
+    expect(existsSync(join(current.project_worktree!, "src/left.ts"))).toBe(true);
+    expect(existsSync(join(current.project_worktree!, "src/right.ts"))).toBe(true);
+  });
+
+  test("overlapping actual changes safely serialize the remaining task", () => {
+    const base = repository({ "shared.txt": "base\n" });
+    const manifest = approve(base, [
+      milestone([
+        task("left", "m", ["src/left.ts"], "pair"),
+        task("right", "m", ["src/right.ts"], "pair"),
+      ]),
+    ]);
+    const [left, right] = project.startProjectTasks(base, manifest.id);
+    commit(left!.worktree, "shared.txt", "left\n");
+    commit(right!.worktree, "shared.txt", "right\n");
+    project.reportProject(base, manifest.id, {
+      kind: "implemented",
+      task_id: "left",
+      revision: git(left!.worktree, "rev-parse", "HEAD"),
+      focused_checks: focused("left"),
+    });
+    const fallback = project.reportProject(base, manifest.id, {
+      kind: "implemented",
+      task_id: "right",
+      revision: git(right!.worktree, "rev-parse", "HEAD"),
+      focused_checks: focused("right"),
+    });
+    expect(fallback.task?.status).toBe("pending");
+    expect(fallback.task?.parallel_group).toBeUndefined();
+    expect(fallback.manifest.events.at(-1)?.kind).toBe("parallel_serialized");
+    expect(git(fallback.manifest.project_worktree!, "status", "--porcelain")).toBe("");
+  });
+
+  test("scope expansion into another task's responsibility stops parallel execution", () => {
+    const base = repository();
+    const manifest = approve(base, [
+      milestone([
+        task("left", "m", ["src/left.ts"], "pair"),
+        task("right", "m", ["src/right.ts"], "pair"),
+      ]),
+    ]);
+    project.startProjectTasks(base, manifest.id);
+    const result = project.reportProject(base, manifest.id, {
+      kind: "scope_review",
+      task_id: "left",
+      assessment: {
+        necessary: true,
+        impact: "The invariant also owns the right-hand module",
+        affected_responsibilities: ["left", "right"],
+        local_alternatives: ["Duplicate the invariant, which is unsafe"],
+        compatibility: "Preserves the approved behavior",
+        category: "objective",
+        added_surfaces: ["src/right.ts"],
+      },
+    });
+    const tasks = result.manifest.milestones[0]!.tasks;
+    expect(tasks.every((item) => item.parallel_group === undefined)).toBe(true);
+    expect(tasks.every((item) => item.status === "running")).toBe(true);
+    expect(result.manifest.events.at(-1)?.kind).toBe("parallel_serialized");
+    expect(git(result.manifest.project_worktree!, "status", "--porcelain")).toBe("");
+  });
+});
+
+describe("foreground milestone validation", () => {
+  test("fixture Project recovers through sequential, decision, parallel, and publication flow", async () => {
+    const base = repository();
+    const first: project.ProjectMilestoneInput = {
+      ...milestone(
+        [task("sequential")],
+        [command(
+          "first-gate",
+          "process.exit(require('fs').existsSync('repair.flag') ? 0 : 9)",
+        )],
+      ),
+      id: "first",
+      title: "First",
+    };
+    const second: project.ProjectMilestoneInput = {
+      ...milestone([
+        task("parallel-left", "m", ["src/parallel-left.ts"], "pair"),
+        task("parallel-right", "m", ["src/parallel-right.ts"], "pair"),
+      ]),
+      id: "second",
+      title: "Second",
+    };
+    const manifest = approve(base, [first, second]);
+
+    const sequential = project.startProjectTasks(base, manifest.id)[0]!;
+    project.reportProject(base, manifest.id, {
+      kind: "needs_user",
+      task_id: "sequential",
+      question: "Confirm the public behavior",
+      rationale: "Two repository policies disagree",
+    });
+    project.reportProject(base, manifest.id, {
+      kind: "user_answer",
+      answer: "Preserve the public behavior",
+    });
+    project.reportProject(base, manifest.id, {
+      kind: "implemented",
+      task_id: "sequential",
+      revision: commit(sequential.worktree, "src/sequential.ts"),
+      focused_checks: focused("sequential"),
+    });
+
+    const failed = await project.validateProject(base, manifest.id);
+    expect(failed.result).toBe("failed");
+    expect(failed.manifest.milestones[0]!.tasks[0]!.status).toBe("running");
+    project.reportProject(base, manifest.id, {
+      kind: "implemented",
+      task_id: "sequential",
+      revision: commit(sequential.worktree, "repair.flag", "fixed\n"),
+      focused_checks: focused("sequential"),
+    });
+    expect((await project.validateProject(base, manifest.id)).result).toBe("passed");
+
+    for (const parallel of project.startProjectTasks(base, manifest.id)) {
+      project.reportProject(base, manifest.id, {
+        kind: "implemented",
+        task_id: parallel.task_id,
+        revision: commit(parallel.worktree, `src/${parallel.task_id}.ts`),
+        focused_checks: focused(parallel.task_id),
+      });
+    }
+    const done = await project.validateProject(base, manifest.id, {
+      publish: async () => ({ url: "https://example.invalid/pr/fixture" }),
+    });
+    expect(done.result).toBe("done");
+    expect(done.manifest.milestones.every((item) => item.status === "validated"))
+      .toBe(true);
+    expect(done.manifest.draft_pr_url).toBe("https://example.invalid/pr/fixture");
+  });
+
+  test("failure remains active, records a stable fingerprint, and reruns without repair state", async () => {
+    const base = repository();
+    const gate = command(
+      "gate",
+      "process.stderr.write('stable failure\\n');process.exit(require('fs').existsSync('fixed')?0:7)",
+    );
+    const manifest = approve(base, [milestone([], [gate])]);
+    const first = await project.validateProject(base, manifest.id);
+    const second = await project.validateProject(base, manifest.id);
+    expect(first.result).toBe("failed");
+    expect(second.result).toBe("failed");
+    expect(first.evidence?.failure_fingerprint)
+      .toBe(second.evidence?.failure_fingerprint);
+    expect(second.manifest.status).toBe("active");
+    expect(JSON.stringify(second.manifest)).not.toContain("repairing");
+
+    writeFileSync(join(second.manifest.project_worktree!, "fixed"), "yes\n");
+    git(second.manifest.project_worktree!, "add", "fixed");
+    git(second.manifest.project_worktree!, "commit", "-m", "fix: gate");
+    const passed = await project.validateProject(base, manifest.id, {
+      publish: async () => ({ url: "https://example.invalid/pr/1" }),
+    });
+    expect(passed.result).toBe("done");
+    expect(passed.manifest.draft_pr_url).toBe("https://example.invalid/pr/1");
+  });
+
+  test("an unchanged unrelated baseline continues only after policy acceptance", async () => {
+    const base = repository();
+    const gate = command(
+      "known-baseline",
+      "process.stderr.write('known baseline\\n');process.exit(6)",
+    );
+    const manifest = approve(base, [milestone([], [gate])]);
+    const failed = await project.validateProject(base, manifest.id);
+    expect(failed.evidence?.baseline_comparison).toBe("unchanged");
+
+    project.reportProject(base, manifest.id, {
+      kind: "baseline_assessment",
+      milestone_id: "delivery",
+      requirement_id: "known-baseline",
+      fingerprint: failed.evidence!.failure_fingerprint!,
+      classification: "unchanged_unrelated",
+      repository_policy_allows: true,
+      rationale: "Repository policy permits this unrelated pre-existing failure",
+    });
+    const completed = await project.validateProject(base, manifest.id, {
+      publish: async () => ({ url: "https://example.invalid/pr/baseline" }),
+    });
+    expect(completed.result).toBe("done");
+    expect(completed.manifest.validation_runs.at(-1)?.[0]?.result)
+      .toBe("accepted_baseline");
+  });
+
+  test("a timed-out validation is bounded and safely rerunnable", async () => {
+    const base = repository();
+    const gate = command("slow", "setInterval(()=>{},1000)");
+    gate.timeout_ms = 100;
+    const manifest = approve(base, [milestone([], [gate])]);
+    const first = await project.validateProject(base, manifest.id);
+    const second = await project.validateProject(base, manifest.id);
+    expect(first.result).toBe("failed");
+    expect(first.evidence?.diagnostic_tail).toContain("timed out after 100ms");
+    expect(second.result).toBe("failed");
+    expect(project.readProjectManifest(base, manifest.id).validation_runs).toHaveLength(2);
+  });
+
+  test("missing GitHub authentication waits with exact remediation", async () => {
+    const base = repository();
+    const manifest = approve(base, [milestone([], [])]);
+    const result = await project.validateProject(base, manifest.id, {
+      publish: async () => {
+        throw new project.PublicationError("AUTH", "not logged in");
+      },
+    });
+    expect(result.result).toBe("waiting");
+    expect(result.manifest.waiting?.remediation).toBe("gh auth login");
+    expect(result.manifest.status).toBe("waiting");
+  });
+
+  test("baseline fingerprints distinguish unchanged failures from regressions", () => {
+    expect(project.compareValidationFingerprint("same", "same")).toBe("unchanged");
+    expect(project.compareValidationFingerprint("old", "new")).toBe("regression");
+    expect(project.compareValidationFingerprint(undefined, "new")).toBe("new_failure");
+  });
+});
+
+describe("OpenCode integration", () => {
+  test("uses one project primary, native research, seven tools, and no GitHub MCP", () => {
     const root = join(import.meta.dir, "..");
     const config = JSON.parse(readFileSync(join(root, "config.jsonc"), "utf8"));
-    const agents = {
-      default: readFileSync(join(root, "agents/primary/default.md"), "utf8"),
-      orchestrate: readFileSync(join(root, "agents/primary/orchestrate.md"), "utf8"),
-      investigate: readFileSync(join(root, "agents/subagents/investigate.md"), "utf8"),
-      diagnose: readFileSync(join(root, "agents/subagents/diagnose.md"), "utf8"),
-      small: readFileSync(join(root, "agents/subagents/implement-s.md"), "utf8"),
-      medium: readFileSync(join(root, "agents/subagents/implement-m.md"), "utf8"),
-      large: readFileSync(join(root, "agents/subagents/implement-l.md"), "utf8"),
-    };
-    expect(agents.default).toContain("model: openai/gpt-5.6-terra");
-    expect(agents.small).toContain("model: openai/gpt-5.6-luna");
-    expect(agents.medium).toContain("model: openai/gpt-5.6-terra");
-    expect(agents.large).toContain("model: openai/gpt-5.6-sol");
-    expect(agents.orchestrate).toContain("implement-s: allow");
-    expect(agents.orchestrate).toContain("implement-m: allow");
-    expect(agents.orchestrate).toContain("implement-l: allow");
-    expect(agents.orchestrate).toContain("A new project always starts with a requirements interview");
-    expect(agents.orchestrate).toContain(
-      "Do not read, grep, glob, investigate, plan, dispatch, or inspect repository files",
+    const primary = readFileSync(join(root, "agents/primary/project.md"), "utf8");
+    const tools = readFileSync(join(root, "tools/project.ts"), "utf8");
+
+    expect(primary).toContain("model: openai/gpt-5.6-terra");
+    expect(primary).toContain("explore: allow");
+    expect(primary).toContain("scout: allow");
+    expect(primary).toContain("implement-s: allow");
+    expect(primary).toContain("implement-m: allow");
+    expect(primary).toContain("implement-l: allow");
+    expect(primary).toContain("the name is only a label");
+    expect(primary).toContain(
+      "or research the repository from the title alone",
     );
-    expect(agents.orchestrate.indexOf("requirements interview"))
-      .toBeLessThan(agents.orchestrate.indexOf("After requirements are understood"));
-    expect(agents.orchestrate).toContain("Never run a project as a silent chain of tool calls");
-    expect(agents.orchestrate).toContain(
-      "Do not perform more than one polling tool call without a user-visible progress message",
+    expect(primary).toContain(
+      "Store the first complete draft plan before presenting it",
     );
-    expect(config.model).toBe("openai/gpt-5.6-terra");
-    expect(config.small_model).toBe("openai/gpt-5.6-luna");
-    expect(config.autoupdate).toBe(false);
-    expect(config.compaction.prune).toBe(true);
-    expect(config.permission.doom_loop).toBe("ask");
-    expect(config.agent.scout.disable).toBe(true);
-    expect(config.mcp.github.enabled).toBe(false);
-    expect(JSON.stringify(config.permission.external_directory))
-      .not.toMatch(/Development\/(?:personal|arai)/);
-    for (const [name, source] of Object.entries(agents)) {
-      expect(source, name).not.toMatch(/^(?:steps|variant|reasoningEffort):/m);
-      if (["small", "medium", "large"].includes(name)) {
-        expect(source).toContain("task: deny");
-        expect(source).toContain("project_task_context: allow");
-      }
-    }
+    expect(primary).toContain(
+      "The assigned clean worktree HEAD is authoritative",
+    );
+    expect(config.permission.doom_loop).toBe("allow");
+    expect(config.agent.explore.disable).toBe(false);
+    expect(config.agent.scout.disable).toBe(false);
+    expect(config.agent.build.disable).toBe(true);
+    expect(config.agent.plan.disable).toBe(true);
+    expect(config.agent.general.disable).toBe(true);
+    expect(config.mcp?.github).toBeUndefined();
+
+    for (const name of [
+      "open",
+      "plan",
+      "status",
+      "next",
+      "context",
+      "report",
+      "validate",
+    ]) expect(tools).toContain(`export const ${name}`);
+    expect(tools).not.toMatch(/poll_token|repair_gate|complete_task|resolve_preflight/);
+    expect(existsSync(join(root, "agents/subagents/diagnose.md"))).toBe(false);
+    expect(existsSync(join(root, "agents/subagents/investigate.md"))).toBe(false);
+    expect(existsSync(join(root, "lib/evidence-runner.ts"))).toBe(false);
   });
 
-  test("throws tool errors and contains no repository-specific workflow vocabulary", async () => {
+  test("implementers cannot delegate, publish, or mutate project state", async () => {
     const root = join(import.meta.dir, "..");
-    const toolSource = readFileSync(join(root, "tools/project.ts"), "utf8");
-    expect(toolSource).not.toContain('return `Error:');
-    expect(toolSource).not.toContain('return "Error:');
-    expect(toolSource).toContain('throw new Error("Only orchestrate may mutate project state")');
-    const base = repository();
-    await expect(
-      projectTools.create.execute(
-        { name: "unauthorized" },
-        { agent: "default", directory: base } as never,
-      ),
-    ).rejects.toThrow("Only orchestrate may mutate project state");
-
-    const genericSources = [
-      join(root, "README.md"),
-      join(root, "lib/project.ts"),
-      join(root, "tools/project.ts"),
-      join(root, "agents/primary/orchestrate.md"),
-      join(root, "agents/subagents/diagnose.md"),
-      join(root, "agents/subagents/implement-s.md"),
-      join(root, "agents/subagents/implement-m.md"),
-      join(root, "agents/subagents/implement-l.md"),
-    ].map((path) => readFileSync(path, "utf8").toLowerCase()).join("\n");
-    for (const forbidden of [
-      "gu" + "ita",
-      "ay" + "ni",
-      "pn" + "pm",
-      "sve" + "lte",
-      "car" + "go",
-      "doc" + "ker",
-      "make e" + "2e",
-    ]) {
-      expect(genericSources).not.toContain(forbidden);
+    for (const name of ["implement-s", "implement-m", "implement-l"]) {
+      const source = readFileSync(join(root, `agents/subagents/${name}.md`), "utf8");
+      expect(source).toContain("task: deny");
+      expect(source).toContain("project_*: deny");
+      expect(source).toContain('"git push*": deny');
+      expect(source).toContain('"gh pr*": deny');
+      expect(source).toContain("project_context: allow");
     }
+    const base = repository();
+    await expect(projectTools.open.execute(
+      { action: "create", name_or_id: "unauthorized" },
+      { agent: "implement-l", directory: base } as never,
+    )).rejects.toThrow("Only the project primary agent");
   });
 });

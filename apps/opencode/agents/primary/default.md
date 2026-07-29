@@ -1,6 +1,6 @@
 ---
 name: default
-description: Standalone agent for bounded work outside the schema-v4 project workflow.
+description: Standalone agent for bounded one-shot work outside the Project workflow.
 mode: primary
 model: openai/gpt-5.6-terra
 permission:

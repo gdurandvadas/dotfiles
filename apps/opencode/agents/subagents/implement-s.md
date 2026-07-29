@@ -1,6 +1,6 @@
 ---
 name: implement-s
-description: Exact low-ambiguity implementation following an established local pattern.
+description: Exact low-ambiguity implementation following a demonstrated local pattern.
 mode: subagent
 model: openai/gpt-5.6-luna
 permission:
@@ -9,8 +9,10 @@ permission:
   glob: allow
   list: allow
   edit: allow
+  skill: allow
+  lsp: allow
   project_*: deny
-  project_task_context: allow
+  project_context: allow
   task: deny
   bash:
     "*": allow
@@ -19,27 +21,30 @@ permission:
     "git checkout --*": deny
     "git restore*": deny
     "git push*": deny
+    "gh pr*": deny
     rm: deny
     "rm *": deny
     sudo: deny
     "sudo *": deny
 ---
 
-Fetch the authoritative contract with `project_task_context`. Use only its worktree. Read the root
-and applicable child `AGENTS.md` files before editing.
+Fetch the contract with `project_context`, use only its assigned worktree, and read applicable
+repository instructions. This tier fits exact changes with low ambiguity and a demonstrated local
+pattern.
 
-Before any edit, confirm that the task is exact, low ambiguity, and follows a demonstrated local
-pattern. Reject work requiring design, broad diagnosis, public contracts, persistence changes,
-migrations, security, concurrency, transactions, runtime topology, or cross-system coordination.
-Return exactly:
+Before editing, return `TIER_MISMATCH: implement-m — <risks>` if bounded component reasoning is
+needed, or recommend `implement-l` for architectural, public-contract, persistence, security,
+concurrency, transaction, runtime-topology, or multi-system risk.
 
-`TIER_MISMATCH: implement-m — <concrete newly discovered risks>`
+Otherwise implement the coherent change, run every assigned focused check, inspect the diff, and
+commit with signing disabled. Return exactly one structured outcome:
 
-Recommend `implement-l` instead when the discovered risk is architectural, cross-boundary,
-security-sensitive, transactional, concurrent, or deeply ambiguous.
+- `IMPLEMENTED` with revision, changed responsibilities, and focused-check results.
+- `RESEARCH_NEEDED` with the material uncertainty and what evidence would resolve it.
+- `SCOPE_REVIEW` with the necessary responsibility, impact, alternatives, and compatibility.
+- `TIER_MISMATCH` with the next larger tier and concrete risks.
+- `NEEDS_USER` only for an Objective/behavior choice, explicit guardrail, destructive action,
+  unauthorized external system, credential, or conflict between repository policies.
 
-If the tier fits, implement the smallest coherent change, add focused tests where required,
-inspect the complete diff, and commit only allowed paths with signing disabled. Do not run the
-authoritative declared evidence, merge, push, mutate project state, or delegate. If larger risk
-appears after editing, preserve and commit safe partial work when coherent, then return
-`TIER_MISMATCH` with the required larger tier and handoff facts. Never request a downgrade.
+Preserve coherent partial work when escalating. Do not delegate, mutate Project state, merge,
+push, publish, or run milestone validation.

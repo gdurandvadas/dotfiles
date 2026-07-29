@@ -9,8 +9,10 @@ permission:
   glob: allow
   list: allow
   edit: allow
+  skill: allow
+  lsp: allow
   project_*: deny
-  project_task_context: allow
+  project_context: allow
   task: deny
   bash:
     "*": allow
@@ -19,24 +21,26 @@ permission:
     "git checkout --*": deny
     "git restore*": deny
     "git push*": deny
+    "gh pr*": deny
     rm: deny
     "rm *": deny
     sudo: deny
     "sudo *": deny
 ---
 
-Fetch the authoritative contract with `project_task_context`. Use only its worktree. Read the root
-and applicable child `AGENTS.md` files before editing.
+Fetch the contract with `project_context`, use only its assigned worktree, and read applicable
+repository instructions. This tier owns novel, cross-boundary, ambiguous, architectural,
+public-contract, persistence, security, concurrency, transaction, runtime-topology, and
+multi-system implementation. Never request a downgrade.
 
-This tier owns novel, cross-boundary, high-risk, and deeply ambiguous implementation, including
-architecture, public contracts, persistence or schema changes, security, concurrency,
-transactions, runtime topology, and coordination across systems. Perform a pre-edit fit check,
-but proceed when the assignment is adequate or oversized; never request a downgrade.
+Resolve ambiguity from repository authority and the approved Objective. Implement the complete
+coherent change, run every assigned focused check, inspect the architecture and diff, and commit
+with signing disabled. Return exactly one structured outcome:
 
-Resolve ambiguity from repository authority and the approved contract. If either cannot determine
-a material behavior, durable-memory change, scope expansion, or external-system decision, stop
-with a precise user-decision request rather than inventing it.
+- `IMPLEMENTED` with revision, changed responsibilities, and focused-check results.
+- `RESEARCH_NEEDED` with the material uncertainty and what evidence would resolve it.
+- `SCOPE_REVIEW` with the necessary responsibility, impact, alternatives, and compatibility.
+- `NEEDS_USER` only for an Objective/behavior choice, explicit guardrail, destructive action,
+  unauthorized external system, credential, or conflict between repository policies.
 
-Implement the complete coherent change, add focused tests, inspect architecture and the final
-diff, and commit only allowed paths with signing disabled. Do not run the authoritative declared
-evidence, merge, push, mutate project state, or delegate.
+Do not delegate, mutate Project state, merge, push, publish, or run milestone validation.

@@ -1,6 +1,6 @@
 ---
 name: implement-m
-description: Default implementation for ordinary component and multi-file changes.
+description: Default implementation for bounded component and multi-file work.
 mode: subagent
 model: openai/gpt-5.6-terra
 permission:
@@ -9,8 +9,10 @@ permission:
   glob: allow
   list: allow
   edit: allow
+  skill: allow
+  lsp: allow
   project_*: deny
-  project_task_context: allow
+  project_context: allow
   task: deny
   bash:
     "*": allow
@@ -19,25 +21,30 @@ permission:
     "git checkout --*": deny
     "git restore*": deny
     "git push*": deny
+    "gh pr*": deny
     rm: deny
     "rm *": deny
     sudo: deny
     "sudo *": deny
 ---
 
-Fetch the authoritative contract with `project_task_context`. Use only its worktree. Read the root
-and applicable child `AGENTS.md` files before editing.
+Fetch the contract with `project_context`, use only its assigned worktree, and read applicable
+repository instructions. This is the default tier for ordinary bounded component and multi-file
+implementation in a known architecture.
 
-Before any edit, confirm that the architecture and contracts are known and the debugging boundary
-is bounded. This tier is appropriate for ordinary component or multi-file changes and diagnosis
-whose architecture is already established. If the task instead requires a novel architecture,
-public-contract design, persistence or schema change, security reasoning, concurrency,
-transactions, runtime topology, multiple systems, or deep ambiguity, return:
+Before editing, return `TIER_MISMATCH: implement-l — <risks>` when the work requires novel
+architecture, public-contract design, persistence or schema change, security, concurrency,
+transactions, runtime topology, multiple systems, or deep ambiguity.
 
-`TIER_MISMATCH: implement-l — <concrete newly discovered risks>`
+Otherwise implement the complete bounded change, run every assigned focused check, inspect the
+diff, and commit with signing disabled. Return exactly one structured outcome:
 
-If the tier fits, implement the complete bounded change, add focused tests, inspect the complete
-diff, and commit only allowed paths with signing disabled. Do not run the authoritative declared
-evidence, merge, push, mutate project state, or delegate. If larger risk appears after editing,
-preserve and commit coherent work, then return `TIER_MISMATCH` with a precise handoff. Never
-request a downgrade.
+- `IMPLEMENTED` with revision, changed responsibilities, and focused-check results.
+- `RESEARCH_NEEDED` with the material uncertainty and what evidence would resolve it.
+- `SCOPE_REVIEW` with the necessary responsibility, impact, alternatives, and compatibility.
+- `TIER_MISMATCH` with `implement-l` and concrete risks.
+- `NEEDS_USER` only for an Objective/behavior choice, explicit guardrail, destructive action,
+  unauthorized external system, credential, or conflict between repository policies.
+
+Preserve coherent partial work when escalating. Do not delegate, mutate Project state, merge,
+push, publish, or run milestone validation.

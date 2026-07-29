@@ -1,272 +1,201 @@
 import { tool } from "@opencode-ai/plugin";
 import {
-  completeProjectTask,
-  createGateRepair,
   createProject,
-  dispatchProjectTask,
-  escalateProjectTask,
   listProjects,
   readProjectStatus,
   readProjectTaskContext,
-  recordProjectDecision,
+  reportProject,
   resolveProject,
-  resolveProjectPreflight,
   setProjectPlan,
-  verifyProjectNext,
-  type EvidenceRequirement,
-  type ProjectMilestoneInput,
-  type ProjectTaskInput,
+  startProjectTasks,
+  validateProject,
+  type ProjectPlanInput,
+  type ProjectReportInput,
 } from "../lib/project";
 
-function output(callback: () => unknown): string {
-  return JSON.stringify(callback(), null, 2);
+function render(value: unknown): string {
+  return JSON.stringify(value, null, 2);
 }
 
-function mutation(
-  context: { agent: string },
-  callback: () => unknown,
-): string {
-  if (context.agent !== "orchestrate") {
-    throw new Error("Only orchestrate may mutate project state");
+function requireProject(context: { agent: string }): void {
+  if (context.agent !== "project") {
+    throw new Error("Only the project primary agent may mutate Project state");
   }
-  return output(callback);
 }
 
-const requirement = tool.schema.object({
+const validation = tool.schema.object({
   id: tool.schema.string(),
-  level: tool.schema.enum(["preflight", "task", "milestone"]),
   command: tool.schema.array(tool.schema.string()),
   proves: tool.schema.string(),
   timeout_ms: tool.schema.number().optional(),
 });
 
-const taskContract = tool.schema.object({
+const task = tool.schema.object({
   id: tool.schema.string(),
   title: tool.schema.string(),
-  kind: tool.schema.enum(["normal", "gate-repair"]),
   implementation_tier: tool.schema.enum(["s", "m", "l"]),
   tier_rationale: tool.schema.string(),
   depends_on: tool.schema.array(tool.schema.string()),
-  allowed_paths: tool.schema.array(tool.schema.string()),
-  excluded_paths: tool.schema.array(tool.schema.string()).optional(),
-  acceptance_criteria: tool.schema.array(tool.schema.string()),
-  required_evidence: tool.schema.array(requirement),
+  expected_surfaces: tool.schema.array(tool.schema.string()),
+  focused_checks: tool.schema.array(validation),
+  parallel_group: tool.schema.string().optional(),
 });
 
 const milestone = tool.schema.object({
   id: tool.schema.string(),
   title: tool.schema.string(),
-  depends_on: tool.schema.array(tool.schema.string()),
   acceptance_criteria: tool.schema.array(tool.schema.string()),
-  required_evidence: tool.schema.array(requirement),
-  tasks: tool.schema.array(taskContract),
+  tasks: tool.schema.array(task),
+  validation: tool.schema.array(validation),
 });
 
-export const create = tool({
-  description: "Create a new schema-v4 project and integration branch.",
-  args: { name: tool.schema.string() },
-  async execute(args, context) {
-    return mutation(context, () => createProject(context.directory, args.name));
-  },
+const objective = tool.schema.object({
+  outcome: tool.schema.string(),
+  acceptance_criteria: tool.schema.array(tool.schema.string()),
+  non_goals: tool.schema.array(tool.schema.string()),
+  guardrails: tool.schema.array(tool.schema.string()),
 });
 
-export const status = tool({
+export const open = tool({
   description:
-    "Return project progress, including live evidence purpose, sequence, elapsed time, recent output, and the authoritative next action.",
-  args: { id: tool.schema.string() },
-  async execute(args, context) {
-    return output(() =>
-      readProjectStatus(context.directory, resolveProject(context.directory, args.id))
-    );
+    "List schema-v5 projects, create a design record, or resolve an existing project.",
+  args: {
+    action: tool.schema.enum(["list", "create", "resolve"]),
+    name_or_id: tool.schema.string().optional(),
   },
-});
-
-export const list = tool({
-  description: "List schema-v4 projects; earlier project records are ignored.",
-  args: {},
-  async execute(_args, context) {
-    return output(() => listProjects(context.directory));
+  async execute(args, context) {
+    if (args.action === "list") return render(listProjects(context.directory));
+    if (!args.name_or_id) throw new Error(`${args.action} requires name_or_id`);
+    if (args.action === "resolve") {
+      const id = resolveProject(context.directory, args.name_or_id);
+      return render(readProjectStatus(context.directory, id));
+    }
+    requireProject(context);
+    return render(createProject(context.directory, args.name_or_id));
   },
 });
 
 export const plan = tool({
   description:
-    "Store an explicitly approved schema-v4 plan, including exact repository-defined evidence.",
+    "Store a draft plan and create its Project branch/worktree, approve that plan, adapt tasks inside the active milestone, or request approval for a material milestone revision.",
   args: {
     id: tool.schema.string(),
-    preflight: tool.schema.array(requirement),
+    objective,
     milestones: tool.schema.array(milestone),
+    rationale: tool.schema.string().optional(),
+    approved: tool.schema.boolean().optional(),
   },
   async execute(args, context) {
-    return mutation(context, () =>
-      setProjectPlan(
-        context.directory,
-        resolveProject(context.directory, args.id),
-        args.preflight as EvidenceRequirement[],
-        args.milestones as ProjectMilestoneInput[],
-      )
-    );
+    requireProject(context);
+    const id = resolveProject(context.directory, args.id);
+    return render(setProjectPlan(context.directory, id, args as ProjectPlanInput));
   },
 });
 
-export const dispatch = tool({
+export const status = tool({
+  description: "Return compact Project state and its deterministic next action.",
+  args: { id: tool.schema.string() },
+  async execute(args, context) {
+    const id = resolveProject(context.directory, args.id);
+    return render(readProjectStatus(context.directory, id));
+  },
+});
+
+export const next = tool({
   description:
-    "Create a task worktree and return the selected implementation agent plus compact handle.",
+    "Start the next ready task or approved independent parallel group and return implementer handles.",
+  args: { id: tool.schema.string() },
+  async execute(args, context) {
+    requireProject(context);
+    const id = resolveProject(context.directory, args.id);
+    return render(startProjectTasks(context.directory, id));
+  },
+});
+
+export const context = tool({
+  description:
+    "Return the authoritative Objective, milestone, task, evidence, and assigned worktree.",
   args: {
     id: tool.schema.string(),
     task_id: tool.schema.string(),
   },
   async execute(args, context) {
-    return mutation(context, () =>
-      dispatchProjectTask(
-        context.directory,
-        resolveProject(context.directory, args.id),
-        args.task_id,
-      )
-    );
-  },
-});
-
-export const task_context = tool({
-  description:
-    "Fetch the authoritative contract for a dispatched task without copying it through prompts.",
-  args: {
-    id: tool.schema.string(),
-    task_id: tool.schema.string(),
-  },
-  async execute(args, context) {
-    return output(() =>
+    const id = resolveProject(context.directory, args.id);
+    return render(
       readProjectTaskContext(
         context.directory,
-        resolveProject(context.directory, args.id),
+        id,
         args.task_id,
         context.agent,
-      )
+      ),
     );
   },
 });
 
-export const escalate_task = tool({
+export const report = tool({
   description:
-    "Escalate a running task upward to a larger implementation tier in the same worktree.",
+    "Record an implementation outcome, research, scope review, tier escalation, user answer, focused checks, observed clean worktree HEAD, or composition result.",
   args: {
     id: tool.schema.string(),
-    task_id: tool.schema.string(),
-    implementation_tier: tool.schema.enum(["m", "l"]),
-    rationale: tool.schema.string(),
-  },
-  async execute(args, context) {
-    return mutation(context, () =>
-      escalateProjectTask(
-        context.directory,
-        resolveProject(context.directory, args.id),
-        args.task_id,
-        args.implementation_tier,
-        args.rationale,
-      )
-    );
-  },
-});
-
-export const complete_task = tool({
-  description:
-    "Start or poll task evidence without blocking; return user-presentable live progress, enforce scope, and merge after every check passes.",
-  args: {
-    id: tool.schema.string(),
-    task_id: tool.schema.string(),
-    poll_token: tool.schema.string().optional(),
-  },
-  async execute(args, context) {
-    return mutation(context, () =>
-      completeProjectTask(
-        context.directory,
-        resolveProject(context.directory, args.id),
-        args.task_id,
-      )
-    );
-  },
-});
-
-export const verify_next = tool({
-  description:
-    "Start or poll one background preflight or milestone gate and return user-presentable live progress, prioritizing the last failure.",
-  args: {
-    id: tool.schema.string(),
-    poll_token: tool.schema.string().optional(),
-  },
-  async execute(args, context) {
-    return mutation(context, () =>
-      verifyProjectNext(
-        context.directory,
-        resolveProject(context.directory, args.id),
-      )
-    );
-  },
-});
-
-export const resolve_preflight = tool({
-  description:
-    "Record the user's explicit baseline-repair or approved-exception choice after preflight fails.",
-  args: {
-    id: tool.schema.string(),
-    action: tool.schema.enum(["repair", "exception"]),
-    rationale: tool.schema.string(),
-    repair: taskContract.optional(),
-  },
-  async execute(args, context) {
-    return mutation(context, () =>
-      resolveProjectPreflight(
-        context.directory,
-        resolveProject(context.directory, args.id),
-        args.action,
-        args.rationale,
-        args.repair as ProjectTaskInput | undefined,
-      )
-    );
-  },
-});
-
-export const repair_gate = tool({
-  description:
-    "After diagnosis, create or update the single cohesive repair for a failed milestone gate.",
-  args: {
-    id: tool.schema.string(),
-    milestone_id: tool.schema.string(),
-    diagnosis: tool.schema.string(),
-    repair: taskContract,
-  },
-  async execute(args, context) {
-    return mutation(context, () =>
-      createGateRepair(
-        context.directory,
-        resolveProject(context.directory, args.id),
-        args.milestone_id,
-        args.repair as ProjectTaskInput,
-        args.diagnosis,
-      )
-    );
-  },
-});
-
-export const decide = tool({
-  description: "Record a material user-approved project decision.",
-  args: {
-    id: tool.schema.string(),
-    summary: tool.schema.string(),
-    rationale: tool.schema.string(),
-    milestone_id: tool.schema.string().optional(),
+    kind: tool.schema.enum([
+      "implemented",
+      "tier_mismatch",
+      "research_needed",
+      "research_completed",
+      "scope_review",
+      "needs_user",
+      "user_answer",
+      "baseline_assessment",
+    ]),
     task_id: tool.schema.string().optional(),
+    rationale: tool.schema.string().optional(),
+    summary: tool.schema.string().optional(),
+    question: tool.schema.string().optional(),
+    answer: tool.schema.string().optional(),
+    revision: tool.schema.string().optional(),
+    focused_checks: tool.schema.array(tool.schema.object({
+      requirement_id: tool.schema.string(),
+      result: tool.schema.enum(["pass", "fail"]),
+      command: tool.schema.array(tool.schema.string()),
+      duration_ms: tool.schema.number(),
+      diagnostic: tool.schema.string().optional(),
+    })).optional(),
+    assessment: tool.schema.object({
+      necessary: tool.schema.boolean(),
+      impact: tool.schema.string(),
+      affected_responsibilities: tool.schema.array(tool.schema.string()),
+      local_alternatives: tool.schema.array(tool.schema.string()),
+      compatibility: tool.schema.string(),
+      category: tool.schema.enum([
+        "objective",
+        "local_prerequisite",
+        "milestone_change",
+        "outside_objective",
+      ]),
+      added_surfaces: tool.schema.array(tool.schema.string()).optional(),
+    }).optional(),
+    milestone_id: tool.schema.string().optional(),
+    requirement_id: tool.schema.string().optional(),
+    fingerprint: tool.schema.string().optional(),
+    classification: tool.schema.enum(["unchanged_unrelated"]).optional(),
+    repository_policy_allows: tool.schema.boolean().optional(),
   },
   async execute(args, context) {
-    return mutation(context, () =>
-      recordProjectDecision(
-        context.directory,
-        resolveProject(context.directory, args.id),
-        args.summary,
-        args.rationale,
-        args.milestone_id,
-        args.task_id,
-      )
+    requireProject(context);
+    const id = resolveProject(context.directory, args.id);
+    return render(
+      reportProject(context.directory, id, args as unknown as ProjectReportInput),
     );
+  },
+});
+
+export const validate = tool({
+  description:
+    "Run the active milestone's repository-declared gates synchronously; advance on pass or return bounded diagnostics on failure. Publish the final validated branch as a draft PR.",
+  args: { id: tool.schema.string() },
+  async execute(args, context) {
+    requireProject(context);
+    const id = resolveProject(context.directory, args.id);
+    return render(await validateProject(context.directory, id));
   },
 });
