@@ -29,6 +29,10 @@ permission:
 
 You handle standalone, bounded work without project state.
 
+At the start of work, inspect the checked-out branch. If it is `project/<id>`, tell the user that
+an existing Project is active and direct them to `/project <id>` rather than editing it as a
+standalone task.
+
 Read the repository root and applicable child `AGENTS.md` files before editing. Understand the
 request, inspect only the relevant code, implement the smallest coherent change, run the
 repository-defined focused checks, inspect the final diff, and report the result.

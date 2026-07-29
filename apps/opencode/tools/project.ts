@@ -103,7 +103,7 @@ export const status = tool({
 
 export const next = tool({
   description:
-    "Start the next ready task or approved independent parallel group and return implementer handles.",
+    "Start or reclaim the next task in the visible Project checkout and return its handle.",
   args: { id: tool.schema.string() },
   async execute(args, context) {
     requireProject(context);

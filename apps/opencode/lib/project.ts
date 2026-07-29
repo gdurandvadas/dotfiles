@@ -165,7 +165,7 @@ export interface TaskHandle {
   task_id: string;
   worktree: string;
   implementation_tier: ImplementationTier;
-  implementation_agent: `implement-${ImplementationTier}`;
+  implementation_agent: "project";
 }
 
 export interface ProjectStatusReport {
@@ -267,6 +267,15 @@ function gitOptional(cwd: string, args: string[]): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+function projectDirtyStatus(cwd: string): string {
+  return git(cwd, ["status", "--porcelain"]).split("\n").filter((line) => {
+    if (!line.startsWith("?? ")) return Boolean(line);
+    const path = line.slice(3);
+    const name = basename(path);
+    return !/(^|\.)env($|\.)/.test(name);
+  }).join("\n");
 }
 
 function statePath(base: string, id: string): string {
@@ -485,7 +494,7 @@ function handle(manifest: ProjectManifest, task: ProjectTask): TaskHandle {
     task_id: task.id,
     worktree: task.worktree,
     implementation_tier: task.implementation_tier,
-    implementation_agent: `implement-${task.implementation_tier}`,
+    implementation_agent: "project",
   };
 }
 
@@ -549,22 +558,18 @@ export function resolveProject(base: string, query: string): string {
 
 function ensureProjectWorktree(base: string, manifest: ProjectManifest): void {
   if (manifest.project_worktree) return;
-  if (git(base, ["status", "--porcelain"])) {
-    throw new Error("The integration base must be clean before Project planning");
+  manifest.base_branch = branchName(base);
+  manifest.base_revision = git(base, ["rev-parse", "HEAD"]);
+  if (gitOptional(base, ["show-ref", "--verify", `refs/heads/${manifest.project_branch}`])) {
+    git(base, ["switch", manifest.project_branch]);
+  } else {
+    git(base, ["switch", "-c", manifest.project_branch]);
   }
-  const root = worktreeRoot(base, manifest.id);
-  const path = join(root, "project");
-  mkdirSync(root, { recursive: true });
-  git(base, [
-    "worktree",
-    "add",
-    "-b",
-    manifest.project_branch,
-    path,
-    manifest.base_revision,
-  ]);
-  manifest.project_worktree = path;
-  manifest.project_revision = manifest.base_revision;
+  if (git(base, ["diff", "--cached", "--name-only"])) {
+    git(base, ["restore", "--staged", "--", "."]);
+  }
+  manifest.project_worktree = base;
+  manifest.project_revision = git(base, ["rev-parse", "HEAD"]);
 }
 
 export function setProjectPlan(
@@ -656,22 +661,21 @@ export function startProjectTasks(base: string, id: string): TaskHandle[] {
   if (manifest.status !== "active") throw new Error(`Project ${id} is ${manifest.status}`);
   const milestone = activeMilestone(manifest);
   if (!milestone) throw new Error("No active milestone");
+  const running = milestone.tasks.filter((task) => task.status === "running");
+  if (running.length) return running.map((task) => handle(manifest, task));
   const ready = milestone.tasks.filter((task) =>
     task.status === "pending" && dependenciesMet(manifest, task)
   );
   if (!ready.length) return [];
 
   const first = ready[0]!;
-  const selected = first.parallel_group
-    ? ready.filter((task) => task.parallel_group === first.parallel_group)
-    : [first];
+  const selected = [first];
   const revision = git(manifest.project_worktree!, ["rev-parse", "HEAD"]);
   for (const task of selected) {
     task.status = "running";
     task.attempt += 1;
     task.base_revision = revision;
-    if (selected.length > 1) createParallelWorktree(base, manifest, task);
-    else task.worktree = manifest.project_worktree;
+    task.worktree = manifest.project_worktree;
     addEvent(manifest, "task_started", `Started ${task.id}`, task);
   }
   persist(base, manifest);
@@ -801,7 +805,7 @@ function reportImplemented(
     throw new Error(`Task ${task.id} is not running`);
   }
   const head = git(task.worktree, ["rev-parse", "HEAD"]);
-  if (git(task.worktree, ["status", "--porcelain"])) {
+  if (projectDirtyStatus(task.worktree)) {
     throw new Error("Implementation worktree must be clean and committed");
   }
   try {
@@ -1177,7 +1181,7 @@ export async function validateProject(
 ): Promise<ValidationResult> {
   const manifest = readProjectManifest(base, id);
   if (!manifest.project_worktree) throw new Error("Project plan has not been approved");
-  if (git(manifest.project_worktree, ["status", "--porcelain"])) {
+  if (projectDirtyStatus(manifest.project_worktree)) {
     throw new Error("The project worktree must be clean before validation");
   }
 

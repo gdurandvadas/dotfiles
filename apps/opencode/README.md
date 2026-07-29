@@ -17,19 +17,21 @@ Objective before any repository research.
 
 ## Product model
 
-A Project has one Objective and one cumulative `project/<id>` worktree. The first complete draft
-plan creates that branch/worktree; approval activates the same plan rather than creating it later.
-It advances
-through milestones whose tasks are sized by reasoning risk:
+A Project has one Objective and one visible `project/<id>` branch in the repository checkout the
+user opened. The first complete draft checks out that branch; approval activates the same plan
+rather than creating it later. The checkout does not need to be clean: tracked and untracked local
+files stay visible, while pre-existing staged files are unstaged to keep commits intentional. It
+advances through milestones whose tasks are sized by reasoning risk:
 
-- `implement-s` / Luna for an exact demonstrated pattern.
-- `implement-m` / Terra for ordinary bounded component or multi-file work.
-- `implement-l` / Sol for novel, ambiguous, architectural, or high-risk work.
+- S for an exact demonstrated pattern.
+- M for ordinary bounded component or multi-file work.
+- L for novel, ambiguous, architectural, or high-risk work.
 
-The `project` primary / Terra designs, routes, integrates, recovers, validates, and publishes. It
-uses native `explore` for local research and `scout` for external research. Implementers cannot
-delegate, mutate Project state, push, publish, read secrets, or run destructive Git operations.
-The bounded `default` primary remains available and has no Project or delegation permission.
+The `project` primary / Terra designs, implements, recovers, validates, and publishes directly in
+that checkout. It uses native `explore` for local research and `scout` for external research, but
+repository implementation is never handed to a background agent. It cannot read secrets, run
+destructive Git operations, or publish outside the bounded Project flow. The bounded `default`
+primary remains available and redirects work on a checked-out Project branch back to `/project`.
 
 ## Autonomy boundary
 
@@ -54,16 +56,11 @@ partial work.
 
 ## Execution and validation
 
-Tasks are sequential by default. The approved plan may declare an independent parallel group with
-no dependencies or overlapping expected surfaces. Those tasks receive temporary branches and
-worktrees from the same validated Project revision. Results compose into the cumulative worktree.
-Actual overlap or a merge conflict restores a clean authoritative worktree and automatically
-serializes the remaining work.
-
-Implementers run focused checks and commit before returning one structured outcome:
-`IMPLEMENTED`, `RESEARCH_NEEDED`, `SCOPE_REVIEW`, `TIER_MISMATCH`, or `NEEDS_USER`.
-For completion, the clean assigned worktree HEAD is authoritative. A stale revision copied through
-an agent response is recorded and reconciled instead of blocking Project state.
+Tasks always run sequentially in the visible checkout. `project_next` returns an existing running
+task after interruption, so a new session can inspect the files and continue instead of waiting on
+an unavailable session. The primary runs focused checks, stages explicit paths, commits, and
+records the result. Credential-bearing environment files and blanket staging commands are
+excluded. The visible checkout HEAD is authoritative.
 
 Milestone validation uses the exact commands declared by repository policy. Commands run
 synchronously in the Project worktree and return on pass, failure, timeout, or interruption.

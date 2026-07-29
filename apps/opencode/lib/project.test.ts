@@ -134,13 +134,28 @@ describe("schema-v5 lifecycle", () => {
     const manifest = approve(base);
     expect(manifest.status).toBe("active");
     expect(manifest.project_branch).toBe(`project/${manifest.id}`);
-    expect(manifest.project_worktree).toBeTruthy();
-    expect(existsSync(manifest.project_worktree!)).toBe(true);
-    expect(git(manifest.project_worktree!, "branch", "--show-current"))
-      .toBe(manifest.project_branch);
+    expect(manifest.project_worktree).toBe(base);
+    expect(git(base, "branch", "--show-current")).toBe(manifest.project_branch);
     expect(manifest.milestones[0]?.status).toBe("active");
     expect(project.readProjectStatus(base, manifest.id).next_action)
       .toContain("Start task change");
+  });
+
+  test("planning keeps dirty work visible on the checked-out Project branch", () => {
+    const base = repository();
+    writeFileSync(join(base, "README.md"), "uncommitted integration work\n");
+    writeFileSync(join(base, ".env.dev"), "credential-bearing local file\n");
+    git(base, "add", ".env.dev");
+
+    const manifest = approve(base);
+
+    expect(manifest.project_worktree).toBe(base);
+    expect(git(base, "branch", "--show-current")).toBe(manifest.project_branch);
+    expect(readFileSync(join(base, "README.md"), "utf8"))
+      .toBe("uncommitted integration work\n");
+    expect(existsSync(join(base, ".env.dev"))).toBe(true);
+    expect(git(base, "status", "--porcelain")).toContain("?? .env.dev");
+    expect(git(base, "status", "--porcelain")).toContain("README.md");
   });
 
   test("the first draft plan creates the branch before user approval", () => {
@@ -161,9 +176,8 @@ describe("schema-v5 lifecycle", () => {
     expect(draft.status).toBe("design");
     expect(draft.plan_revision).toBe(1);
     expect(draft.plan_history[0]?.approved).toBe(false);
-    expect(draft.project_worktree).toBeTruthy();
-    expect(git(draft.project_worktree!, "branch", "--show-current"))
-      .toBe(draft.project_branch);
+    expect(draft.project_worktree).toBe(base);
+    expect(git(base, "branch", "--show-current")).toBe(draft.project_branch);
 
     const approved = project.setProjectPlan(base, created.id, {
       objective,
@@ -290,6 +304,19 @@ describe("adaptive execution", () => {
     expect(resumed.handle?.worktree).toBe(handle.worktree);
   });
 
+  test("a new session can reclaim an interrupted running task", () => {
+    const base = repository();
+    const manifest = approve(base);
+    const first = project.startProjectTasks(base, manifest.id)[0]!;
+
+    const resumed = project.startProjectTasks(base, manifest.id);
+
+    expect(resumed).toEqual([first]);
+    expect(resumed[0]!.implementation_agent).toBe("project");
+    expect(project.readProjectStatus(base, manifest.id).next_action)
+      .toBe("Resume task change");
+  });
+
   test("focused checks are recorded and implementation commits on the project worktree", () => {
     const base = repository();
     const manifest = approve(base);
@@ -332,8 +359,8 @@ describe("adaptive execution", () => {
   });
 });
 
-describe("parallel composition", () => {
-  test("independent tasks get temporary worktrees and compose into the project worktree", () => {
+describe("visible sequential execution", () => {
+  test("declared parallel tasks serialize in the checked-out Project branch", () => {
     const base = repository();
     const manifest = approve(base, [
       milestone([
@@ -341,18 +368,26 @@ describe("parallel composition", () => {
         task("right", "m", ["src/right.ts"], "pair"),
       ]),
     ]);
-    const handles = project.startProjectTasks(base, manifest.id);
-    expect(handles).toHaveLength(2);
-    expect(new Set(handles.map((item) => item.worktree)).size).toBe(2);
-    for (const handle of handles) {
-      const revision = commit(handle.worktree, `src/${handle.task_id}.ts`);
+    const first = project.startProjectTasks(base, manifest.id);
+    expect(first).toHaveLength(1);
+    expect(first[0]!.worktree).toBe(base);
+    for (const handle of first) {
       project.reportProject(base, manifest.id, {
         kind: "implemented",
         task_id: handle.task_id,
-        revision,
+        revision: commit(handle.worktree, `src/${handle.task_id}.ts`),
         focused_checks: focused(handle.task_id),
       });
     }
+    const second = project.startProjectTasks(base, manifest.id);
+    expect(second).toHaveLength(1);
+    expect(second[0]!.worktree).toBe(base);
+    project.reportProject(base, manifest.id, {
+      kind: "implemented",
+      task_id: second[0]!.task_id,
+      revision: commit(base, `src/${second[0]!.task_id}.ts`),
+      focused_checks: focused(second[0]!.task_id),
+    });
     const current = project.readProjectManifest(base, manifest.id);
     expect(current.milestones[0]?.tasks.every((item) => item.status === "committed"))
       .toBe(true);
@@ -360,36 +395,7 @@ describe("parallel composition", () => {
     expect(existsSync(join(current.project_worktree!, "src/right.ts"))).toBe(true);
   });
 
-  test("overlapping actual changes safely serialize the remaining task", () => {
-    const base = repository({ "shared.txt": "base\n" });
-    const manifest = approve(base, [
-      milestone([
-        task("left", "m", ["src/left.ts"], "pair"),
-        task("right", "m", ["src/right.ts"], "pair"),
-      ]),
-    ]);
-    const [left, right] = project.startProjectTasks(base, manifest.id);
-    commit(left!.worktree, "shared.txt", "left\n");
-    commit(right!.worktree, "shared.txt", "right\n");
-    project.reportProject(base, manifest.id, {
-      kind: "implemented",
-      task_id: "left",
-      revision: git(left!.worktree, "rev-parse", "HEAD"),
-      focused_checks: focused("left"),
-    });
-    const fallback = project.reportProject(base, manifest.id, {
-      kind: "implemented",
-      task_id: "right",
-      revision: git(right!.worktree, "rev-parse", "HEAD"),
-      focused_checks: focused("right"),
-    });
-    expect(fallback.task?.status).toBe("pending");
-    expect(fallback.task?.parallel_group).toBeUndefined();
-    expect(fallback.manifest.events.at(-1)?.kind).toBe("parallel_serialized");
-    expect(git(fallback.manifest.project_worktree!, "status", "--porcelain")).toBe("");
-  });
-
-  test("scope expansion into another task's responsibility stops parallel execution", () => {
+  test("scope expansion keeps later work pending in the visible checkout", () => {
     const base = repository();
     const manifest = approve(base, [
       milestone([
@@ -412,14 +418,30 @@ describe("parallel composition", () => {
       },
     });
     const tasks = result.manifest.milestones[0]!.tasks;
-    expect(tasks.every((item) => item.parallel_group === undefined)).toBe(true);
-    expect(tasks.every((item) => item.status === "running")).toBe(true);
-    expect(result.manifest.events.at(-1)?.kind).toBe("parallel_serialized");
-    expect(git(result.manifest.project_worktree!, "status", "--porcelain")).toBe("");
+    expect(tasks[0]!.status).toBe("running");
+    expect(tasks[0]!.expected_surfaces).toContain("src/right.ts");
+    expect(tasks[1]!.status).toBe("pending");
+    expect(result.manifest.project_worktree).toBe(base);
   });
 });
 
 describe("foreground milestone validation", () => {
+  test("a local environment file stays uncommitted without blocking validation", async () => {
+    const base = repository();
+    writeFileSync(join(base, ".env.dev"), "credential-bearing local file\n");
+    git(base, "add", ".env.dev");
+    const manifest = approve(base, [milestone([], [])]);
+
+    const result = await project.validateProject(base, manifest.id, {
+      publish: async () => ({ url: "https://example.invalid/pr/env-safe" }),
+    });
+
+    expect(result.result).toBe("done");
+    expect(git(base, "status", "--porcelain")).toContain("?? .env.dev");
+    expect(git(base, "show", "--name-only", "--format=", "HEAD"))
+      .not.toContain(".env.dev");
+  });
+
   test("fixture Project recovers through sequential, decision, parallel, and publication flow", async () => {
     const base = repository();
     const first: project.ProjectMilestoneInput = {
@@ -472,12 +494,13 @@ describe("foreground milestone validation", () => {
     });
     expect((await project.validateProject(base, manifest.id)).result).toBe("passed");
 
-    for (const parallel of project.startProjectTasks(base, manifest.id)) {
+    for (let index = 0; index < 2; index += 1) {
+      const next = project.startProjectTasks(base, manifest.id)[0]!;
       project.reportProject(base, manifest.id, {
         kind: "implemented",
-        task_id: parallel.task_id,
-        revision: commit(parallel.worktree, `src/${parallel.task_id}.ts`),
-        focused_checks: focused(parallel.task_id),
+        task_id: next.task_id,
+        revision: commit(next.worktree, `src/${next.task_id}.ts`),
+        focused_checks: focused(next.task_id),
       });
     }
     const done = await project.validateProject(base, manifest.id, {
@@ -585,9 +608,8 @@ describe("OpenCode integration", () => {
     expect(primary).toContain("model: openai/gpt-5.6-terra");
     expect(primary).toContain("explore: allow");
     expect(primary).toContain("scout: allow");
-    expect(primary).toContain("implement-s: allow");
-    expect(primary).toContain("implement-m: allow");
-    expect(primary).toContain("implement-l: allow");
+    expect(primary).toContain("edit: allow");
+    expect(primary).toContain("does not transfer repository");
     expect(primary).toContain("the name is only a label");
     expect(primary).toContain(
       "or research the repository from the title alone",
@@ -596,7 +618,10 @@ describe("OpenCode integration", () => {
       "Store the first complete draft plan before presenting it",
     );
     expect(primary).toContain(
-      "The assigned clean worktree HEAD is authoritative",
+      "do not ask the user to stash, commit, rename, or remove it",
+    );
+    expect(primary).toContain(
+      "A running task returned by `project_next` is interrupted",
     );
     expect(config.permission.doom_loop).toBe("allow");
     expect(config.agent.explore.disable).toBe(false);
