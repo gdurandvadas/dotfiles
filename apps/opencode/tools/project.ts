@@ -71,7 +71,8 @@ export const create = tool({
 });
 
 export const status = tool({
-  description: "Return compact project progress and the authoritative next action.",
+  description:
+    "Return project progress, including live evidence purpose, sequence, elapsed time, recent output, and the authoritative next action.",
   args: { id: tool.schema.string() },
   async execute(args, context) {
     return output(() =>
@@ -169,10 +170,11 @@ export const escalate_task = tool({
 
 export const complete_task = tool({
   description:
-    "Run each declared task check once for the revision, enforce scope and cleanliness, then merge.",
+    "Start or poll task evidence without blocking; return user-presentable live progress, enforce scope, and merge after every check passes.",
   args: {
     id: tool.schema.string(),
     task_id: tool.schema.string(),
+    poll_token: tool.schema.string().optional(),
   },
   async execute(args, context) {
     return mutation(context, () =>
@@ -187,8 +189,11 @@ export const complete_task = tool({
 
 export const verify_next = tool({
   description:
-    "Run exactly one sequential preflight or milestone gate, prioritizing the last failure.",
-  args: { id: tool.schema.string() },
+    "Start or poll one background preflight or milestone gate and return user-presentable live progress, prioritizing the last failure.",
+  args: {
+    id: tool.schema.string(),
+    poll_token: tool.schema.string().optional(),
+  },
   async execute(args, context) {
     return mutation(context, () =>
       verifyProjectNext(

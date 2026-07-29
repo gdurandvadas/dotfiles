@@ -1,10 +1,16 @@
 import { createHash } from "node:crypto";
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import {
+  appendFileSync,
+  closeSync,
   existsSync,
+  fstatSync,
   mkdirSync,
+  openSync,
+  readSync,
   readdirSync,
   readFileSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, join, relative } from "node:path";
@@ -51,6 +57,24 @@ export interface EvidenceAttempt {
   failure_fingerprint?: string;
   diagnostic_tail?: string;
   log_path: string;
+}
+
+export interface EvidenceRun {
+  id: string;
+  requirement_id: string;
+  owner_type: EvidenceOwnerType;
+  owner_id: string;
+  level: EvidenceLevel;
+  command: string[];
+  started_at: string;
+  timeout_ms: number;
+  revision: string;
+  log_path: string;
+  result_path: string;
+  runner_pid: number;
+  proves?: string;
+  sequence_position?: number;
+  sequence_total?: number;
 }
 
 export interface GateBinding {
@@ -137,6 +161,7 @@ export interface ProjectManifest {
   preflight: ProjectPreflight;
   milestones: ProjectMilestone[];
   evidence: EvidenceAttempt[];
+  active_evidence?: EvidenceRun[];
   decisions: ProjectDecision[];
 }
 
@@ -174,6 +199,27 @@ export interface ProjectStatusReport {
   }>;
   ready_tasks: TaskSummary[];
   active_tasks: TaskSummary[];
+  running_evidence: Array<{
+    owner_type: EvidenceOwnerType;
+    owner_id: string;
+    requirement_id: string;
+    proves: string;
+    command: string[];
+    started_at: string;
+    elapsed_ms: number;
+    timeout_ms: number;
+    timeout_remaining_ms: number;
+    sequence_position: number;
+    sequence_total: number;
+    completed_in_sequence: number;
+    log_size_bytes: number;
+    activity: "starting" | "active" | "quiet";
+    last_output_at?: string;
+    quiet_for_ms: number;
+    status_message: string;
+    recent_output?: string;
+    log_path: string;
+  }>;
   next_action: string;
   path: string;
 }
@@ -206,16 +252,20 @@ export interface TaskContext {
 export interface CompletionResult {
   manifest: ProjectStatusReport;
   task_id: string;
-  result: "merged" | "evidence-failed";
+  result: "merged" | "evidence-running" | "evidence-failed";
   evidence: EvidenceAttempt[];
+  running_evidence?: ProjectStatusReport["running_evidence"];
+  poll_token?: string;
 }
 
 export interface VerifyNextResult {
   manifest: ProjectStatusReport;
   owner_type: "preflight" | "milestone";
   owner_id: string;
-  result: "pass" | "fail" | "nothing-to-run";
+  result: "running" | "pass" | "fail" | "nothing-to-run";
   evidence?: EvidenceAttempt;
+  running_evidence?: ProjectStatusReport["running_evidence"][number];
+  poll_token?: string;
 }
 
 const PROJECTS_DIR = ".projects";
@@ -527,26 +577,192 @@ function logPath(
   attempt: number,
 ): { absolute: string; stored: string } {
   const safe = (value: string) => value.replace(/[^a-zA-Z0-9.-]+/g, "-");
-  const name = `${String(manifest.evidence.length + 1).padStart(4, "0")}-` +
+  const ordinal = manifest.evidence.length + (manifest.active_evidence?.length ?? 0) + 1;
+  const name = `${String(ordinal).padStart(4, "0")}-` +
     `${safe(ownerType)}-${safe(ownerId)}-${safe(requirementId)}-${attempt}.log`;
   const absolute = join(projectFolder(base, manifest.id), "logs", name);
   return { absolute, stored: relative(base, absolute) };
 }
 
-function runRequirement(
+interface EvidenceRunnerResult {
+  completed_at: string;
+  duration_ms: number;
+  exit_code: number | null;
+  signal: NodeJS.Signals | null;
+  timed_out: boolean;
+  error?: string;
+}
+
+function activeEvidence(manifest: ProjectManifest): EvidenceRun[] {
+  manifest.active_evidence ??= [];
+  return manifest.active_evidence;
+}
+
+function tail(path: string, bytes = 8_000): string {
+  if (!existsSync(path)) return "";
+  const descriptor = openSync(path, "r");
+  try {
+    const size = fstatSync(descriptor).size;
+    const length = Math.min(bytes, size);
+    const buffer = Buffer.alloc(length);
+    readSync(descriptor, buffer, 0, length, size - length);
+    return diagnosticText(buffer.toString("utf8"));
+  } finally {
+    closeSync(descriptor);
+  }
+}
+
+function requirementSequence(
+  manifest: ProjectManifest,
+  ownerType: EvidenceOwnerType,
+  ownerId: string,
+  requirement: EvidenceRequirement,
+): EvidenceRequirement[] {
+  if (ownerType === "preflight" && ownerId === "preflight") {
+    return manifest.preflight.required_evidence;
+  }
+  if (ownerType === "milestone" && !ownerId.startsWith("repair:")) {
+    return milestone(manifest, ownerId).required_evidence;
+  }
+  if (ownerType === "task") {
+    return locateTask(manifest, ownerId).task.required_evidence;
+  }
+  return [requirement];
+}
+
+function requirementForRun(
+  manifest: ProjectManifest,
+  item: EvidenceRun,
+): EvidenceRequirement {
+  if (item.owner_type === "preflight" && item.owner_id === "preflight") {
+    return ownerScopedRequirement(
+      manifest.preflight.required_evidence,
+      item.requirement_id,
+    );
+  }
+  if (item.owner_type === "milestone" && !item.owner_id.startsWith("repair:")) {
+    return ownerScopedRequirement(
+      milestone(manifest, item.owner_id).required_evidence,
+      item.requirement_id,
+    );
+  }
+  const taskId = item.owner_id.startsWith("repair:")
+    ? item.owner_id.slice("repair:".length)
+    : item.owner_id;
+  const task = locateTask(manifest, taskId).task;
+  if (item.owner_type === "task") {
+    return ownerScopedRequirement(task.required_evidence, item.requirement_id);
+  }
+  if (!task.gate_binding) {
+    throw new Error(`Repair evidence has no gate binding: ${taskId}`);
+  }
+  const requirements = task.gate_binding.owner_type === "preflight"
+    ? manifest.preflight.required_evidence
+    : milestone(manifest, task.gate_binding.owner_id).required_evidence;
+  return ownerScopedRequirement(requirements, item.requirement_id);
+}
+
+function runningEvidenceSummary(
+  base: string,
+  manifest: ProjectManifest,
+  item: EvidenceRun,
+): ProjectStatusReport["running_evidence"][number] {
+  const requirement = requirementForRun(manifest, item);
+  const sequence = requirementSequence(
+    manifest,
+    item.owner_type,
+    item.owner_id,
+    requirement,
+  );
+  const log = join(base, item.log_path);
+  const elapsed = Math.max(0, Date.now() - Date.parse(item.started_at));
+  const recentOutput = tail(log, 1_500);
+  const logStats = existsSync(log) ? statSync(log) : undefined;
+  const quietFor = logStats
+    ? Math.max(0, Date.now() - logStats.mtimeMs)
+    : elapsed;
+  const completed = manifest.evidence.filter((attempt) =>
+    attempt.owner_type === item.owner_type &&
+    attempt.owner_id === item.owner_id &&
+    attempt.revision === item.revision &&
+    attempt.result === "pass"
+  ).length;
+  const inferredIndex = sequence.findIndex((entry) => entry.id === item.requirement_id);
+  const position = item.sequence_position ?? Math.max(0, inferredIndex) + 1;
+  const total = item.sequence_total ?? sequence.length;
+  const proves = item.proves ?? requirement.proves;
+  const scope = item.owner_type === "preflight"
+    ? "preflight"
+    : item.owner_type === "milestone"
+    ? `milestone ${item.owner_id}`
+    : `task ${item.owner_id}`;
+  const activity = !logStats?.size
+    ? "starting"
+    : quietFor > 30_000
+    ? "quiet"
+    : "active";
+  const quietSuffix = activity === "quiet"
+    ? `; no new output for ${Math.round(quietFor / 1_000)}s`
+    : "";
+  return {
+    owner_type: item.owner_type,
+    owner_id: item.owner_id,
+    requirement_id: item.requirement_id,
+    proves,
+    command: [...item.command],
+    started_at: item.started_at,
+    elapsed_ms: elapsed,
+    timeout_ms: item.timeout_ms,
+    timeout_remaining_ms: Math.max(0, item.timeout_ms - elapsed),
+    sequence_position: position,
+    sequence_total: total,
+    completed_in_sequence: Math.min(completed, total),
+    log_size_bytes: logStats?.size ?? 0,
+    activity,
+    ...(logStats ? { last_output_at: logStats.mtime.toISOString() } : {}),
+    quiet_for_ms: quietFor,
+    status_message:
+      `Running ${scope} check ${position}/${total}: ${proves} ` +
+      `(${Math.round(elapsed / 1_000)}s elapsed${quietSuffix})`,
+    ...(recentOutput ? { recent_output: recentOutput } : {}),
+    log_path: item.log_path,
+  };
+}
+
+function runnerAlive(pid: number): boolean {
+  if (pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function startRequirement(
   base: string,
   manifest: ProjectManifest,
   cwd: string,
   ownerType: EvidenceOwnerType,
   ownerId: string,
   requirement: EvidenceRequirement,
-): EvidenceAttempt {
+): EvidenceRun {
   safeEvidenceCommand(requirement);
   const dirty = cwd === base ? integrationChanges(base) : workingTreeChanges(cwd);
   if (dirty.length) {
     throw new Error(`Evidence requires a clean worktree: ${requirement.id}`);
   }
-  const previous = manifest.evidence.filter((attempt) =>
+  const running = activeEvidence(manifest);
+  const duplicate = running.find((item) =>
+    item.owner_type === ownerType &&
+    item.owner_id === ownerId &&
+    item.requirement_id === requirement.id
+  );
+  if (duplicate) return duplicate;
+  const previous = [
+    ...manifest.evidence,
+    ...running,
+  ].filter((attempt) =>
     attempt.owner_type === ownerType &&
     attempt.owner_id === ownerId &&
     attempt.requirement_id === requirement.id
@@ -554,76 +770,142 @@ function runRequirement(
   const attemptNumber = previous + 1;
   const timeout = requirement.timeout_ms ??
     (requirement.level === "task" ? 300_000 : 900_000);
-  const started = Date.now();
-  const result = spawnSync(requirement.command[0]!, requirement.command.slice(1), {
-    cwd,
-    shell: false,
-    encoding: "utf8",
-    timeout,
-    maxBuffer: 20 * 1024 * 1024,
-  });
-  const duration = Date.now() - started;
-  const exitCode = typeof result.status === "number" ? result.status : null;
-  const stdout = result.stdout ?? "";
-  const stderr = result.stderr ?? "";
-  const diagnostic = diagnosticText([
-    result.error?.message,
-    result.signal ? `terminated by ${result.signal}` : "",
-    stderr,
-    stdout,
-  ].filter(Boolean).join("\n"));
-  const path = logPath(
-    base,
+  const sequence = requirementSequence(
     manifest,
     ownerType,
     ownerId,
+    requirement,
+  );
+  const sequenceIndex = sequence.findIndex((item) => item.id === requirement.id);
+  const startedAt = now();
+  const currentRevision = revision(cwd);
+  const id = `${Date.now()}-${hash([
+    manifest.id,
+    ownerType,
+    ownerId,
     requirement.id,
-    attemptNumber,
-  );
+    currentRevision,
+  ].join(":")).slice(0, 12)}`;
+  const path = logPath(base, manifest, ownerType, ownerId, requirement.id, attemptNumber);
+  const runsFolder = join(projectFolder(base, manifest.id), "runs");
+  const specPath = join(runsFolder, `${id}.json`);
+  const resultPath = join(runsFolder, `${id}.result.json`);
   mkdirSync(dirname(path.absolute), { recursive: true });
-  writeFileSync(
-    path.absolute,
-    [
-      `command: ${JSON.stringify(requirement.command)}`,
-      `revision: ${revision(cwd)}`,
-      `duration_ms: ${duration}`,
-      `exit_code: ${exitCode ?? "null"}`,
-      `signal: ${result.signal ?? ""}`,
-      "",
-      "stdout:",
-      stdout,
-      "",
-      "stderr:",
-      stderr,
-      result.error ? `\nerror:\n${result.error.message}` : "",
-    ].join("\n"),
-  );
-  const passed = exitCode === 0;
-  const attempt: EvidenceAttempt = {
+  mkdirSync(runsFolder, { recursive: true });
+  writeFileSync(path.absolute, "");
+  writeFileSync(specPath, `${JSON.stringify({
+    command: requirement.command,
+    cwd,
+    timeout_ms: timeout,
+    log_path: path.absolute,
+    result_path: resultPath,
+  }, null, 2)}\n`);
+  const runner = spawn("bun", [join(import.meta.dir, "evidence-runner.ts"), specPath], {
+    cwd: base,
+    detached: true,
+    stdio: "ignore",
+  });
+  runner.once("error", (error) => {
+    appendFileSync(path.absolute, `\n[evidence-runner] launch error: ${error.message}\n`);
+    if (!existsSync(resultPath)) {
+      writeFileSync(resultPath, `${JSON.stringify({
+        completed_at: now(),
+        duration_ms: Date.now() - Date.parse(startedAt),
+        exit_code: null,
+        signal: null,
+        timed_out: false,
+        error: error.message,
+      }, null, 2)}\n`);
+    }
+  });
+  runner.unref();
+  const runRecord: EvidenceRun = {
+    id,
     requirement_id: requirement.id,
     owner_type: ownerType,
     owner_id: ownerId,
     level: requirement.level,
+    command: [...requirement.command],
+    started_at: startedAt,
+    timeout_ms: timeout,
+    revision: currentRevision,
+    log_path: path.stored,
+    result_path: relative(base, resultPath),
+    runner_pid: runner.pid ?? -1,
+    proves: requirement.proves,
+    sequence_position: Math.max(0, sequenceIndex) + 1,
+    sequence_total: sequence.length,
+  };
+  running.push(runRecord);
+  writeManifest(base, manifest);
+  return runRecord;
+}
+
+function pollRequirement(
+  base: string,
+  manifest: ProjectManifest,
+  runRecord: EvidenceRun,
+): EvidenceAttempt | undefined {
+  const resultPath = join(base, runRecord.result_path);
+  if (!existsSync(resultPath)) {
+    const overdue = Date.now() - Date.parse(runRecord.started_at) >
+      runRecord.timeout_ms + 15_000;
+    if (!overdue || runnerAlive(runRecord.runner_pid)) return undefined;
+    writeFileSync(resultPath, `${JSON.stringify({
+      completed_at: now(),
+      duration_ms: Date.now() - Date.parse(runRecord.started_at),
+      exit_code: null,
+      signal: null,
+      timed_out: true,
+      error: "Evidence runner exited without recording a result",
+    }, null, 2)}\n`);
+  }
+  const result = JSON.parse(readFileSync(resultPath, "utf8")) as EvidenceRunnerResult;
+  const diagnostic = tail(join(base, runRecord.log_path));
+  const passed = result.exit_code === 0 && !result.timed_out && !result.error;
+  const attemptNumber = manifest.evidence.filter((attempt) =>
+    attempt.owner_type === runRecord.owner_type &&
+    attempt.owner_id === runRecord.owner_id &&
+    attempt.requirement_id === runRecord.requirement_id
+  ).length + 1;
+  const requirement: EvidenceRequirement = {
+    id: runRecord.requirement_id,
+    level: runRecord.level,
+    command: runRecord.command,
+    proves: "",
+    timeout_ms: runRecord.timeout_ms,
+  };
+  const attempt: EvidenceAttempt = {
+    requirement_id: runRecord.requirement_id,
+    owner_type: runRecord.owner_type,
+    owner_id: runRecord.owner_id,
+    level: runRecord.level,
     attempt: attemptNumber,
     result: passed ? "pass" : "fail",
-    checked_at: now(),
-    duration_ms: duration,
-    exit_code: exitCode,
-    revision: revision(cwd),
-    log_path: path.stored,
+    checked_at: result.completed_at,
+    duration_ms: result.duration_ms,
+    exit_code: result.exit_code,
+    revision: runRecord.revision,
+    log_path: runRecord.log_path,
     ...(!passed
       ? {
         failure_fingerprint: failureFingerprint(
           requirement,
-          exitCode,
+          result.exit_code,
           result.signal,
           diagnostic,
         ),
-        diagnostic_tail: (diagnostic || "command failed without output").slice(-8_000),
+        diagnostic_tail: (
+          diagnostic ||
+          result.error ||
+          (result.timed_out ? "evidence command timed out" : "command failed without output")
+        ).slice(-8_000),
       }
       : {}),
   };
   manifest.evidence.push(attempt);
+  manifest.active_evidence = activeEvidence(manifest)
+    .filter((item) => item.id !== runRecord.id);
   return attempt;
 }
 
@@ -810,9 +1092,18 @@ function readyTaskEntries(manifest: ProjectManifest): TaskSummary[] {
   }).map((item) => taskSummary(item.ownerId, item.task));
 }
 
-function nextAction(manifest: ProjectManifest): string {
+function nextAction(base: string, manifest: ProjectManifest): string {
   if (manifest.status === "design") return "Obtain explicit plan approval, then store the plan.";
   if (manifest.status === "done") return "Project complete.";
+  const evidence = activeEvidence(manifest);
+  if (evidence.length) {
+    const current = runningEvidenceSummary(base, manifest, evidence[0]!);
+    const additional = evidence.length > 1
+      ? ` (${evidence.length - 1} additional task check(s) are also running.)`
+      : "";
+    return `${current.status_message}.${additional} ` +
+      "Report the progress to the user, then poll the owning completion or verification tool.";
+  }
   if (manifest.preflight.status === "failed") {
     return "Ask the user to choose baseline repair or an approved exception.";
   }
@@ -879,7 +1170,9 @@ export function summarizeProject(
     active_tasks: allTasks(manifest)
       .filter((item) => item.task.status === "running")
       .map((item) => taskSummary(item.ownerId, item.task)),
-    next_action: nextAction(manifest),
+    running_evidence: activeEvidence(manifest)
+      .map((item) => runningEvidenceSummary(base, manifest, item)),
+    next_action: nextAction(base, manifest),
     path: manifestPath(base, manifest.id),
   };
 }
@@ -1184,6 +1477,41 @@ export function completeProjectTask(
     throw new Error(`Task changed paths outside its contract:\n${violations.join("\n")}`);
   }
   const attempts: EvidenceAttempt[] = [];
+  const belongsToTask = (runRecord: EvidenceRun): boolean =>
+    (runRecord.owner_type === "task" && runRecord.owner_id === task.id) ||
+    runRecord.owner_id === `repair:${task.id}`;
+  for (const runRecord of activeEvidence(manifest).filter(belongsToTask)) {
+    const attempt = pollRequirement(base, manifest, runRecord);
+    if (attempt) attempts.push(attempt);
+  }
+  const stillRunning = activeEvidence(manifest).filter(belongsToTask);
+  if (stillRunning.length) {
+    writeManifest(base, manifest);
+    const summary = summarizeProject(base, manifest);
+    return {
+      manifest: summary,
+      task_id: task.id,
+      result: "evidence-running",
+      evidence: attempts,
+      running_evidence: summary.running_evidence.filter((item) =>
+        (item.owner_type === "task" && item.owner_id === task.id) ||
+        item.owner_id === `repair:${task.id}`
+      ),
+      poll_token: `${stillRunning.map((item) => item.id).join(",")}:${Date.now()}`,
+    };
+  }
+  if (attempts.some((attempt) =>
+    attempt.result === "fail" && attempt.revision === taskRevision
+  )) {
+    writeManifest(base, manifest);
+    return {
+      manifest: summarizeProject(base, manifest),
+      task_id: task.id,
+      result: "evidence-failed",
+      evidence: attempts,
+    };
+  }
+  let started = false;
   for (const requirement of task.required_evidence) {
     if (freshPass(manifest, "task", task.id, requirement, taskRevision)) continue;
     const previous = latestAttempt(manifest, "task", task.id, requirement.id);
@@ -1191,9 +1519,8 @@ export function completeProjectTask(
       attempts.push(previous);
       continue;
     }
-    attempts.push(
-      runRequirement(base, manifest, task.worktree, "task", task.id, requirement),
-    );
+    startRequirement(base, manifest, task.worktree, "task", task.id, requirement);
+    started = true;
   }
   if (attempts.some((attempt) => attempt.result === "fail")) {
     writeManifest(base, manifest);
@@ -1202,6 +1529,22 @@ export function completeProjectTask(
       task_id: task.id,
       result: "evidence-failed",
       evidence: attempts,
+    };
+  }
+  if (started) {
+    writeManifest(base, manifest);
+    const summary = summarizeProject(base, manifest);
+    return {
+      manifest: summary,
+      task_id: task.id,
+      result: "evidence-running",
+      evidence: attempts,
+      running_evidence: summary.running_evidence.filter((item) =>
+        item.owner_type === "task" && item.owner_id === task.id
+      ),
+      poll_token: `${activeEvidence(manifest)
+        .filter((item) => item.owner_type === "task" && item.owner_id === task.id)
+        .map((item) => item.id).join(",")}:${Date.now()}`,
     };
   }
   if (task.gate_binding) {
@@ -1222,16 +1565,27 @@ export function completeProjectTask(
     } else if (
       !freshPass(manifest, requirement.level, diagnosticOwner, requirement, taskRevision)
     ) {
-      attempts.push(
-        runRequirement(
-          base,
-          manifest,
-          task.worktree,
-          requirement.level,
-          diagnosticOwner,
-          requirement,
-        ),
+      startRequirement(
+        base,
+        manifest,
+        task.worktree,
+        requirement.level,
+        diagnosticOwner,
+        requirement,
       );
+      writeManifest(base, manifest);
+      const summary = summarizeProject(base, manifest);
+      return {
+        manifest: summary,
+        task_id: task.id,
+        result: "evidence-running",
+        evidence: attempts,
+        running_evidence: summary.running_evidence.filter((item) =>
+          item.owner_id === diagnosticOwner
+        ),
+        poll_token: `${activeEvidence(manifest)
+          .find((item) => item.owner_id === diagnosticOwner)?.id}:${Date.now()}`,
+      };
     }
     if (attempts.at(-1)?.result === "fail") {
       writeManifest(base, manifest);
@@ -1275,6 +1629,53 @@ export function verifyProjectNext(base: string, id: string): VerifyNextResult {
   const head = revision(base);
   if (manifest.preflight.status === "pending" || manifest.preflight.status === "verifying") {
     manifest.preflight.status = "verifying";
+    const running = activeEvidence(manifest).find((item) =>
+      item.owner_type === "preflight" && item.owner_id === "preflight"
+    );
+    if (running) {
+      const attempt = pollRequirement(base, manifest, running);
+      if (!attempt) {
+        writeManifest(base, manifest);
+        const summary = summarizeProject(base, manifest);
+        return {
+          manifest: summary,
+          owner_type: "preflight",
+          owner_id: "preflight",
+          result: "running",
+          running_evidence: summary.running_evidence.find((item) =>
+            item.owner_type === "preflight" && item.owner_id === "preflight"
+          ),
+          poll_token: `${running.id}:${Date.now()}`,
+        };
+      }
+      if (attempt.result === "fail") {
+        manifest.preflight.status = "failed";
+        manifest.preflight.failed_requirement_id = attempt.requirement_id;
+        manifest.preflight.failure_fingerprint = attempt.failure_fingerprint;
+        manifest.status = "blocked";
+      } else {
+        manifest.preflight.failed_requirement_id = undefined;
+        manifest.preflight.failure_fingerprint = undefined;
+        const complete = manifest.preflight.required_evidence.every((item) =>
+          freshPass(manifest, "preflight", "preflight", item, head)
+        );
+        if (complete) {
+          manifest.preflight.status = "passed";
+          manifest.preflight.verified_revision = head;
+          manifest.preflight.resolved_at = now();
+          manifest.status = "active";
+          activateAvailableMilestones(manifest);
+        }
+      }
+      writeManifest(base, manifest);
+      return {
+        manifest: summarizeProject(base, manifest),
+        owner_type: "preflight",
+        owner_id: "preflight",
+        result: attempt.result,
+        evidence: attempt,
+      };
+    }
     const requirement = firstStaleRequirement(
       manifest,
       "preflight",
@@ -1299,7 +1700,7 @@ export function verifyProjectNext(base: string, id: string): VerifyNextResult {
         result: "nothing-to-run",
       };
     }
-    const attempt = runRequirement(
+    const started = startRequirement(
       base,
       manifest,
       base,
@@ -1307,37 +1708,71 @@ export function verifyProjectNext(base: string, id: string): VerifyNextResult {
       "preflight",
       requirement,
     );
+    writeManifest(base, manifest);
+    const summary = summarizeProject(base, manifest);
+    return {
+      manifest: summary,
+      owner_type: "preflight",
+      owner_id: "preflight",
+      result: "running",
+      running_evidence: summary.running_evidence.find((item) =>
+        item.requirement_id === started.requirement_id &&
+        item.owner_type === "preflight"
+      ),
+      poll_token: `${started.id}:${Date.now()}`,
+    };
+  }
+  const item = manifest.milestones.find((candidate) => candidate.status === "verifying");
+  if (!item) {
+    throw new Error("No preflight check or milestone gate is ready");
+  }
+  const running = activeEvidence(manifest).find((entry) =>
+    entry.owner_type === "milestone" && entry.owner_id === item.id
+  );
+  if (running) {
+    const attempt = pollRequirement(base, manifest, running);
+    if (!attempt) {
+      writeManifest(base, manifest);
+      const summary = summarizeProject(base, manifest);
+      return {
+        manifest: summary,
+        owner_type: "milestone",
+        owner_id: item.id,
+        result: "running",
+        running_evidence: summary.running_evidence.find((entry) =>
+          entry.owner_type === "milestone" && entry.owner_id === item.id
+        ),
+        poll_token: `${running.id}:${Date.now()}`,
+      };
+    }
     if (attempt.result === "fail") {
-      manifest.preflight.status = "failed";
-      manifest.preflight.failed_requirement_id = requirement.id;
-      manifest.preflight.failure_fingerprint = attempt.failure_fingerprint;
+      item.status = "repairing";
+      item.failed_gate_id = attempt.requirement_id;
+      item.failure_fingerprint = attempt.failure_fingerprint;
       manifest.status = "blocked";
     } else {
-      manifest.preflight.failed_requirement_id = undefined;
-      manifest.preflight.failure_fingerprint = undefined;
-      const complete = manifest.preflight.required_evidence.every((item) =>
-        freshPass(manifest, "preflight", "preflight", item, head)
+      if (item.failed_gate_id === attempt.requirement_id) {
+        item.failed_gate_id = undefined;
+        item.failure_fingerprint = undefined;
+      }
+      const complete = item.required_evidence.every((gate) =>
+        freshPass(manifest, "milestone", item.id, gate, head)
       );
       if (complete) {
-        manifest.preflight.status = "passed";
-        manifest.preflight.verified_revision = head;
-        manifest.preflight.resolved_at = now();
-        manifest.status = "active";
+        item.status = "verified";
+        item.verified_revision = head;
+        item.verified_at = now();
         activateAvailableMilestones(manifest);
       }
     }
     writeManifest(base, manifest);
     return {
       manifest: summarizeProject(base, manifest),
-      owner_type: "preflight",
-      owner_id: "preflight",
+      owner_type: "milestone",
+      owner_id: item.id,
       result: attempt.result,
       evidence: attempt,
     };
-  }
-  const item = manifest.milestones.find((candidate) => candidate.status === "verifying");
-  if (!item) {
-    throw new Error("No preflight check or milestone gate is ready");
   }
   const requirement = firstStaleRequirement(
     manifest,
@@ -1362,34 +1797,27 @@ export function verifyProjectNext(base: string, id: string): VerifyNextResult {
       result: "nothing-to-run",
     };
   }
-  const attempt = runRequirement(base, manifest, base, "milestone", item.id, requirement);
-  if (attempt.result === "fail") {
-    item.status = "repairing";
-    item.failed_gate_id = requirement.id;
-    item.failure_fingerprint = attempt.failure_fingerprint;
-    manifest.status = "blocked";
-  } else {
-    if (item.failed_gate_id === requirement.id) {
-      item.failed_gate_id = undefined;
-      item.failure_fingerprint = undefined;
-    }
-    const complete = item.required_evidence.every((gate) =>
-      freshPass(manifest, "milestone", item.id, gate, head)
-    );
-    if (complete) {
-      item.status = "verified";
-      item.verified_revision = head;
-      item.verified_at = now();
-      activateAvailableMilestones(manifest);
-    }
-  }
+  const started = startRequirement(
+    base,
+    manifest,
+    base,
+    "milestone",
+    item.id,
+    requirement,
+  );
   writeManifest(base, manifest);
+  const summary = summarizeProject(base, manifest);
   return {
-    manifest: summarizeProject(base, manifest),
+    manifest: summary,
     owner_type: "milestone",
     owner_id: item.id,
-    result: attempt.result,
-    evidence: attempt,
+    result: "running",
+    running_evidence: summary.running_evidence.find((entry) =>
+      entry.requirement_id === started.requirement_id &&
+      entry.owner_type === "milestone" &&
+      entry.owner_id === item.id
+    ),
+    poll_token: `${started.id}:${Date.now()}`,
   };
 }
 

@@ -42,11 +42,29 @@ Apply authority in this order:
 The `/project` argument is a new name, exact ID, or numeric prefix. List projects when empty. Read
 status when it resolves. Create only when it does not resolve.
 
-A new name is only a label. Gather the intended outcome, boundaries, constraints, references, and
-success conditions. During read-only planning, read the repository map, root instructions,
-applicable child instructions, and relevant planning sources. Extract exact preflight, focused
-task, and milestone commands from those repository instructions; never invent commands from tool
-names or language assumptions.
+A new project always starts with a requirements interview. The project name is only a label—even
+when it sounds descriptive—and is never authorization to inspect the repository or infer the
+work.
+
+Immediately after creating a project:
+
+1. Do not read, grep, glob, investigate, plan, dispatch, or inspect repository files.
+2. Ask the user what they have in mind and invite the context needed to understand the desired
+   outcome.
+3. Follow up concisely for material gaps in scope, exclusions, current pain, expected behavior,
+   constraints, references, and success conditions.
+4. Reflect the understood requirements back to the user.
+5. Only after the user has supplied enough requirements may read-only repository discovery begin.
+
+If a newly created design-state project is resumed without captured requirements, return to this
+interview. Do not treat an empty project record, its name, branch history, or nearby files as a
+specification. If the user already supplied substantive requirements in the conversation before
+invoking `/project`, confirm that understanding and ask only for material gaps before discovery.
+
+After requirements are understood, read the repository map, root instructions, applicable child
+instructions, and relevant planning sources. Extract exact preflight, focused task, and milestone
+commands from those repository instructions; never invent commands from tool names or language
+assumptions.
 
 Present the proposed plan for explicit user approval before storing it. The plan must show scope,
 milestones, tasks, dependencies, acceptance criteria, writable paths, exclusions, evidence, and
@@ -81,12 +99,18 @@ After approval:
 3. Dispatch every returned ready task whose paths do not conflict. Invoke the agent named in the
    returned handle with only the project ID and task ID; it obtains its authoritative contract via
    `project_task_context`.
-4. When implementation returns, call `project_complete_task` once. It checks cleanliness and
-   scope, runs declared task evidence once for that revision, and merges on success.
+4. When implementation returns, call `project_complete_task`. It checks cleanliness and scope,
+   starts every declared task check once for that revision, and immediately returns
+   `evidence-running` with live log paths. Poll `project_complete_task` until it merges or returns
+   a failure, passing the newly returned `poll_token` on each poll. Polling observes the existing
+   jobs and never reruns them; changing tokens prevents legitimate polling from being classified as
+   a repeated tool loop.
 5. If task evidence fails, send the diagnostic tail and log path back to the same selected agent in
    the same worktree. Do not repeat an unchanged failed check.
-6. When a milestone is ready, call `project_verify_next`. It runs exactly one gate. Continue until
-   the milestone advances or a gate fails.
+6. When a milestone is ready, call `project_verify_next`. It starts exactly one background gate
+   and immediately returns `running` with a live log path. Poll the same tool to finalize it, then
+   continue until the milestone advances or a gate fails. Pass the newly returned `poll_token` on
+   every poll. Do not create a new command or repair while a persisted evidence job is running.
 7. On gate failure, invoke `diagnose` before creating a repair. Then call `project_repair_gate` with
    one cohesive root-cause contract. Reuse its worktree until the failed gate passes diagnostically
    there and the repair merges.
@@ -102,3 +126,29 @@ delegate.
 Treat tool errors as real failures. Resolve their concrete cause; do not convert them into project
 decisions. Read `next_action` before yielding—task completion, merge, and a passing gate are
 progress events, not stopping points.
+
+Evidence execution is restart-safe. If this session resumes with `running_evidence`, poll the
+owning `project_complete_task` or `project_verify_next`; do not launch the command manually.
+Timeouts terminate the complete spawned process group.
+
+## User-visible progress
+
+Never run a project as a silent chain of tool calls. The user must be able to tell what phase is
+active, why work is happening, and whether it is moving.
+
+- Before requirements research, planning, implementation dispatch, task evidence, diagnosis,
+  repair, or milestone verification, send a short plain-language progress update.
+- When evidence starts, report its `status_message`, the command being run, and what it proves.
+- Between evidence polls, surface elapsed time and meaningful new `recent_output`. Do not paste
+  repetitive output or runner metadata. If output is quiet, say that the command is still running
+  and include elapsed time.
+- Report each pass or failure immediately, including duration. On failure, include the concise
+  diagnostic and log path before starting diagnosis.
+- At task merge, milestone completion, and project completion, state the completed event and the
+  next action.
+- Do not perform more than one polling tool call without a user-visible progress message. A
+  progress message is informational and does not ask the user to intervene.
+
+Prefer updates such as “Preflight 1/2 is running: validate the baseline (18s elapsed)” over
+internal terms such as “poll token received.” Mention log paths as optional detail, not as the
+only indication of progress.

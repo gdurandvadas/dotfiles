@@ -61,16 +61,26 @@ approved plan
 ```
 
 `project_dispatch` creates the worktree and returns the selected agent plus a compact task handle.
-`project_complete_task` checks cleanliness and scope, runs all declared task evidence once for the
-revision, and merges on success. There are no separate inspect, per-check verification,
-task-done, merge, report, or trace steps.
+`project_complete_task` checks cleanliness and scope, starts all declared task evidence once for
+the revision, and immediately returns their live log paths. Later calls poll the persisted jobs;
+after they pass, the same tool merges the task. Each running response supplies a new `poll_token`
+for the next call so legitimate polling does not trigger loop protection. There are no separate
+inspect, per-check verification, task-done, merge, report, or trace steps.
 
-Milestone gates run sequentially and stop at the first failure. The full output is preserved, the
-failed gate remains priority, and a diagnostic agent identifies the root cause before one
-`gate-repair` contract is created. That repair reuses one worktree until the failed gate passes
-there diagnostically. After the cohesive repair merges, the integration revision runs the failed
-gate first and then every remaining stale gate once. Verification requires every gate to pass at
-the same revision.
+Milestone gates run sequentially as persisted background jobs and stop at the first failure.
+`project_verify_next` starts or polls one gate and always returns control with a live log path
+instead of waiting silently. Jobs survive an OpenCode restart, and a timeout terminates the full
+spawned process group. The failed gate remains priority, and a diagnostic agent identifies the
+root cause before one `gate-repair` contract is created. That repair reuses one worktree until the
+failed gate passes there diagnostically. After the cohesive repair merges, the integration
+revision runs the failed gate first and then every remaining stale gate once. Verification
+requires every gate to pass at the same revision.
+
+Running responses include the check's purpose and command, its position in the current sequence,
+elapsed and remaining timeout, log activity, a concise recent-output tail, and a ready-to-present
+status message. The orchestrator reports that information between polls, plus every phase change,
+pass, failure, merge, and next action. Background execution therefore remains non-blocking without
+turning project work into an invisible polling loop.
 
 ## State and logs
 
@@ -83,6 +93,8 @@ Runtime data is repository-local and ignored without changing the repository roo
     project.json
     logs/
       <attempt>.log
+    runs/
+      <persisted-background-job>.json
 ```
 
 The manifest stores only approved contracts, state, material decisions, and compact evidence

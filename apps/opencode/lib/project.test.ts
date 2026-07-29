@@ -125,6 +125,31 @@ function commitFile(
   git(base, "-c", "commit.gpgsign=false", "commit", "-m", `feat: ${path}`);
 }
 
+async function settleTask(
+  base: string,
+  id: string,
+  taskId: string,
+): Promise<project.CompletionResult> {
+  for (let attempt = 0; attempt < 250; attempt += 1) {
+    const result = project.completeProjectTask(base, id, taskId);
+    if (result.result !== "evidence-running") return result;
+    await Bun.sleep(20);
+  }
+  throw new Error(`Timed out waiting for task evidence: ${taskId}`);
+}
+
+async function settleNext(
+  base: string,
+  id: string,
+): Promise<project.VerifyNextResult> {
+  for (let attempt = 0; attempt < 250; attempt += 1) {
+    const result = project.verifyProjectNext(base, id);
+    if (result.result !== "running") return result;
+    await Bun.sleep(20);
+  }
+  throw new Error(`Timed out waiting for project evidence: ${id}`);
+}
+
 describe("schema v4 and routing", () => {
   test("creates ignored schema-v4 state and rejects every earlier schema", () => {
     const base = repository();
@@ -212,8 +237,8 @@ describe("schema v4 and routing", () => {
   });
 });
 
-describe("single-call task completion", () => {
-  test("runs every task check once, enforces scope, and merges cohesively", () => {
+describe("task completion", () => {
+  test("runs every task check once, enforces scope, and merges cohesively", async () => {
     const base = repository();
     const contract = task();
     contract.required_evidence = [
@@ -224,7 +249,7 @@ describe("single-call task completion", () => {
     const handle = track(project.dispatchProjectTask(base, created.id, "change"));
     commitFile(handle.worktree, "src/change.ts");
 
-    const completed = project.completeProjectTask(base, created.id, "change");
+    const completed = await settleTask(base, created.id, "change");
     expect(completed.result).toBe("merged");
     expect(completed.evidence.map((item) => item.requirement_id))
       .toEqual(["first", "second"]);
@@ -250,7 +275,7 @@ describe("single-call task completion", () => {
       .toThrow("clean and committed");
   });
 
-  test("persists complete logs, diagnostic tails, and stable failure fingerprints", () => {
+  test("persists complete logs, diagnostic tails, and stable failure fingerprints", async () => {
     const base = repository();
     const contract = task();
     contract.required_evidence = [
@@ -264,7 +289,7 @@ describe("single-call task completion", () => {
     const handle = track(project.dispatchProjectTask(base, created.id, "change"));
     commitFile(handle.worktree, "src/change.ts");
 
-    const first = project.completeProjectTask(base, created.id, "change");
+    const first = await settleTask(base, created.id, "change");
     const second = project.completeProjectTask(base, created.id, "change");
     expect(first.result).toBe("evidence-failed");
     expect(second.result).toBe("evidence-failed");
@@ -274,12 +299,82 @@ describe("single-call task completion", () => {
     expect(first.evidence[0]?.diagnostic_tail).toContain("stable failure");
     const log = join(base, first.evidence[0]!.log_path);
     expect(existsSync(log)).toBe(true);
-    expect(readFileSync(log, "utf8")).toContain("stderr:\nstable failure");
+    expect(readFileSync(log, "utf8")).toContain("stable failure");
   });
 });
 
 describe("preflight", () => {
-  test("runs preflight sequentially before activating product tasks", () => {
+  test("starts evidence immediately, exposes a live log, and finalizes by polling", async () => {
+    const base = repository();
+    const slow = evidence(
+      "observable",
+      "preflight",
+      [
+        "node",
+        "-e",
+        "process.stdout.write('started\\n');setTimeout(()=>process.exit(0),400)",
+      ],
+    );
+    const created = start(base, { preflight: [slow] });
+    const started = Date.now();
+    const running = project.verifyProjectNext(base, created.id);
+    expect(running.result).toBe("running");
+    expect(Date.now() - started).toBeLessThan(250);
+    expect(running.running_evidence?.requirement_id).toBe("observable");
+    expect(running.poll_token).toBeTruthy();
+    expect(project.readProjectManifest(base, created.id).active_evidence).toHaveLength(1);
+
+    await Bun.sleep(2);
+    const polled = project.verifyProjectNext(base, created.id);
+    expect(polled.result).toBe("running");
+    expect(polled.poll_token).not.toBe(running.poll_token);
+
+    await Bun.sleep(150);
+    const liveLog = join(base, running.running_evidence!.log_path);
+    expect(readFileSync(liveLog, "utf8")).toContain("started");
+    const report = project.readProjectStatus(base, created.id);
+    const progress = report.running_evidence[0]!;
+    expect(progress.status_message).toContain("preflight check 1/1");
+    expect(progress.proves).toBe("observable passes");
+    expect(progress.command[0]).toBe("node");
+    expect(progress.elapsed_ms).toBeGreaterThan(0);
+    expect(progress.timeout_remaining_ms).toBeLessThan(progress.timeout_ms);
+    expect(progress.log_size_bytes).toBeGreaterThan(0);
+    expect(progress.activity).toBe("active");
+    expect(progress.last_output_at).toBeTruthy();
+    expect(progress.quiet_for_ms).toBeLessThan(30_000);
+    expect(progress.recent_output).toContain("started");
+    expect(report.next_action).toContain("Report the progress to the user");
+
+    const completed = await settleNext(base, created.id);
+    expect(completed.result).toBe("pass");
+    expect(project.readProjectManifest(base, created.id).active_evidence).toEqual([]);
+  });
+
+  test("times out the background process group and records the diagnostic", async () => {
+    const base = repository();
+    const hanging = evidence(
+      "bounded",
+      "preflight",
+      [
+        "node",
+        "-e",
+        [
+          "require('child_process').spawn(process.execPath,",
+          "['-e','setInterval(()=>{},1000)'],{stdio:'ignore'});",
+          "setInterval(()=>{},1000)",
+        ].join(""),
+      ],
+    );
+    hanging.timeout_ms = 250;
+    const created = start(base, { preflight: [hanging] });
+    const failed = await settleNext(base, created.id);
+    expect(failed.result).toBe("fail");
+    expect(failed.evidence?.diagnostic_tail).toContain("timed out after 250ms");
+    expect(failed.evidence?.duration_ms).toBeLessThan(5_000);
+  });
+
+  test("runs preflight sequentially before activating product tasks", async () => {
     const base = repository();
     const created = start(base, {
       preflight: [
@@ -288,23 +383,23 @@ describe("preflight", () => {
       ],
     });
     expect(project.readProjectStatus(base, created.id).ready_tasks).toHaveLength(0);
-    const first = project.verifyProjectNext(base, created.id);
+    const first = await settleNext(base, created.id);
     expect(first.evidence?.requirement_id).toBe("baseline-one");
     expect(project.readProjectStatus(base, created.id).ready_tasks).toHaveLength(0);
-    const second = project.verifyProjectNext(base, created.id);
+    const second = await settleNext(base, created.id);
     expect(second.evidence?.requirement_id).toBe("baseline-two");
     expect(second.manifest.preflight.status).toBe("passed");
     expect(second.manifest.ready_tasks.map((item) => item.id)).toEqual(["change"]);
   });
 
-  test("pauses on baseline failure and records an explicit approved exception", () => {
+  test("pauses on baseline failure and records an explicit approved exception", async () => {
     const base = repository();
     const created = start(base, {
       preflight: [
         evidence("baseline", "preflight", ["node", "-e", "process.exit(9)"]),
       ],
     });
-    const failed = project.verifyProjectNext(base, created.id);
+    const failed = await settleNext(base, created.id);
     expect(failed.result).toBe("fail");
     expect(failed.manifest.status).toBe("blocked");
     expect(failed.manifest.next_action).toContain("approved exception");
@@ -321,7 +416,7 @@ describe("preflight", () => {
       .toContain("Approved preflight exception");
   });
 
-  test("repairs a failing baseline and reruns it at the new integration revision", () => {
+  test("repairs a failing baseline and reruns it at the new integration revision", async () => {
     const base = repository();
     const baseline = evidence(
       "baseline",
@@ -329,7 +424,7 @@ describe("preflight", () => {
       ["node", "-e", "process.exit(require('fs').existsSync('baseline.flag')?0:4)"],
     );
     const created = start(base, { preflight: [baseline] });
-    project.verifyProjectNext(base, created.id);
+    await settleNext(base, created.id);
     const repair = task("repair-baseline", "m", ["baseline.flag"]);
     repair.kind = "gate-repair";
     project.resolveProjectPreflight(
@@ -341,9 +436,9 @@ describe("preflight", () => {
     );
     const handle = track(project.dispatchProjectTask(base, created.id, "repair-baseline"));
     commitFile(handle.worktree, "baseline.flag", "fixed\n");
-    const completed = project.completeProjectTask(base, created.id, "repair-baseline");
+    const completed = await settleTask(base, created.id, "repair-baseline");
     expect(completed.result).toBe("merged");
-    const verified = project.verifyProjectNext(base, created.id);
+    const verified = await settleNext(base, created.id);
     expect(verified.result).toBe("pass");
     expect(verified.manifest.preflight.status).toBe("passed");
     expect(verified.manifest.ready_tasks.map((item) => item.id)).toEqual(["change"]);
@@ -351,7 +446,7 @@ describe("preflight", () => {
 });
 
 describe("sequential milestone gates and cohesive repair", () => {
-  test("stops at failure, reuses one repair worktree, and proves all gates at one revision", () => {
+  test("stops at failure, reuses one repair worktree, and proves all gates at one revision", async () => {
     const base = repository();
     const gates = [
       evidence("warmup", "milestone"),
@@ -363,8 +458,8 @@ describe("sequential milestone gates and cohesive repair", () => {
       evidence("remaining", "milestone"),
     ];
     const created = start(base, { milestones: [milestone([], gates)] });
-    expect(project.verifyProjectNext(base, created.id).evidence?.requirement_id).toBe("warmup");
-    const failed = project.verifyProjectNext(base, created.id);
+    expect((await settleNext(base, created.id)).evidence?.requirement_id).toBe("warmup");
+    const failed = await settleNext(base, created.id);
     expect(failed.evidence?.requirement_id).toBe("behavior");
     expect(failed.manifest.milestones[0]?.status).toBe("repairing");
     expect(project.readProjectManifest(base, created.id).evidence).toHaveLength(2);
@@ -396,20 +491,20 @@ describe("sequential milestone gates and cohesive repair", () => {
     expect(reused.handle.worktree).toBe(handle.worktree);
 
     commitFile(handle.worktree, "note.txt", "diagnostic attempt\n");
-    const diagnosticFailure = project.completeProjectTask(base, created.id, "repair-gate");
+    const diagnosticFailure = await settleTask(base, created.id, "repair-gate");
     expect(diagnosticFailure.result).toBe("evidence-failed");
     const initialFingerprint = failed.evidence!.failure_fingerprint;
     expect(diagnosticFailure.evidence.at(-1)?.failure_fingerprint).toBe(initialFingerprint);
 
     commitFile(handle.worktree, "gate.flag", "fixed\n");
-    const merged = project.completeProjectTask(base, created.id, "repair-gate");
+    const merged = await settleTask(base, created.id, "repair-gate");
     expect(merged.result).toBe("merged");
 
-    const priority = project.verifyProjectNext(base, created.id);
+    const priority = await settleNext(base, created.id);
     expect(priority.evidence?.requirement_id).toBe("behavior");
-    const staleWarmup = project.verifyProjectNext(base, created.id);
+    const staleWarmup = await settleNext(base, created.id);
     expect(staleWarmup.evidence?.requirement_id).toBe("warmup");
-    const remaining = project.verifyProjectNext(base, created.id);
+    const remaining = await settleNext(base, created.id);
     expect(remaining.evidence?.requirement_id).toBe("remaining");
     expect(remaining.manifest.status).toBe("done");
 
@@ -428,7 +523,7 @@ describe("sequential milestone gates and cohesive repair", () => {
 });
 
 describe("generic contracts and configuration", () => {
-  test("allows owner-scoped evidence IDs and executes arbitrary repository-declared commands", () => {
+  test("allows owner-scoped evidence IDs and executes arbitrary repository-declared commands", async () => {
     const base = repository({
       "AGENTS.md": [
         "# Repository instructions",
@@ -448,11 +543,11 @@ describe("generic contracts and configuration", () => {
         milestone([contract], [evidence("verify", "milestone", exact)]),
       ],
     });
-    expect(project.verifyProjectNext(base, created.id).result).toBe("pass");
+    expect((await settleNext(base, created.id)).result).toBe("pass");
     const handle = track(project.dispatchProjectTask(base, created.id, "change"));
     commitFile(handle.worktree, "src/change.ts");
-    expect(project.completeProjectTask(base, created.id, "change").result).toBe("merged");
-    expect(project.verifyProjectNext(base, created.id).result).toBe("pass");
+    expect((await settleTask(base, created.id, "change")).result).toBe("merged");
+    expect((await settleNext(base, created.id)).result).toBe("pass");
     const owners = project.readProjectManifest(base, created.id).evidence
       .filter((attempt) => attempt.requirement_id === "verify")
       .map((attempt) => `${attempt.owner_type}:${attempt.owner_id}`);
@@ -480,6 +575,16 @@ describe("generic contracts and configuration", () => {
     expect(agents.orchestrate).toContain("implement-s: allow");
     expect(agents.orchestrate).toContain("implement-m: allow");
     expect(agents.orchestrate).toContain("implement-l: allow");
+    expect(agents.orchestrate).toContain("A new project always starts with a requirements interview");
+    expect(agents.orchestrate).toContain(
+      "Do not read, grep, glob, investigate, plan, dispatch, or inspect repository files",
+    );
+    expect(agents.orchestrate.indexOf("requirements interview"))
+      .toBeLessThan(agents.orchestrate.indexOf("After requirements are understood"));
+    expect(agents.orchestrate).toContain("Never run a project as a silent chain of tool calls");
+    expect(agents.orchestrate).toContain(
+      "Do not perform more than one polling tool call without a user-visible progress message",
+    );
     expect(config.model).toBe("openai/gpt-5.6-terra");
     expect(config.small_model).toBe("openai/gpt-5.6-luna");
     expect(config.autoupdate).toBe(false);
