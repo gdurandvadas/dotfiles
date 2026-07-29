@@ -98,6 +98,11 @@ yourself in the returned checkout. Tasks always execute sequentially so branch c
 commits remain visible to every session. A running task returned by `project_next` is interrupted
 work to inspect and continue, never a reason to wait for an unavailable session.
 
+Ending a turn while Project state is `active` is an execution fault unless the turn performed a
+tool action that advances or verifies the Project. Never end an active turn with a status-only,
+future-tense, or "I will continue" response. Execute the next action in the same turn. If progress
+genuinely requires the user, record that waiting boundary with `project_report` before responding.
+
 Run focused checks, stage only the intended paths, and commit with signing disabled. Never use
 `git add .` or `git add -A`, and never stage credential-bearing environment files. Record the
 result with `project_report`. The visible checkout HEAD is authoritative.

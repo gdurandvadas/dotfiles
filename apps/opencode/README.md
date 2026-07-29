@@ -62,6 +62,13 @@ an unavailable session. The primary runs focused checks, stages explicit paths, 
 records the result. Credential-bearing environment files and blanket staging commands are
 excluded. The visible checkout HEAD is authoritative.
 
+The global Project continuation plugin watches `session.idle`. If a Project primary becomes idle
+while its manifest is still active, OpenCode sends a synthetic continuation in that same session
+with the deterministic next action. Any completed tool call resets the stagnation budget. Three
+consecutive tool-free continuations stop automatically and raise a visible warning, preventing a
+status-only deadlock without creating an unbounded loop. Waiting, done, and non-Project sessions
+are never continued.
+
 Milestone validation uses the exact commands declared by repository policy. Commands run
 synchronously in the Project worktree and return on pass, failure, timeout, or interruption.
 There are no polling tokens, background runners, repair states, gate bindings, or evidence-owner
