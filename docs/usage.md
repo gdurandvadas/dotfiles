@@ -5,7 +5,7 @@
 | Layer | Tool | Manages |
 | ----- | ---- | ------- |
 | Binaries & apps | **Homebrew** | CLIs, GUI apps, casks, fonts |
-| Language runtimes | **mise** | Node, Go, Rust, Python, etc. |
+| Runtimes & npm CLIs | **mise** | Node, Go, Rust, Python, OpenCode v2, etc. |
 | Config files | **Home Manager / Nix** | dotfiles, symlinks, `.zshrc`, git config |
 | System defaults | **nix-darwin** | macOS settings, Homebrew orchestration |
 
@@ -21,7 +21,7 @@ Nix never installs a runtime binary. Homebrew never writes a config file.
 | `direnv allow`                             | Activate a project-local Nix dev environment (`.envrc`)               |
 | `z <project>`                              | Open a project in Zed                                                 |
 | `c <project>`                              | Open a project in Cursor                                              |
-| `oc-pers`                                  | Launch OpenCode with personal configuration                           |
+| `oc`                                       | Launch OpenCode v2 with the personal ADE configuration                 |
 | `cl`                                       | Launch Claude Code with the work ADE and configured MCP servers       |
 
 > **When to use which apply command:**
@@ -69,5 +69,7 @@ Use `mise` — edit `apps/mise/config.toml` and run `mise install`. No rebuild n
 - **dioxus-cli (`dx`):** No brew formula yet. Install with `curl -fsSL https://dioxuslabs.com/install.sh | bash` or `cargo binstall dioxus-cli`.
 - **Zed:** Downloaded from the upstream binary on each `dotfiles apply` if a newer version is available.
 - **LSP servers** (Zed/Cursor): managed automatically by the IDE when opening a file.
+- **OpenCode v2:** pinned through Mise; `oc` loads the personal ADE configuration and its pinned
+  plugin dependency.
 - **LSP servers** (OpenCode personal): installed via Home Manager in `apps/opencode/module.nix`.
   Apply with `dotfiles apply` (or `dotfiles workstation apply`).

@@ -19,13 +19,12 @@
 │   ├── tools/
 │   │   └── module.nix     # Additional CLI/dev tools (unfree and extra)
 │   ├── opencode/
-│   │   ├── module.nix     # OpenCode package + Home Manager wiring
-│   │   ├── config.jsonc   # Personal OpenCode configuration
-│   │   ├── agents/        # Personal primary and subagent prompts
-│   │   ├── commands/      # Personal project command
-│   │   ├── lib/           # Deterministic project state and tracing
-│   │   ├── plugins/       # Personal project telemetry integration
-│   │   └── tools/         # Personal project tools
+│   │   ├── module.nix     # Home Manager wiring and language servers
+│   │   ├── config.jsonc   # Native OpenCode v2 configuration
+│   │   ├── agents/        # ADE orchestrator and specialized subagents
+│   │   ├── commands/      # /project entry point
+│   │   ├── lib/           # Tested deterministic Git operations
+│   │   └── plugins/       # Narrow v2 Project operations plugin
 │   ├── claude/
 │   │   ├── module.nix     # Claude Code Home Manager wiring
 │   │   ├── CLAUDE.md      # Work ADE instructions
@@ -58,7 +57,7 @@
 │       ├── theme-switch.zsh  # Dark/light sync for Alacritty + Starship
 │       ├── mise.zsh          # Mise (polyglot runtime manager) integration
 │       ├── cl.sh              # Launch Claude Code with work MCP configuration
-│       ├── oc-pers.sh        # Launch OpenCode with personal config
+│       ├── oc.sh             # Launch OpenCode v2 with personal ADE config
 │       ├── z.sh              # Open project in Zed
 │       └── c.sh              # Open project in Cursor
 └── docs/

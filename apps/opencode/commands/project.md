@@ -1,24 +1,15 @@
 ---
-description: Design, execute, validate, or resume a schema-v5 Project
-agent: project
+description: Start or resume a researched, approved, autonomous Project
+agent: ade-orchestrator
 ---
 
-Project name or ID: $ARGUMENTS
+Project title: $ARGUMENTS
 
-When the argument is empty and the checked-out branch is `project/<id>`, use `project_open` to
-resolve and resume that ID. Otherwise list schema-v5 projects when empty, resume when the argument
-resolves, or create a design record for a new name. Schema-v4 records are read-only history.
+If the title above is non-empty, immediately call `project_start` with it exactly once. Do not run
+Git setup commands yourself. After it succeeds, delegate repository research and plan creation to
+`ade-researcher`, then present the completed draft plan for explicit approval.
 
-For a new Project, treat the name only as a label. If the conversation does not already contain a
-substantive request, immediately ask what the user wants to achieve; do not inspect or research
-the repository from the title. If substantive context already exists, use it and ask only for
-material missing behavior or constraints. Research begins only after the Objective and observable
-success criteria are known.
-
-Present one concise plan with milestones, ordered S/M/L tasks, dependencies, expected
-responsibility surfaces, focused checks, and exact repository-declared milestone commands. After
-research, store the first draft with `approved: false`; that checks out its visible Project branch.
-Present it for approval, then store the approved revision with `approved: true` and continue
-autonomously through foreground, sequential implementation, scope review, validation, recovery,
-and draft-PR publication. Reclaim a running task after session interruption. Task adaptations
-inside the current milestone need no approval; a new or materially changed milestone does.
+If the title is empty, call `project_current`. When it returns an id, read that Project's
+`plan.md`, `changes.md`, and `result.md`, summarize the current state, and execute or request the
+next action allowed by the lifecycle. When there is no active project id, ask for a title and do
+not mutate Git.
