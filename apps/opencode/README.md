@@ -1,102 +1,68 @@
-# OpenCode Personal Profile
+# OpenCode v2 Personal ADE
 
-Personal OpenCode configuration for efficient standalone work and autonomous schema-v5 Projects.
-Launch it with `oc-pers`; Home Manager links this directory into the active configuration.
+This directory is the configuration loaded by `oc`. Home Manager links it to
+`~/.config/opencode-personal`, while Mise installs the pinned `opencode2` beta.
 
-## Two workflows
+## Workflow
 
-| Flow | Entry | Use |
-|---|---|---|
-| Standalone | `@default` | One bounded change without Project state |
-| Project | `/project <name-or-id>` | Objective-driven delivery through validated draft PR |
-
-`/project` lists current v5 Projects when empty, resumes an ID, or starts design for a new name.
-Older Project records stay untouched as read-only history and are not resumed or migrated.
-A new name is only a label: without substantive conversational context, Project asks for the
-Objective before any repository research.
-
-## Product model
-
-A Project has one Objective and one cumulative `project/<id>` worktree. The first complete draft
-plan creates that branch/worktree; approval activates the same plan rather than creating it later.
-It advances
-through milestones whose tasks are sized by reasoning risk:
-
-- `implement-s` / Luna for an exact demonstrated pattern.
-- `implement-m` / Terra for ordinary bounded component or multi-file work.
-- `implement-l` / Sol for novel, ambiguous, architectural, or high-risk work.
-
-The `project` primary / Terra designs, routes, integrates, recovers, validates, and publishes. It
-uses native `explore` for local research and `scout` for external research. Implementers cannot
-delegate, mutate Project state, push, publish, read secrets, or run destructive Git operations.
-The bounded `default` primary remains available and has no Project or delegation permission.
-
-## Autonomy boundary
-
-The Objective, current milestone, repository policy, and reversibility define the working
-envelope. The Project proceeds without asking when a discovered change is necessary inside that
-envelope. This includes local Docker, tooling, test-harness, and prerequisite repairs required to
-continue.
-
-When a task reaches another responsibility, `explore` performs an independent bird's-eye
-assessment of necessity, impact, affected responsibilities, alternatives, and compatibility.
-Necessary work stays in the current task or becomes another task. The user is asked only for:
-
-- an Objective or observable-behavior change;
-- a new or materially changed milestone;
-- an explicit repository or user guardrail;
-- an irreversible or destructive action;
-- an unauthorized external system, credential, or publication;
-- a conflict between authoritative repository policies.
-
-User answers resume the same task. S → M → L escalation also preserves the same worktree and
-partial work.
-
-## Execution and validation
-
-Tasks are sequential by default. The approved plan may declare an independent parallel group with
-no dependencies or overlapping expected surfaces. Those tasks receive temporary branches and
-worktrees from the same validated Project revision. Results compose into the cumulative worktree.
-Actual overlap or a merge conflict restores a clean authoritative worktree and automatically
-serializes the remaining work.
-
-Implementers run focused checks and commit before returning one structured outcome:
-`IMPLEMENTED`, `RESEARCH_NEEDED`, `SCOPE_REVIEW`, `TIER_MISMATCH`, or `NEEDS_USER`.
-For completion, the clean assigned worktree HEAD is authoritative. A stale revision copied through
-an agent response is recorded and reconciled instead of blocking Project state.
-
-Milestone validation uses the exact commands declared by repository policy. Commands run
-synchronously in the Project worktree and return on pass, failure, timeout, or interruption.
-There are no polling tokens, background runners, repair states, gate bindings, or evidence-owner
-hierarchies. A failure keeps the milestone active and returns diagnostics to implementation.
-Repeated failure fingerprints distinguish unchanged baseline failures from new or worsened ones;
-repository policy decides whether an unchanged unrelated baseline may continue. An allowed
-unchanged fingerprint is recorded through `project_report` and accepted only while it remains
-identical.
-
-A milestone pass records evidence at one cumulative revision. Completion requires every
-milestone and Objective criterion, a clean branch, `git push`, and `gh pr create --draft` against
-the captured base branch. Invalid GitHub authentication enters `waiting` with `gh auth login`;
-publication resumes after authentication is repaired.
-
-## State and tools
-
-Repository-local ignored state is intentionally small:
+Start autonomous delivery from a Git repository:
 
 ```text
-.projects/
-  .gitignore
-  <project-id>/
-    project.json
-    logs/
-      <foreground-validation>.log
+/project Add account recovery
 ```
 
-The seven tools are `project_open`, `project_plan`, `project_status`, `project_next`,
-`project_context`, `project_report`, and `project_validate`. The manifest stores the Objective,
-plan history, milestones and tasks, scope assessments, focused checks, foreground evidence,
-questions and answers, failure fingerprints, and the draft PR URL.
+The command:
 
-Configuration is deny-first, loop recovery is automatic for Project agents, native skills and
-language servers remain enabled, and source-control publication uses the installed `gh` CLI rather
-than a large GitHub MCP server.
+1. preserves current staged, unstaged, and untracked work;
+2. switches to and fast-forwards `origin`'s default branch;
+3. creates a unique `project/<id>` branch;
+4. scaffolds committed living documents under `.projects/<id>/`;
+5. researches and presents a plan for explicit approval;
+6. delegates approved tasks to the S, M, or L developer;
+7. validates and commits once per milestone;
+8. pushes and creates a draft PR after final validation.
+
+Run `/project` without a title on an existing `project/*` branch to resume it.
+
+## Durable state
+
+There is no project database or JSON state machine. These documents are the contract:
+
+- `plan.md` — objective, research, architecture, milestones, tasks, tiers, and validation.
+- `changes.md` — append-only validation and change evidence per milestone.
+- `result.md` — cumulative acceptance, final behavior, impact, debt, and publication.
+
+The plugin in `plugins/project.ts` owns only operations that must be deterministic: branch setup,
+approval metadata, explicit-path milestone commits, and draft-PR publication.
+
+## Agents
+
+| Agent | Model | Purpose |
+| --- | --- | --- |
+| `ade-orchestrator` | Sol, medium reasoning | User interface and lifecycle owner |
+| `ade-researcher` | Sol, high reasoning | Isolated research and planning |
+| `ade-developer-s` | Luna, no reasoning | Exact demonstrated changes |
+| `ade-developer-m` | Terra, low reasoning | Bounded component work |
+| `ade-developer-l` | Sol, medium reasoning | Architectural or high-risk work |
+| `ade-archivist` | Luna, no reasoning | Precise living-document updates |
+
+Temperature and reasoning effort are encoded in model variants because OpenCode v2 does not yet
+apply per-agent request overlays.
+
+## Validation
+
+When a repository has `.ayni.toml` and `ayni` is available, milestones run
+`ayni analyze --output json` in addition to their repository-native promotion commands. The ADE
+never installs Ayni. If it is unavailable, the approved native commands remain the gate and the
+living documentation records that Ayni was skipped.
+
+## Development
+
+```sh
+cd apps/opencode
+bun install --frozen-lockfile
+bun test
+bun run typecheck
+```
+
+The OpenCode v2 CLI and `@opencode-ai/plugin` must stay on the same exact beta version.

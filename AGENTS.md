@@ -43,7 +43,7 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 │   │   ├── module.nix     # Custom scripts as Nix packages
 │   │   ├── dotfiles.sh    # Unified home-manager / darwin switch script
 │   │   ├── cl.sh          # Launch Claude Code with work MCP configuration
-│   │   ├── oc-pers.sh     # Launch OpenCode with personal config
+│   │   ├── oc.sh          # Launch OpenCode v2 with personal ADE config
 │   │   ├── z.sh           # Open project in Zed
 │   │   ├── c.sh           # Open project in Cursor
 │   │   └── *.zsh          # Zsh helper scripts sourced at shell startup

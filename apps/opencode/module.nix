@@ -6,8 +6,8 @@ let
     force = true;
   };
 in {
-  # opencode binary is managed by Homebrew (anomalyco/tap/opencode).
-  # Launch via oc-pers, which sets OPENCODE_CONFIG and OPENCODE_CONFIG_DIR.
+  # OpenCode v2 is pinned through mise's npm backend.
+  # Launch via oc, which sets OPENCODE_CONFIG and OPENCODE_CONFIG_DIR.
   # Language servers below are on PATH for OpenCode LSP (see config.jsonc).
 
   home.packages = with pkgs; [

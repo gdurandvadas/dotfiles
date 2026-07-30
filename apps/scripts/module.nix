@@ -13,9 +13,9 @@ let
   z = pkgs.writeShellScriptBin "z" (builtins.readFile ./z.sh);
   c = pkgs.writeShellScriptBin "c" (builtins.readFile ./c.sh);
   cl = pkgs.writeShellScriptBin "cl" (builtins.readFile ./cl.sh);
-  oc-pers = pkgs.writeShellScriptBin "oc-pers" (builtins.readFile ./oc-pers.sh);
+  oc = pkgs.writeShellScriptBin "oc" (builtins.readFile ./oc.sh);
 in {
-  home.packages = [ dotfiles-apply dotfiles z c cl oc-pers ];
+  home.packages = [ dotfiles-apply dotfiles z c cl oc ];
 
   home.file.".zsh/theme-switch.zsh".source = ./theme-switch.zsh;
   home.file.".zsh/mise.zsh".source         = ./mise.zsh;
