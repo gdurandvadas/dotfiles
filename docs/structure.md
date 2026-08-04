@@ -20,11 +20,14 @@
 │   │   └── module.nix     # Additional CLI/dev tools (unfree and extra)
 │   ├── opencode/
 │   │   ├── module.nix     # Home Manager wiring and language servers
-│   │   ├── config.jsonc   # Native OpenCode v2 configuration
-│   │   ├── agents/        # ADE orchestrator and specialized subagents
-│   │   ├── commands/      # /project entry point
-│   │   ├── lib/           # Tested deterministic Git operations
-│   │   └── plugins/       # Narrow v2 Project operations plugin
+│   │   ├── opencode.jsonc # OpenCode v1 models, permissions, and runtime config
+│   │   ├── tui.json       # Native Waveboard TUI plugin and attention settings
+│   │   ├── AGENTS.md      # Immutable contract and role governance
+│   │   ├── agents/        # Plan, orchestrator, builders, and PM auditor
+│   │   ├── commands/      # Milestone plan/run/audit/status entry points
+│   │   ├── lib/           # Tested DAG, contract, checkpoint, and recovery logic
+│   │   ├── plugins/       # Role-gated workflow tools and mutation guard
+│   │   └── tui/           # Waveboard route and sidebar integration
 │   ├── claude/
 │   │   ├── module.nix     # Claude Code Home Manager wiring
 │   │   ├── CLAUDE.md      # Work ADE instructions
@@ -57,7 +60,7 @@
 │       ├── theme-switch.zsh  # Dark/light sync for Alacritty + Starship
 │       ├── mise.zsh          # Mise (polyglot runtime manager) integration
 │       ├── cl.sh              # Launch Claude Code with work MCP configuration
-│       ├── oc.sh             # Launch OpenCode v2 with personal ADE config
+│       ├── oc.sh             # Launch OpenCode v1 with Waveboard workflow config
 │       ├── z.sh              # Open project in Zed
 │       └── c.sh              # Open project in Cursor
 └── docs/

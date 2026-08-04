@@ -5,7 +5,7 @@
 | Layer | Tool | Manages |
 | ----- | ---- | ------- |
 | Binaries & apps | **Homebrew** | CLIs, GUI apps, casks, fonts |
-| Runtimes & npm CLIs | **mise** | Node, Go, Rust, Python, OpenCode v2, etc. |
+| Runtimes & npm CLIs | **mise** | Node, Go, Rust, Python, OpenCode v1, etc. |
 | Config files | **Home Manager / Nix** | dotfiles, symlinks, `.zshrc`, git config |
 | System defaults | **nix-darwin** | macOS settings, Homebrew orchestration |
 
@@ -21,7 +21,7 @@ Nix never installs a runtime binary. Homebrew never writes a config file.
 | `direnv allow`                             | Activate a project-local Nix dev environment (`.envrc`)               |
 | `z <project>`                              | Open a project in Zed                                                 |
 | `c <project>`                              | Open a project in Cursor                                              |
-| `oc`                                       | Launch OpenCode v2 with the personal ADE configuration                 |
+| `oc`                                       | Launch OpenCode v1 with Waveboard milestone orchestration              |
 | `cl`                                       | Launch Claude Code with the work ADE and configured MCP servers       |
 
 > **When to use which apply command:**
@@ -69,7 +69,8 @@ Use `mise` — edit `apps/mise/config.toml` and run `mise install`. No rebuild n
 - **dioxus-cli (`dx`):** No brew formula yet. Install with `curl -fsSL https://dioxuslabs.com/install.sh | bash` or `cargo binstall dioxus-cli`.
 - **Zed:** Downloaded from the upstream binary on each `dotfiles apply` if a newer version is available.
 - **LSP servers** (Zed/Cursor): managed automatically by the IDE when opening a file.
-- **OpenCode v2:** pinned through Mise; `oc` loads the personal ADE configuration and its pinned
-  plugin dependency.
+- **OpenCode v1:** pinned through Mise; `oc` loads the document-driven milestone workflow and its
+  native Waveboard TUI. Start with `/milestone-plan <outcome>` and open Waveboard with
+  `<leader>w` or `/waves`; see `apps/opencode/README.md`.
 - **LSP servers** (OpenCode personal): installed via Home Manager in `apps/opencode/module.nix`.
   Apply with `dotfiles apply` (or `dotfiles workstation apply`).

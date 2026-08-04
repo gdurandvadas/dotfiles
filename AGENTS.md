@@ -26,12 +26,13 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 │   │   └── module.nix     # Unfree/extra tools (1Password CLI, Brave, gh, claude-code, etc.)
 │   ├── opencode/
 │   │   ├── module.nix     # OpenCode package + Home Manager wiring
-│   │   ├── config.jsonc   # Personal OpenCode configuration
-│   │   ├── agents/        # Personal primary and subagent prompts
-│   │   ├── commands/      # Personal task commands
-│   │   ├── lib/           # Deterministic task state machine
-│   │   ├── plugins/       # Personal task command integration
-│   │   └── tools/         # Personal task tools
+│   │   ├── opencode.jsonc # Personal OpenCode v1 configuration
+│   │   ├── tui.json       # Waveboard TUI configuration
+│   │   ├── agents/        # Plan, orchestration, build, and audit roles
+│   │   ├── commands/      # Milestone workflow commands
+│   │   ├── lib/           # Deterministic DAG and file-contract logic
+│   │   ├── plugins/       # Role-gated contract/checkpoint tools
+│   │   └── tui/           # Native milestone dashboard
 │   ├── claude/
 │   │   ├── module.nix     # Claude Code Home Manager wiring
 │   │   ├── CLAUDE.md      # Work ADE instructions
