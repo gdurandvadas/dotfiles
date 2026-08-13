@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Launch OpenCode v1 with the personal wave workflow configuration.
+# Launch OpenCode v1 with the personal managed-agent configuration.
 # Usage: oc [opencode args...]
 
 set -euo pipefail
@@ -18,9 +18,7 @@ if ! command -v opencode >/dev/null 2>&1; then
 fi
 
 # Local plugins resolve their pinned API package from the configuration directory.
-if [[ ! -d "$CONFIG_DIR/node_modules/@opencode-ai/plugin" ||
-      ! -d "$CONFIG_DIR/node_modules/@opentui/solid" ||
-      ! -d "$CONFIG_DIR/node_modules/solid-js" ]]; then
+if [[ ! -d "$CONFIG_DIR/node_modules/@opencode-ai/plugin" ]]; then
   if ! command -v bun >/dev/null 2>&1; then
     echo "Bun is required to install the pinned OpenCode plugin dependency." >&2
     exit 1

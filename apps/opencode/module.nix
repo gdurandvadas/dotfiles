@@ -2,8 +2,8 @@
 let
   dotfiles = "${config.home.homeDirectory}/.config/dotfiles/apps/opencode";
 in {
-  # Keep the personal OpenCode configuration mutable so its local plugins can
-  # install pinned development dependencies beside their source files.
+  # Keep the managed-agent profile mutable so its pinned plugin dependency can
+  # be developed and verified in place.
   xdg.configFile."opencode-personal" = {
     source = config.lib.file.mkOutOfStoreSymlink dotfiles;
     force = true;

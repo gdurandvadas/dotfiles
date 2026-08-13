@@ -1,8 +1,6 @@
 {
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "jsx": "preserve",
-    "jsxImportSource": "@opentui/solid",
     "lib": ["ES2023", "DOM"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -12,5 +10,5 @@
     "target": "ES2023",
     "types": ["bun"]
   },
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["**/*.ts"]
 }

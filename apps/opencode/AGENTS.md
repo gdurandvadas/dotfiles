@@ -1,40 +1,39 @@
-# Document-driven milestone orchestration
+# Managed-agent runtime
 
-This OpenCode profile schedules work from immutable files. The filesystem is the source of truth;
-conversation memory, todos, child-session state, and plugin memory are never workflow state.
+This OpenCode profile separates durable reasoning state from execution. OpenCode sessions are the
+source of truth; hands are logical tool interfaces that execute directly in OpenCode's environment.
 
-## Durable contract
+## Contracts
 
-- `.opencode/plans/<milestone>.md` is a sealed execution contract created only by
-  `workflow_contract` after deterministic DAG validation.
-- `docs/decisions/<date>-<milestone>-wave-<n>.md` is a sealed checkpoint ADR created only by
-  `workflow_checkpoint` after an audit.
-- `workflow_status` recomputes progress from those files on every call. Never cache, mirror, or
-  reproduce their state elsewhere.
-- Never use shell, edit, write, patch, or generated scripts on `.opencode/plans/` or
-  `docs/decisions/`. The workflow plugin rejects those mutations even if an agent asks.
+- **Brain:** `managed` is the primary brain. It may create `managed-worker` and
+  `managed-reviewer` child sessions with `brain_spawn`. Brain-local memory is never durable state.
+- **Hands:** every repository read, search, edit, and command uses `hand_*`. Native host tools are
+  denied so orchestration stays explicit. Hands require no provisioning or lifecycle management.
+- **Session:** OpenCode persists messages and tool results. `session_events` reads positional
+  slices without changing history; `session_note` records explicit recovery state.
 
-## Roles
+Resume a durable brain with `oc --session <session-id>`. Use `session_events` only when the active
+context does not contain the exact historical detail needed.
 
-- `plan` researches the repository, defines stable task ids and dependencies, then submits the
-  complete graph once through `workflow_contract`. It cannot edit application code.
-- `orchestrator` is the only user-facing execution agent. It derives the next wave with
-  `workflow_status`, dispatches every ready task concurrently, and stops after the checkpoint.
-- `build-backend`, `build-frontend`, and `build-general` implement one bounded task. They may edit
-  source and tests but cannot modify contracts, ADRs, or delegate.
-- `pm-agent` audits a completed wave, runs the contract's validation, translates the outcome into
-  product language, and submits exactly one ADR through `workflow_checkpoint`. It cannot edit
-  source, plans, or ADRs directly.
+## Execution boundary
 
-## Wave protocol
+- Hands inherit OpenCode's filesystem, environment, network, and process access. OpenCode itself is
+  the trust boundary; this profile does not sandbox individual commands.
+- Structured hand paths are constrained to their assigned workspace. `hand_run` is an ordinary
+  local shell and can access anything available to OpenCode.
+- Agents do not commit, push, reset, clean, or rewrite refs unless the user explicitly changes the
+  orchestration contract.
+- Tool output is sanitized before it enters the model context or session history.
+- Commands are never retried automatically. The brain inspects failures before deciding whether a
+  retry is safe.
 
-1. Plan: research, model dependencies, and seal one contract.
-2. Wave: dispatch all tasks in the first unaccepted wave in one parallel batch.
-3. Checkpoint: wait for every worker, inspect the combined diff, validate, and have `pm-agent`
-   create the ADR.
-4. Review: present only the product impact, decisions, evidence, and ADR path. Stop for review.
-5. Continue: the next `/milestone-run` recomputes readiness from disk and advances one wave.
+## Child brains
 
-Never skip a wave, accept partial work, infer success from a worker's prose, or begin a later wave
-before the preceding ADR exists. A contract is create-once; changed scope requires a new milestone
-slug and a new contract.
+- Reviewers receive only structured read, search, and list tools; local shell execution is denied.
+- Workers require a clean primary Git checkout and receive detached worktrees under the OpenCode
+  managed state directory.
+- The primary brain checks child status and output before calling `brain_integrate`.
+- Integration checks a complete binary patch before applying it as unstaged changes. On conflict,
+  neither workspace is changed.
+- Integration and discard remove only the exact worker worktree. Child session history remains
+  durable.
