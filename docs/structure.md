@@ -20,7 +20,7 @@
 │   │   └── module.nix     # Additional CLI/dev tools (unfree and extra)
 │   ├── opencode/
 │   │   ├── module.nix     # Home Manager wiring and language servers
-│   │   ├── opencode.jsonc # OpenCode v1 models, permissions, and runtime config
+│   │   ├── profile.jsonc  # OpenCode v1 models, permissions, and runtime config
 │   │   ├── tui.json       # Native Waveboard TUI plugin and attention settings
 │   │   ├── AGENTS.md      # Immutable contract and role governance
 │   │   ├── agents/        # Plan, orchestrator, builders, and PM auditor

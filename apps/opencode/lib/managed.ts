@@ -3,7 +3,7 @@ import { realpathSync } from "node:fs"
 import { isAbsolute, join, relative, resolve, sep } from "node:path"
 import { homedir } from "node:os"
 
-export const MAX_TOOL_OUTPUT = 1_000_000
+export const MAX_TOOL_OUTPUT = 80_000
 
 export function managedStateDirectory() {
   return (
@@ -60,7 +60,17 @@ export function sanitizeOutput(value: string, maximum = MAX_TOOL_OUTPUT) {
   let result = value
   for (const [pattern, replacement] of redactions) result = result.replace(pattern, replacement)
   if (result.length > maximum) {
-    return `${result.slice(0, maximum)}\n[output truncated at ${maximum} characters]`
+    let marker = ""
+    let payload = maximum
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      marker = `\n[... ${result.length - payload} characters omitted ...]\n`
+      payload = Math.max(0, maximum - marker.length)
+    }
+    if (payload === 0) return result.slice(0, maximum)
+    const headLength = Math.ceil(payload / 2)
+    const tailLength = Math.floor(payload / 2)
+    const tail = tailLength === 0 ? "" : result.slice(-tailLength)
+    return `${result.slice(0, headLength)}${marker}${tail}`
   }
   return result
 }

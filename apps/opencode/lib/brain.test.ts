@@ -70,7 +70,7 @@ describe("isolated worker integration", () => {
     unlinkSync(join(workspace, "delete.txt"))
     writeFileSync(join(workspace, "new.bin"), new Uint8Array([0, 1, 2, 255]))
 
-    const result = await brains.integrate("parent", "child", async () => undefined)
+    const result = await brains.integrate("parent", "child")
     expect(result.applied).toBe(true)
     expect(readFileSync(join(root, "tracked.txt"), "utf8")).toBe("after\n")
     expect(() => readFileSync(join(root, "delete.txt"))).toThrow()
@@ -95,7 +95,7 @@ describe("isolated worker integration", () => {
     const workspace = await brains.ensureWorker("child")
     writeFileSync(join(workspace, "tracked.txt"), "worker\n")
     writeFileSync(join(root, "tracked.txt"), "primary\n")
-    await expect(brains.integrate("parent", "child", async () => undefined)).rejects.toThrow(
+    await expect(brains.integrate("parent", "child")).rejects.toThrow(
       "conflicts",
     )
     expect(readFileSync(join(root, "tracked.txt"), "utf8")).toBe("primary\n")

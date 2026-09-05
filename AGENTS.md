@@ -26,7 +26,7 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 │   │   └── module.nix     # Unfree/extra tools (1Password CLI, Brave, gh, claude-code, etc.)
 │   ├── opencode/
 │   │   ├── module.nix     # OpenCode package + Home Manager wiring
-│   │   ├── opencode.jsonc # Personal OpenCode v1 configuration
+│   │   ├── profile.jsonc  # Personal OpenCode v1 configuration
 │   │   ├── tui.json       # Waveboard TUI configuration
 │   │   ├── agents/        # Plan, orchestration, build, and audit roles
 │   │   ├── commands/      # Milestone workflow commands

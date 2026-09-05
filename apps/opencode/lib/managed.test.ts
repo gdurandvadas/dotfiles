@@ -19,7 +19,11 @@ describe("session and security helpers", () => {
     const value = sanitizeOutput("Authorization: Bearer abc.def.ghi\napi_key=very-secret-value", 200)
     expect(value).not.toContain("abc.def.ghi")
     expect(value).not.toContain("very-secret-value")
-    expect(sanitizeOutput("x".repeat(30), 10)).toContain("truncated")
+    const bounded = sanitizeOutput(`START-${"x".repeat(100)}-END`, 60)
+    expect(bounded).toContain("START")
+    expect(bounded).toContain("END")
+    expect(bounded).toContain("omitted")
+    expect(bounded.length).toBeLessThanOrEqual(60)
   })
 
   test("contains structured hand paths within the workspace", () => {

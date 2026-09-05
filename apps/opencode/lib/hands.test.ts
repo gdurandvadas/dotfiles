@@ -36,7 +36,11 @@ describe("local hands", () => {
     expect(runner.calls).toEqual([
       {
         argv: ["bash", "-lc", "pwd"],
-        options: { cwd: realpathSync(spec.workspace) },
+        options: {
+          cwd: realpathSync(spec.workspace),
+          outputLimitCharacters: 50_000,
+          timeoutMs: 900_000,
+        },
       },
     ])
   })
@@ -91,6 +95,55 @@ describe("local hands", () => {
       backend: "local",
       ready: true,
       mode: "primary",
+      budget: "standard",
+      commandTimeoutSeconds: 900,
+      outputLimitCharacters: 80_000,
     })
+  })
+
+  test("bounds shell and search execution with caller overrides", async () => {
+    const runner = new RecordingRunner()
+    const hands = new LocalHands(runner)
+    const { spec } = fixture()
+    const abort = new AbortController()
+
+    await hands.execute(
+      spec,
+      { name: "run", command: "long-command", timeoutSeconds: 42 },
+      abort.signal,
+    )
+    await hands.execute(
+      spec,
+      { name: "search", query: "needle", timeoutSeconds: 7 },
+      abort.signal,
+    )
+
+    expect(runner.calls[0]?.options).toMatchObject({
+      timeoutMs: 42_000,
+      outputLimitCharacters: 50_000,
+      signal: abort.signal,
+    })
+    expect(runner.calls[1]?.argv).toContain("!**/node_modules/**")
+    expect(runner.calls[1]?.options).toMatchObject({
+      timeoutMs: 7_000,
+      outputLimitCharacters: 50_000,
+      signal: abort.signal,
+    })
+  })
+
+  test("does not recursively enumerate generated dependency directories", async () => {
+    const hands = new LocalHands(new RecordingRunner())
+    const { root, spec } = fixture()
+    await hands.execute(spec, { name: "write", path: "src/visible.txt", content: "ok" })
+    await hands.execute(spec, {
+      name: "write",
+      path: "node_modules/pkg/hidden.txt",
+      content: "noise",
+    })
+
+    const listed = await hands.execute(spec, { name: "list", depth: 4 })
+    expect(listed).toContain("src/visible.txt")
+    expect(listed).toContain("node_modules [ignored]")
+    expect(listed).not.toContain("hidden.txt")
   })
 })

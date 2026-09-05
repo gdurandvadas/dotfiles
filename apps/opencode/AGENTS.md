@@ -9,11 +9,19 @@ source of truth; hands are logical tool interfaces that execute directly in Open
   `managed-reviewer` child sessions with `brain_spawn`. Brain-local memory is never durable state.
 - **Hands:** every repository read, search, edit, and command uses `hand_*`. Native host tools are
   denied so orchestration stays explicit. Hands require no provisioning or lifecycle management.
+  Commands are cancellable, default to a 15-minute deadline, and return a bounded head and tail;
+  searches and recursive listings skip generated dependency trees unless explicitly requested.
 - **Session:** OpenCode persists messages and tool results. `session_events` reads positional
-  slices without changing history; `session_note` records explicit recovery state.
+  slices without changing history and offers a server-limited `tail` for efficient recovery;
+  `session_note` records explicit recovery state.
 
 Resume a durable brain with `oc --session <session-id>`. Use `session_events` only when the active
 context does not contain the exact historical detail needed.
+
+Select an execution ceiling at launch with `oc --budget small|standard|long`. Project
+`opencode.jsonc` agent overrides are honored; the launcher flag wins for that process. A running
+process cannot change its own hard step ceiling, so resume the session under another budget when
+necessary.
 
 ## Execution boundary
 
@@ -23,7 +31,8 @@ context does not contain the exact historical detail needed.
   local shell and can access anything available to OpenCode.
 - Agents do not commit, push, reset, clean, or rewrite refs unless the user explicitly changes the
   orchestration contract.
-- Tool output is sanitized before it enters the model context or session history.
+- Tool output is sanitized and bounded before it enters model context or session history. The
+  beginning and end are retained so both the initiating error and final diagnostics remain visible.
 - Commands are never retried automatically. The brain inspects failures before deciding whether a
   retry is safe.
 

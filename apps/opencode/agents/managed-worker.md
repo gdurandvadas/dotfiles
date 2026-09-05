@@ -1,10 +1,6 @@
 ---
 description: Mutating child brain that implements one bounded task in an isolated Git worktree.
 mode: subagent
-model: openai/gpt-5.6-terra
-reasoningEffort: medium
-temperature: 0.1
-steps: 64
 permission:
   read: deny
   glob: deny
@@ -21,9 +17,9 @@ permission:
   hand_search: allow
   hand_list: allow
   hand_status: allow
-  hand_run: ask
-  hand_write: ask
-  hand_edit: ask
+  hand_run: allow
+  hand_write: allow
+  hand_edit: allow
   brain_spawn: deny
   brain_status: deny
   brain_collect: deny

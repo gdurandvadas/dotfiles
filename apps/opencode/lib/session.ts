@@ -3,6 +3,9 @@ import { positionalSlice, sanitizeOutput } from "./managed.ts"
 
 type OpenCodeClient = PluginInput["client"]
 
+const MAX_EVENT_CONTENT = 40_000
+const SESSION_CONTENT_BUDGET = 60_000
+
 function textPart(part: Record<string, unknown>) {
   if (part.type === "text" && typeof part.text === "string") return part.text
   if (part.type === "tool") {
@@ -20,6 +23,29 @@ export type SessionEvent = {
   content: string
 }
 
+export type RecentSessionEvent = Omit<SessionEvent, "index"> & { position: number }
+
+function eventContent(
+  { info, parts }: { info: Record<string, unknown>; parts: unknown[] },
+  maximum = MAX_EVENT_CONTENT,
+) {
+  return {
+    id: String(info.id),
+    role: String(info.role),
+    created:
+      "time" in info ? (info.time as { created?: number } | undefined)?.created : undefined,
+    content: sanitizeOutput(
+      parts.map((part) => textPart(part as Record<string, unknown>)).join("\n"),
+      maximum,
+    ),
+  }
+}
+
+function contentLimit(eventCount: number) {
+  if (eventCount === 0) return MAX_EVENT_CONTENT
+  return Math.min(MAX_EVENT_CONTENT, Math.floor(SESSION_CONTENT_BUDGET / eventCount))
+}
+
 export async function assertSessionVisible(
   client: OpenCodeClient,
   currentSessionID: string,
@@ -27,14 +53,20 @@ export async function assertSessionVisible(
   directory: string,
 ) {
   if (currentSessionID === requestedSessionID) return
-  const [current, requested] = await Promise.all([
-    client.session.get({ path: { id: currentSessionID }, query: { directory } }),
-    client.session.get({ path: { id: requestedSessionID }, query: { directory } }),
-  ])
-  if (!current.data || !requested.data) throw new Error("session not found")
-  const related =
-    current.data.parentID === requested.data.id || requested.data.parentID === current.data.id
-  if (!related) throw new Error("session_events is limited to the current session and direct relatives")
+  const requested = await client.session.get({
+    path: { id: requestedSessionID },
+    query: { directory },
+  })
+  if (!requested.data) throw new Error("session not found")
+  if (requested.data.parentID === currentSessionID) return
+  const current = await client.session.get({
+    path: { id: currentSessionID },
+    query: { directory },
+  })
+  if (!current.data) throw new Error("session not found")
+  if (current.data.parentID !== requested.data.id) {
+    throw new Error("session_events is limited to the current session and direct relatives")
+  }
 }
 
 export async function getSessionEvents(
@@ -53,16 +85,51 @@ export async function getSessionEvents(
   if (!response.data) throw new Error(`unable to read session ${requestedSessionID}`)
   const selected = positionalSlice(response.data, start, end)
   const base = start === undefined ? 0 : start < 0 ? Math.max(response.data.length + start, 0) : start
+  const maximum = contentLimit(selected.length)
   return selected.map(({ info, parts }, offset): SessionEvent => ({
     index: base + offset,
-    id: info.id,
-    role: info.role,
-    created: "time" in info ? info.time?.created : undefined,
-    content: sanitizeOutput(
-      parts.map((part) => textPart(part as unknown as Record<string, unknown>)).join("\n"),
-      40_000,
+    ...eventContent(
+      {
+        info: info as unknown as Record<string, unknown>,
+        parts: parts as unknown[],
+      },
+      maximum,
     ),
   }))
+}
+
+export async function getRecentSessionEvents(
+  client: OpenCodeClient,
+  currentSessionID: string,
+  requestedSessionID: string,
+  directory: string,
+  tail = 20,
+) {
+  if (!Number.isInteger(tail) || tail < 1 || tail > 100) {
+    throw new Error("tail must be an integer from 1 through 100")
+  }
+  await assertSessionVisible(client, currentSessionID, requestedSessionID, directory)
+  const response = await client.session.messages({
+    path: { id: requestedSessionID },
+    query: { directory, limit: tail + 1 },
+  })
+  if (!response.data) throw new Error(`unable to read session ${requestedSessionID}`)
+  const hasMore = response.data.length > tail
+  const selected = response.data.slice(-tail)
+  const maximum = contentLimit(selected.length)
+  return {
+    hasMore,
+    events: selected.map(({ info, parts }, offset): RecentSessionEvent => ({
+      position: offset - selected.length,
+      ...eventContent(
+        {
+          info: info as unknown as Record<string, unknown>,
+          parts: parts as unknown[],
+        },
+        maximum,
+      ),
+    })),
+  }
 }
 
 export async function emitSessionNote(

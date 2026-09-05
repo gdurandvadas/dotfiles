@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { managedStateDirectory, stableHash } from "./managed.ts"
 import { checked, type CommandRunner } from "./process.ts"
-import { emitSessionNote, getSessionEvents } from "./session.ts"
+import { emitSessionNote, getRecentSessionEvents } from "./session.ts"
 
 type OpenCodeClient = PluginInput["client"]
 export type BrainRole = "worker" | "reviewer"
@@ -44,10 +44,10 @@ export class ManagedBrains {
     }
   }
 
-  async ensureWorker(sessionID: string) {
+  async ensureWorker(sessionID: string, primaryAlreadyChecked = false) {
     const path = workerPath(this.projectRoot, sessionID)
     if (existsSync(path)) return path
-    await this.assertClean()
+    if (!primaryAlreadyChecked) await this.assertClean()
     mkdirSync(dirname(path), { recursive: true })
     await gitOutput(this.runner, this.projectRoot, ["worktree", "add", "--detach", path, "HEAD"])
     return path
@@ -63,7 +63,7 @@ export class ManagedBrains {
     const child = created.data
 
     try {
-      if (role === "worker") await this.ensureWorker(child.id)
+      if (role === "worker") await this.ensureWorker(child.id, true)
       const prompted = await this.client.session.promptAsync({
         path: { id: child.id },
         query: { directory: this.projectRoot },
@@ -92,11 +92,13 @@ export class ManagedBrains {
   }
 
   async status(parentID: string, childID?: string) {
-    const statuses = await this.client.session.status({ query: { directory: this.projectRoot } })
-    const children = await this.client.session.children({
-      path: { id: parentID },
-      query: { directory: this.projectRoot },
-    })
+    const [statuses, children] = await Promise.all([
+      this.client.session.status({ query: { directory: this.projectRoot } }),
+      this.client.session.children({
+        path: { id: parentID },
+        query: { directory: this.projectRoot },
+      }),
+    ])
     if (!children.data) throw new Error("unable to list child brains")
     const selected = childID
       ? children.data.filter((child) => child.id === childID)
@@ -110,15 +112,13 @@ export class ManagedBrains {
     }))
   }
 
-  async collect(parentID: string, childID: string, start = -12) {
-    await this.child(parentID, childID)
-    return getSessionEvents(
+  async collect(parentID: string, childID: string, tail = 12) {
+    return getRecentSessionEvents(
       this.client,
       parentID,
       childID,
       this.projectRoot,
-      start,
-      undefined,
+      tail,
     )
   }
 
@@ -148,7 +148,7 @@ export class ManagedBrains {
     }
   }
 
-  async integrate(parentID: string, childID: string, approve: () => Promise<void>) {
+  async integrate(parentID: string, childID: string) {
     await this.child(parentID, childID)
     await this.assertIdle(childID)
     const patch = await this.patch(childID)
@@ -161,7 +161,6 @@ export class ManagedBrains {
     if (check.exitCode !== 0) {
       throw new Error(`worker patch conflicts with the primary checkout: ${check.stderr || check.stdout}`)
     }
-    await approve()
     await checked(
       this.runner,
       ["git", "-C", this.projectRoot, "apply", "--binary", "-"],
@@ -178,9 +177,8 @@ export class ManagedBrains {
     return { applied: true, bytes: Buffer.byteLength(patch), message: "patch applied unstaged" }
   }
 
-  async discard(parentID: string, childID: string, approve: () => Promise<void>) {
+  async discard(parentID: string, childID: string) {
     await this.child(parentID, childID)
-    await approve()
     await this.removeWorker(childID)
     await emitSessionNote(
       this.client,

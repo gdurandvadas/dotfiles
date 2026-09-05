@@ -1,10 +1,6 @@
 ---
 description: Read-only child brain for investigation, planning, and independent review.
 mode: subagent
-model: openai/gpt-5.6-sol
-reasoningEffort: high
-temperature: 0.1
-steps: 48
 permission:
   read: deny
   glob: deny
