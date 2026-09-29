@@ -88,4 +88,17 @@ if [[ ! -d "$CONFIG_DIR/node_modules/@opencode-ai/plugin" ]]; then
   )
 fi
 
+plugin_package="$CONFIG_DIR/node_modules/@opencode-ai/plugin/package.json"
+expected_version="$(sed -nE 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' "$plugin_package" | head -1)"
+actual_version="$(opencode --version)"
+if [[ -z "$expected_version" ]]; then
+  echo "oc: unable to determine the installed OpenCode plugin version" >&2
+  exit 1
+fi
+if [[ "$actual_version" != "$expected_version" ]]; then
+  echo "oc: OpenCode CLI $actual_version does not match plugin $expected_version." >&2
+  echo "oc: install the configured version with: mise install npm:@opencode-ai/cli" >&2
+  exit 1
+fi
+
 exec opencode "${opencode_args[@]}"

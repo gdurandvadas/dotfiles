@@ -54,6 +54,16 @@ describe("managed-agent plugin surface", () => {
     expect(safelyParseSchema(tools.session_events?.args.tail, 101).success).toBe(false)
   })
 
+  test("uses the default hand when a runtime omits the schema default", async () => {
+    const hooks = await ManagedAgentsPlugin(input)
+    const status = await hooks.tool?.hand_status?.execute({} as never, {
+      agent: "managed",
+      sessionID: "session-1",
+      worktree: process.cwd(),
+    } as never)
+    expect(status).toContain('"hand": "default"')
+  })
+
   test("adds the active execution budget to model context", async () => {
     const previous = process.env.OPENCODE_MANAGED_BUDGET
     process.env.OPENCODE_MANAGED_BUDGET = "long"

@@ -14,8 +14,12 @@ async function launch(args: string[], environment: Record<string, string> = {}) 
   mkdirSync(bin, { recursive: true })
   writeFileSync(join(config, "profile.jsonc"), "{}")
   writeFileSync(
+    join(config, "node_modules", "@opencode-ai", "plugin", "package.json"),
+    '{"version":"1.18.32"}',
+  )
+  writeFileSync(
     join(bin, "opencode"),
-    "#!/bin/sh\nprintf '%s\\n%s\\n%s\\n' \"$OPENCODE_MANAGED_BUDGET\" \"$OPENCODE_CONFIG\" \"$OPENCODE_CONFIG_CONTENT\" > \"$CAPTURE\"\nprintf '%s\\n' \"$@\" >> \"$CAPTURE\"\n",
+    "#!/bin/sh\nif [ \"$1\" = '--version' ]; then printf '%s\\n' \"${OPENCODE_TEST_VERSION:-1.18.32}\"; exit 0; fi\nprintf '%s\\n%s\\n%s\\n' \"$OPENCODE_MANAGED_BUDGET\" \"$OPENCODE_CONFIG\" \"$OPENCODE_CONFIG_CONTENT\" > \"$CAPTURE\"\nprintf '%s\\n' \"$@\" >> \"$CAPTURE\"\n",
   )
   chmodSync(join(bin, "opencode"), 0o755)
 
@@ -97,6 +101,13 @@ describe("oc budget profiles", () => {
     const result = await launch(["--budget=huge"])
     expect(result.exitCode).toBe(2)
     expect(result.stderr).toContain("small, standard, or long")
+    expect(result.capture).toBe("")
+  })
+
+  test("rejects an OpenCode CLI that does not match the installed plugin", async () => {
+    const result = await launch([], { OPENCODE_TEST_VERSION: "1.18.31" })
+    expect(result.exitCode).toBe(1)
+    expect(result.stderr).toContain("does not match plugin 1.18.32")
     expect(result.capture).toBe("")
   })
 

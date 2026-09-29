@@ -34,11 +34,15 @@ oc --budget standard
 oc --budget long --session <session-id>
 ```
 
+Before launch, `oc` checks that the OpenCode CLI matches the pinned plugin version. If it does not,
+install the configured CLI with `mise install npm:@opencode-ai/cli` rather than running an
+incompatible tool protocol.
+
 `small` uses Terra at medium reasoning with 60 primary steps. `standard` uses Sol at high reasoning
 with 200 primary steps. `long` retains Sol at high reasoning and allows 400 primary steps. Worker
-reviewer, and planning ceilings scale with the selected profile. A project can persist its own default in an
-`opencode.jsonc` agent override or export `OPENCODE_MANAGED_BUDGET` from `.envrc`; an explicit
-launcher flag takes precedence.
+worker, reviewer, and planning ceilings scale with the selected profile. A project can persist its
+own default in an `opencode.jsonc` agent override or export `OPENCODE_MANAGED_BUDGET` from
+`.envrc`; an explicit launcher flag takes precedence.
 
 For an exact project-specific ceiling, add this to the project's `opencode.jsonc`:
 

@@ -16,7 +16,7 @@ python    = "latest"
 uv        = "latest"
 gradle    = "latest"
 java      = "21"
-"npm:@opencode-ai/cli" = { version = "1.17.20", bun_args = "--trust" }
+"npm:@opencode-ai/cli" = { version = "1.18.32", bun_args = "--trust" }
 
 [settings.npm]
 package_manager = "bun"
