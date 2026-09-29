@@ -26,20 +26,28 @@ export const ManagedAgentsPlugin: Plugin = async ({ client, worktree }) => {
 
   const handSpec = async (
     context: { sessionID: string; agent: string; worktree: string },
-    hand: string,
+    hand?: string,
   ): Promise<HandSpec> => {
-    validHandID(hand)
+    const resolvedHand = hand ?? "default"
+    validHandID(resolvedHand)
     if (context.agent === "managed") {
       return {
         workspace: worktree,
-        hand,
+        hand: resolvedHand,
         mode: "primary",
       }
     }
     if (context.agent === "managed-reviewer") {
       return {
         workspace: worktree,
-        hand,
+        hand: resolvedHand,
+        mode: "reviewer",
+      }
+    }
+    if (context.agent === "managed-plan") {
+      return {
+        workspace: worktree,
+        hand: resolvedHand,
         mode: "reviewer",
       }
     }
@@ -48,7 +56,7 @@ export const ManagedAgentsPlugin: Plugin = async ({ client, worktree }) => {
       if (!existsSync(workspace)) await brains.ensureWorker(context.sessionID)
       return {
         workspace,
-        hand,
+        hand: resolvedHand,
         mode: "worker",
       }
     }
@@ -71,7 +79,8 @@ export const ManagedAgentsPlugin: Plugin = async ({ client, worktree }) => {
       output.system.push(
         `Managed execution budget: ${descriptions[profile] ?? descriptions.standard}. ` +
           (steps === undefined ? "" : `The resolved primary ceiling is ${steps} agent turns. `) +
-          "This is an execution ceiling, not a reason to ask the user for confirmation.",
+          "This is an execution ceiling; it does not replace the task-contract decision in the " +
+          "agent instructions.",
       )
     },
     event: async ({ event }) => {

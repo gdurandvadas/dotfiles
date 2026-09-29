@@ -6,6 +6,8 @@ This profile implements a Docker-free Brain–Hands–Session runtime on OpenCod
 - Hands execute directly in OpenCode's environment.
 - Child workers use isolated Git worktrees; reviewers receive structured read-only tools.
 - OpenCode itself is the trust boundary. Individual hand commands are not sandboxed.
+- The execution brain establishes a compact task contract before mutating; `/shape` provides an
+  explicit read-only planning path for ambiguous work.
 
 ## Start and recover
 
@@ -22,7 +24,9 @@ Recover any existing brain directly from its durable session:
 oc --session <session-id>
 ```
 
-Choose a per-run execution ceiling without editing the profile:
+Choose a per-run execution ceiling without editing the profile. The default is `small`, so an
+unproven interpretation has a bounded runway; resume the same durable session at `standard` or
+`long` once its scope is established:
 
 ```sh
 oc --budget small
@@ -30,11 +34,15 @@ oc --budget standard
 oc --budget long --session <session-id>
 ```
 
+Before launch, `oc` checks that the OpenCode CLI matches the pinned plugin version. If it does not,
+install the configured CLI with `mise install npm:@opencode-ai/cli` rather than running an
+incompatible tool protocol.
+
 `small` uses Terra at medium reasoning with 60 primary steps. `standard` uses Sol at high reasoning
 with 200 primary steps. `long` retains Sol at high reasoning and allows 400 primary steps. Worker
-and reviewer ceilings scale with the selected profile. A project can persist its own default in an
-`opencode.jsonc` agent override or export `OPENCODE_MANAGED_BUDGET` from `.envrc`; an explicit
-launcher flag takes precedence.
+worker, reviewer, and planning ceilings scale with the selected profile. A project can persist its
+own default in an `opencode.jsonc` agent override or export `OPENCODE_MANAGED_BUDGET` from
+`.envrc`; an explicit launcher flag takes precedence.
 
 For an exact project-specific ceiling, add this to the project's `opencode.jsonc`:
 
@@ -54,6 +62,19 @@ resume the durable session with a larger budget rather than restarting the task.
 One step is an agent turn that may include a tool call, not a complete implementation iteration.
 The managed plugin reads the effective merged ceiling once and includes it in model context, so a
 project override is visible to the brain when it scopes the run.
+
+## Shape before implementing
+
+Use `/shape <request>` for work whose intended outcome is not yet clear, such as a redesign,
+migration, or a request to "make something better." It runs `managed-plan`, a read-only primary
+agent. Its response distinguishes evidence from assumptions and returns an implementation contract:
+the observable outcome, scope, non-goals, acceptance checks, risks, and at most one material open
+question.
+
+For direct requests, stay with `managed`. Before its first state-changing operation it records the
+same contract in the durable session and proceeds without confirmation when the remaining choices
+are implementation details. It asks only when a decision would materially change behavior, public
+interfaces, data lifecycle, security, architecture, cost, or success criteria.
 
 No Docker daemon, runtime image, or per-hand provisioning is required.
 

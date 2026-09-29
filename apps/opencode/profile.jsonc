@@ -72,6 +72,12 @@
       "temperature": 0.1,
       "steps": 64,
     },
+    "managed-plan": {
+      "model": "openai/gpt-5.6-sol",
+      "reasoningEffort": "high",
+      "temperature": 0.1,
+      "steps": 64,
+    },
   },
   "provider": {
     "openai": {

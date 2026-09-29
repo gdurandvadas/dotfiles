@@ -5,8 +5,9 @@ source of truth; hands are logical tool interfaces that execute directly in Open
 
 ## Contracts
 
-- **Brain:** `managed` is the primary brain. It may create `managed-worker` and
-  `managed-reviewer` child sessions with `brain_spawn`. Brain-local memory is never durable state.
+- **Brains:** `managed` is the execution primary brain; `managed-plan` is a read-only planning
+  primary brain. `managed` may create `managed-worker` and `managed-reviewer` child sessions with
+  `brain_spawn`. Brain-local memory is never durable state.
 - **Hands:** every repository read, search, edit, and command uses `hand_*`. Native host tools are
   denied so orchestration stays explicit. Hands require no provisioning or lifecycle management.
   Commands are cancellable, default to a 15-minute deadline, and return a bounded head and tail;
@@ -22,6 +23,11 @@ Select an execution ceiling at launch with `oc --budget small|standard|long`. Pr
 `opencode.jsonc` agent overrides are honored; the launcher flag wins for that process. A running
 process cannot change its own hard step ceiling, so resume the session under another budget when
 necessary.
+
+Use `/shape <request>` when the desired outcome needs to be explored before implementation. It runs
+the read-only planning brain and returns the proposed outcome, scope, validation, and only material
+open questions. For ordinary implementation requests, `managed` establishes the same compact task
+contract before its first state-changing operation.
 
 ## Execution boundary
 

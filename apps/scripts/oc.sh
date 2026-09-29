@@ -12,7 +12,7 @@ export OPENCODE_CONFIG_DIR="$CONFIG_DIR"
 # Use Home Manager–installed language servers; do not auto-download duplicates.
 export OPENCODE_DISABLE_LSP_DOWNLOAD=true
 
-budget="${OPENCODE_MANAGED_BUDGET:-standard}"
+budget="${OPENCODE_MANAGED_BUDGET:-small}"
 opencode_args=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -37,13 +37,13 @@ done
 
 case "$budget" in
   small)
-    budget_config='{"agent":{"managed":{"model":"openai/gpt-5.6-terra","reasoningEffort":"medium","steps":60},"managed-worker":{"steps":48},"managed-reviewer":{"steps":32}}}'
+    budget_config='{"agent":{"managed":{"model":"openai/gpt-5.6-terra","reasoningEffort":"medium","steps":60},"managed-worker":{"steps":48},"managed-reviewer":{"steps":32},"managed-plan":{"steps":32}}}'
     ;;
   standard)
     budget_config='{}'
     ;;
   long)
-    budget_config='{"agent":{"managed":{"steps":400},"managed-worker":{"steps":200},"managed-reviewer":{"steps":96}}}'
+    budget_config='{"agent":{"managed":{"steps":400},"managed-worker":{"steps":200},"managed-reviewer":{"steps":96},"managed-plan":{"steps":96}}}'
     ;;
   *)
     echo "oc: unknown budget '$budget'; expected small, standard, or long" >&2
@@ -86,6 +86,19 @@ if [[ ! -d "$CONFIG_DIR/node_modules/@opencode-ai/plugin" ]]; then
     cd "$CONFIG_DIR"
     bun install --frozen-lockfile --production
   )
+fi
+
+plugin_package="$CONFIG_DIR/node_modules/@opencode-ai/plugin/package.json"
+expected_version="$(sed -nE 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' "$plugin_package" | head -1)"
+actual_version="$(opencode --version)"
+if [[ -z "$expected_version" ]]; then
+  echo "oc: unable to determine the installed OpenCode plugin version" >&2
+  exit 1
+fi
+if [[ "$actual_version" != "$expected_version" ]]; then
+  echo "oc: OpenCode CLI $actual_version does not match plugin $expected_version." >&2
+  echo "oc: install the configured version with: mise install npm:@opencode-ai/cli" >&2
+  exit 1
 fi
 
 exec opencode "${opencode_args[@]}"
