@@ -34,9 +34,9 @@ oc --budget standard
 oc --budget long --session <session-id>
 ```
 
-Before launch, `oc` checks that the OpenCode CLI matches the pinned plugin version. If it does not,
-install the configured CLI with `mise install npm:@opencode-ai/cli` rather than running an
-incompatible tool protocol.
+Before launch, `oc` checks that the OpenCode CLI and pinned plugin share a major/minor version. It
+allows patch-level differences, but rejects an incompatible tool protocol and directs you to install
+the configured CLI with `mise install npm:@opencode-ai/cli`.
 
 `small` uses Terra at medium reasoning with 60 primary steps. `standard` uses Sol at high reasoning
 with 200 primary steps. `long` retains Sol at high reasoning and allows 400 primary steps. Worker

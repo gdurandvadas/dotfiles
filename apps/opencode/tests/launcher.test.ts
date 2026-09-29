@@ -104,10 +104,16 @@ describe("oc budget profiles", () => {
     expect(result.capture).toBe("")
   })
 
-  test("rejects an OpenCode CLI that does not match the installed plugin", async () => {
-    const result = await launch([], { OPENCODE_TEST_VERSION: "1.18.31" })
+  test("allows a patch-level OpenCode CLI update", async () => {
+    const result = await launch([], { OPENCODE_TEST_VERSION: "1.18.33" })
+    expect(result.exitCode).toBe(0)
+    expect(result.stderr).toContain("differs from plugin 1.18.32 by a patch release")
+  })
+
+  test("rejects an OpenCode CLI with an incompatible API version", async () => {
+    const result = await launch([], { OPENCODE_TEST_VERSION: "1.19.0" })
     expect(result.exitCode).toBe(1)
-    expect(result.stderr).toContain("does not match plugin 1.18.32")
+    expect(result.stderr).toContain("is incompatible with plugin 1.18.32")
     expect(result.capture).toBe("")
   })
 

@@ -95,10 +95,15 @@ if [[ -z "$expected_version" ]]; then
   echo "oc: unable to determine the installed OpenCode plugin version" >&2
   exit 1
 fi
-if [[ "$actual_version" != "$expected_version" ]]; then
-  echo "oc: OpenCode CLI $actual_version does not match plugin $expected_version." >&2
+expected_api_version="${expected_version%.*}"
+actual_api_version="${actual_version%.*}"
+if [[ "$actual_api_version" != "$expected_api_version" ]]; then
+  echo "oc: OpenCode CLI $actual_version is incompatible with plugin $expected_version." >&2
   echo "oc: install the configured version with: mise install npm:@opencode-ai/cli" >&2
   exit 1
+fi
+if [[ "$actual_version" != "$expected_version" ]]; then
+  echo "oc: OpenCode CLI $actual_version differs from plugin $expected_version by a patch release; continuing." >&2
 fi
 
 exec opencode "${opencode_args[@]}"
