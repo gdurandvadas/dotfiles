@@ -54,10 +54,22 @@ function exists(path: string) {
 }
 
 describe("oc budget profiles", () => {
-  test("uses the standard profile and preserves OpenCode arguments", async () => {
+  test("uses the small profile by default and preserves OpenCode arguments", async () => {
     const result = await launch(["--session", "session-1"])
     expect(result.exitCode).toBe(0)
-    expect(result.capture).toBe(`standard\n${result.profile}\n\n--session\nsession-1\n`)
+    expect(result.capture).toContain(`small\n${result.profile}\n`)
+    const [, , content] = result.capture.split("\n")
+    expect(JSON.parse(content ?? "{}").agent).toEqual({
+      managed: {
+        model: "openai/gpt-5.6-terra",
+        reasoningEffort: "medium",
+        steps: 60,
+      },
+      "managed-worker": { steps: 48 },
+      "managed-reviewer": { steps: 32 },
+      "managed-plan": { steps: 32 },
+    })
+    expect(result.capture).toContain("--session\nsession-1\n")
   })
 
   test("applies a long inline step budget", async () => {
@@ -69,6 +81,7 @@ describe("oc budget profiles", () => {
       managed: { steps: 400 },
       "managed-worker": { steps: 200 },
       "managed-reviewer": { steps: 96 },
+      "managed-plan": { steps: 96 },
     })
     expect(result.capture).not.toContain("--budget")
   })
@@ -99,6 +112,7 @@ describe("oc budget profiles", () => {
       },
       "managed-worker": { steps: 48 },
       "managed-reviewer": { steps: 32 },
+      "managed-plan": { steps: 32 },
     })
 
     const overridden = await launch(["--budget=long"], {
@@ -120,6 +134,7 @@ describe("oc budget profiles", () => {
         managed: { temperature: 0.2, steps: 400 },
         "managed-worker": { steps: 200 },
         "managed-reviewer": { steps: 96 },
+        "managed-plan": { steps: 96 },
       },
     })
   })

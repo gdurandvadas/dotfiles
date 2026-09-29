@@ -12,7 +12,7 @@ export OPENCODE_CONFIG_DIR="$CONFIG_DIR"
 # Use Home Manager–installed language servers; do not auto-download duplicates.
 export OPENCODE_DISABLE_LSP_DOWNLOAD=true
 
-budget="${OPENCODE_MANAGED_BUDGET:-standard}"
+budget="${OPENCODE_MANAGED_BUDGET:-small}"
 opencode_args=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -37,13 +37,13 @@ done
 
 case "$budget" in
   small)
-    budget_config='{"agent":{"managed":{"model":"openai/gpt-5.6-terra","reasoningEffort":"medium","steps":60},"managed-worker":{"steps":48},"managed-reviewer":{"steps":32}}}'
+    budget_config='{"agent":{"managed":{"model":"openai/gpt-5.6-terra","reasoningEffort":"medium","steps":60},"managed-worker":{"steps":48},"managed-reviewer":{"steps":32},"managed-plan":{"steps":32}}}'
     ;;
   standard)
     budget_config='{}'
     ;;
   long)
-    budget_config='{"agent":{"managed":{"steps":400},"managed-worker":{"steps":200},"managed-reviewer":{"steps":96}}}'
+    budget_config='{"agent":{"managed":{"steps":400},"managed-worker":{"steps":200},"managed-reviewer":{"steps":96},"managed-plan":{"steps":96}}}'
     ;;
   *)
     echo "oc: unknown budget '$budget'; expected small, standard, or long" >&2

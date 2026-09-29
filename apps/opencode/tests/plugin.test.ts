@@ -63,17 +63,35 @@ describe("managed-agent plugin surface", () => {
       await hooks["experimental.chat.system.transform"]?.({} as never, output)
       expect(output.system.join("\n")).toContain("long")
       expect(output.system.join("\n")).toContain("275 agent turns")
-      expect(output.system.join("\n")).toContain("not a reason to ask")
+      expect(output.system.join("\n")).toContain("does not replace the task-contract decision")
     } finally {
       if (previous === undefined) delete process.env.OPENCODE_MANAGED_BUDGET
       else process.env.OPENCODE_MANAGED_BUDGET = previous
     }
   })
 
-  test("instructs new sessions to begin actionable work without reconfirmation", () => {
+  test("requires a task contract before mutating while avoiding unnecessary ceremony", () => {
     const prompt = readFileSync(new URL("../agents/managed.md", import.meta.url), "utf8")
+      .replace(/\s+/g, " ")
     expect(prompt).toContain("already the active user task")
-    expect(prompt).toContain("begin immediately")
+    expect(prompt).toContain("Before the first state-changing operation")
+    expect(prompt).toContain("task contract")
+    expect(prompt).toContain("Do not substitute an unverified assumption")
+    expect(prompt).toContain("do not turn a precise, low-risk request into a planning")
     expect(prompt).toContain("Do not ask whether to create a task")
+  })
+
+  test("provides a read-only planning primary and shape command", () => {
+    const plan = readFileSync(new URL("../agents/managed-plan.md", import.meta.url), "utf8")
+    const command = readFileSync(new URL("../commands/shape.md", import.meta.url), "utf8")
+    const profile = readFileSync(new URL("../profile.jsonc", import.meta.url), "utf8")
+
+    expect(plan).toContain("mode: primary")
+    expect(plan).toContain("hand_read: allow")
+    expect(plan).toContain("hand_run: deny")
+    expect(plan).toContain("hand_write: deny")
+    expect(command).toContain("agent: managed-plan")
+    expect(command).toContain("$ARGUMENTS")
+    expect(profile).toContain('"managed-plan"')
   })
 })
