@@ -34,9 +34,15 @@ oc --budget standard
 oc --budget long --session <session-id>
 ```
 
-Before launch, `oc` checks that the OpenCode CLI matches the pinned plugin version. If it does not,
-install the configured CLI with `mise install npm:@opencode-ai/cli` rather than running an
-incompatible tool protocol.
+Before launch, `oc` reconciles the CLI and plugin together with
+`bun install --frozen-lockfile --production`, then executes the profile-local CLI by absolute path.
+Both dependencies are pinned in `package.json` and `bun.lock`; Homebrew, mise, and project-local
+OpenCode updates cannot change this runtime. Bun is required (`mise install bun`).
+
+To upgrade this profile, choose a version published for both `opencode-ai` and
+`@opencode-ai/plugin`, update both exact pins together, regenerate `bun.lock` with `bun install`,
+and run `bun test` and `bun run typecheck` before committing. Do not use `@opencode-ai/cli`:
+that package does not publish the newer stable releases.
 
 `small` uses Terra at medium reasoning with 60 primary steps. `standard` uses Sol at high reasoning
 with 200 primary steps. `long` retains Sol at high reasoning and allows 400 primary steps. Worker

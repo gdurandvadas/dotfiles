@@ -71,34 +71,23 @@ if [[ "$budget_config" != '{}' ]]; then
   fi
 fi
 
-if ! command -v opencode >/dev/null 2>&1; then
-  echo "OpenCode v1 is not installed. Run: mise install npm:@opencode-ai/cli" >&2
+# Install CLI and plugin together from the profile's single frozen lockfile.
+# Always reconcile: an existing node_modules directory may belong to an older profile.
+if ! command -v bun >/dev/null 2>&1; then
+  echo "oc: Bun is required to install the locked OpenCode runtime. Run: mise install bun" >&2
+  exit 1
+fi
+if ! (cd "$CONFIG_DIR" && bun install --frozen-lockfile --production >&2); then
+  echo "oc: unable to install the locked OpenCode runtime; check the install error above." >&2
   exit 1
 fi
 
-# Local plugins resolve their pinned API package from the configuration directory.
-if [[ ! -d "$CONFIG_DIR/node_modules/@opencode-ai/plugin" ]]; then
-  if ! command -v bun >/dev/null 2>&1; then
-    echo "Bun is required to install the pinned OpenCode plugin dependency." >&2
-    exit 1
-  fi
-  (
-    cd "$CONFIG_DIR"
-    bun install --frozen-lockfile --production
-  )
-fi
-
-plugin_package="$CONFIG_DIR/node_modules/@opencode-ai/plugin/package.json"
-expected_version="$(sed -nE 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' "$plugin_package" | head -1)"
-actual_version="$(opencode --version)"
-if [[ -z "$expected_version" ]]; then
-  echo "oc: unable to determine the installed OpenCode plugin version" >&2
-  exit 1
-fi
-if [[ "$actual_version" != "$expected_version" ]]; then
-  echo "oc: OpenCode CLI $actual_version does not match plugin $expected_version." >&2
-  echo "oc: install the configured version with: mise install npm:@opencode-ai/cli" >&2
+# Never resolve OpenCode through PATH: Homebrew, mise, and project-local versions
+# can update independently of this profile's plugin API.
+opencode_bin="$CONFIG_DIR/node_modules/.bin/opencode"
+if [[ ! -x "$opencode_bin" ]]; then
+  echo "oc: the locked OpenCode executable is missing: $opencode_bin" >&2
   exit 1
 fi
 
-exec opencode "${opencode_args[@]}"
+exec "$opencode_bin" "${opencode_args[@]}"
