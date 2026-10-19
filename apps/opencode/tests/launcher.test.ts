@@ -10,23 +10,25 @@ async function launch(args: string[], environment: Record<string, string> = {}) 
   const bin = join(root, "bin")
   const config = join(root, ".config", "opencode-personal")
   const capture = join(root, "capture")
-  mkdirSync(join(config, "node_modules", "@opencode-ai", "plugin"), { recursive: true })
+  mkdirSync(join(config, "node_modules", ".bin"), { recursive: true })
   mkdirSync(bin, { recursive: true })
   writeFileSync(join(config, "profile.jsonc"), "{}")
+  const localCLI = join(config, "node_modules", ".bin", "opencode")
   writeFileSync(
-    join(config, "node_modules", "@opencode-ai", "plugin", "package.json"),
-    '{"version":"1.18.32"}',
+    localCLI,
+    '#!/bin/sh\nprintf "%s\\n%s\\n%s\\n" "$OPENCODE_MANAGED_BUDGET" "$OPENCODE_CONFIG" "$OPENCODE_CONFIG_CONTENT" > "$CAPTURE"\nprintf "%s\\n" "$@" >> "$CAPTURE"\n',
   )
-  writeFileSync(
-    join(bin, "opencode"),
-    "#!/bin/sh\nif [ \"$1\" = '--version' ]; then printf '%s\\n' \"${OPENCODE_TEST_VERSION:-1.18.32}\"; exit 0; fi\nprintf '%s\\n%s\\n%s\\n' \"$OPENCODE_MANAGED_BUDGET\" \"$OPENCODE_CONFIG\" \"$OPENCODE_CONFIG_CONTENT\" > \"$CAPTURE\"\nprintf '%s\\n' \"$@\" >> \"$CAPTURE\"\n",
-  )
+  chmodSync(localCLI, 0o755)
+  writeFileSync(join(bin, "opencode"), '#!/bin/sh\necho "unexpected PATH OpenCode" >&2\nexit 99\n')
   chmodSync(join(bin, "opencode"), 0o755)
+  writeFileSync(join(bin, "bun"), '#!/bin/sh\nprintf "%s\\n" "$PWD" "$@" > "$INSTALL_CAPTURE"\nexit "${INSTALL_EXIT:-0}"\n')
+  chmodSync(join(bin, "bun"), 0o755)
 
   const child = Bun.spawn([launcher, ...args], {
     env: {
       ...process.env,
       CAPTURE: capture,
+      INSTALL_CAPTURE: join(root, "install"),
       HOME: root,
       PATH: `${bin}:${process.env.PATH}`,
       ...environment,
@@ -41,6 +43,8 @@ async function launch(args: string[], environment: Record<string, string> = {}) 
   ])
   return {
     capture: exists(capture) ? readFileSync(capture, "utf8") : "",
+    install: exists(join(root, "install")) ? readFileSync(join(root, "install"), "utf8") : "",
+    config,
     exitCode,
     profile: join(config, "profile.jsonc"),
     stderr,
@@ -104,11 +108,27 @@ describe("oc budget profiles", () => {
     expect(result.capture).toBe("")
   })
 
-  test("rejects an OpenCode CLI that does not match the installed plugin", async () => {
-    const result = await launch([], { OPENCODE_TEST_VERSION: "1.18.31" })
+  test("reconciles the frozen runtime even when installed and ignores PATH OpenCode", async () => {
+    const result = await launch(["--budget", "long"])
+    expect(result.exitCode).toBe(0)
+    expect(result.install).toBe(`${result.config}\ninstall\n--frozen-lockfile\n--production\n`)
+    expect(result.capture).toContain("long\n")
+    expect(result.stderr).not.toContain("unexpected PATH OpenCode")
+  })
+
+  test("stops on a failed frozen install without falling back to PATH", async () => {
+    const result = await launch([], { INSTALL_EXIT: "1" })
     expect(result.exitCode).toBe(1)
-    expect(result.stderr).toContain("does not match plugin 1.18.32")
+    expect(result.stderr).toContain("unable to install the locked OpenCode runtime")
     expect(result.capture).toBe("")
+  })
+
+  test("pins the CLI and plugin to the same exact release", () => {
+    const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
+    const version = manifest.dependencies["opencode-ai"]
+    expect(version).toMatch(/^\d+\.\d+\.\d+$/)
+    expect(version).toBe(manifest.dependencies["@opencode-ai/plugin"])
+    expect(manifest.trustedDependencies).toContain("opencode-ai")
   })
 
   test("uses a project environment default and lets the CLI override it", async () => {
