@@ -50,6 +50,7 @@
     "brain_spawn": "allow",
     "brain_status": "allow",
     "brain_collect": "allow",
+    "brain_cancel": "allow",
     "brain_integrate": "allow",
     "brain_discard": "allow",
   },
@@ -70,7 +71,7 @@
       "model": "openai/gpt-5.6-sol",
       "reasoningEffort": "high",
       "temperature": 0.1,
-      "steps": 64,
+      "steps": 24,
     },
     "managed-plan": {
       "model": "openai/gpt-5.6-sol",

@@ -61,7 +61,7 @@ For an exact project-specific ceiling, add this to the project's `opencode.jsonc
   "agent": {
     "managed": { "steps": 300 },
     "managed-worker": { "steps": 150 },
-    "managed-reviewer": { "steps": 80 },
+    "managed-reviewer": { "steps": 24 },
   },
 }
 ```
@@ -93,12 +93,12 @@ No Docker daemon, runtime image, or per-hand provisioning is required.
 | --- | --- |
 | Session | `session_events`, `session_note` |
 | Hands | `hand_run`, `hand_read`, `hand_write`, `hand_edit`, `hand_search`, `hand_list`, `hand_status` |
-| Brains | `brain_spawn`, `brain_status`, `brain_collect`, `brain_integrate`, `brain_discard` |
+| Brains | `brain_spawn`, `brain_status`, `brain_collect`, `brain_cancel`, `brain_integrate`, `brain_discard` |
 
 Hand names are logical labels rather than provisioned runtimes. Structured file tools stay inside
 the assigned workspace. `hand_run` starts an ordinary local shell with that workspace as its
 working directory and inherits everything available to the OpenCode process. It defaults to a
-15-minute deadline, honors OpenCode cancellation, terminates descendants, and returns bounded
+five-minute deadline, honors OpenCode cancellation, terminates descendants, and returns bounded
 head-and-tail output. A caller can request a longer deadline up to one hour when a repository gate
 requires it.
 
@@ -111,12 +111,22 @@ them explicitly for diagnostics.
 
 `brain_spawn` accepts `reviewer` or `worker`:
 
-- Reviewers inspect the primary checkout through structured read-only tools and cannot run a shell.
+- Reviewers inspect an immutable Git snapshot through structured read-only tools and cannot run a
+  shell. A changed primary checkout marks their report stale.
 - Workers are allowed only when the primary checkout is clean. Each receives its own detached Git
   worktree and cannot mutate Git metadata.
 - `brain_integrate` creates a complete binary patch, checks it against the primary checkout, and
   applies it unstaged. Conflicts do not modify either checkout.
+- `brain_status` reports a reviewer snapshot's target generation and whether the primary checkout
+  has since drifted.
+- `brain_cancel` aborts an active child; it removes a reviewer snapshot but preserves a worker
+  worktree for explicit follow-up.
 - `brain_discard` removes a worker's worktree but retains its session history.
+
+Commands can declare up to eight named shared resources. The runtime acquires those locks in a
+stable order across OpenCode processes, so callers can serialize commands that share a Docker
+daemon, test database, or explicitly shared compiler target. Locking is opt-in because only a
+project can know which commands contend.
 
 The environment running OpenCode must provide Bash, Git, and ripgrep. Project-specific toolchains
 are used directly; there is no second container environment to configure.

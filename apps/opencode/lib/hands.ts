@@ -15,6 +15,7 @@ import {
   type HandMode,
 } from "./managed.ts"
 import type { CommandResult, CommandRunner } from "./process.ts"
+import { acquireResourceLocks } from "./resource-locks.ts"
 
 export type HandSpec = {
   workspace: string
@@ -23,7 +24,13 @@ export type HandSpec = {
 }
 
 export type HandOperation =
-  | { name: "run"; command: string; timeoutSeconds?: number }
+  | {
+      name: "run"
+      command: string
+      timeoutSeconds?: number
+      resources?: string[]
+      lockTimeoutSeconds?: number
+    }
   | { name: "read"; path: string; offset?: number; limit?: number }
   | { name: "write"; path: string; content: string }
   | { name: "edit"; path: string; oldText: string; newText: string; replaceAll?: boolean }
@@ -37,7 +44,7 @@ export type HandOperation =
     }
   | { name: "list"; path?: string; depth?: number; includeGenerated?: boolean; limit?: number }
 
-export const DEFAULT_HAND_TIMEOUT_SECONDS = 900
+export const DEFAULT_HAND_TIMEOUT_SECONDS = 300
 export const DEFAULT_SEARCH_TIMEOUT_SECONDS = 30
 export const HAND_STREAM_OUTPUT_LIMIT = 50_000
 
@@ -141,12 +148,21 @@ export class LocalHands {
 
     if (operation.name === "run") {
       deadlineSeconds = operation.timeoutSeconds ?? DEFAULT_HAND_TIMEOUT_SECONDS
-      result = await this.runner.run(["bash", "-lc", operation.command], {
-        cwd: workspace,
+      const locks = await acquireResourceLocks(
+        operation.resources,
+        operation.lockTimeoutSeconds,
         signal,
-        timeoutMs: deadlineSeconds * 1000,
-        outputLimitCharacters: HAND_STREAM_OUTPUT_LIMIT,
-      })
+      )
+      try {
+        result = await this.runner.run(["bash", "-lc", operation.command], {
+          cwd: workspace,
+          signal,
+          timeoutMs: deadlineSeconds * 1000,
+          outputLimitCharacters: HAND_STREAM_OUTPUT_LIMIT,
+        })
+      } finally {
+        locks?.release()
+      }
       output = lines(result)
     } else if (operation.name === "read") {
       const path = resolveWorkspacePath(workspace, operation.path)

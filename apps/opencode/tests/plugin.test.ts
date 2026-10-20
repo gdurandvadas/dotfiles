@@ -28,6 +28,7 @@ describe("managed-agent plugin surface", () => {
     expect(Object.keys(hooks.tool ?? {}).sort()).toEqual(
       [
         "brain_collect",
+        "brain_cancel",
         "brain_discard",
         "brain_integrate",
         "brain_spawn",
@@ -48,7 +49,8 @@ describe("managed-agent plugin surface", () => {
   test("advertises bounded defaults on expensive hand tools", async () => {
     const hooks = await ManagedAgentsPlugin(input)
     const tools = hooks.tool ?? {}
-    expect(parseSchema(tools.hand_run?.args.timeoutSeconds, undefined)).toBe(900)
+    expect(parseSchema(tools.hand_run?.args.timeoutSeconds, undefined)).toBe(300)
+    expect(parseSchema(tools.hand_run?.args.lockTimeoutSeconds, undefined)).toBe(60)
     expect(parseSchema(tools.hand_search?.args.timeoutSeconds, undefined)).toBe(30)
     expect(parseSchema(tools.hand_list?.args.limit, undefined)).toBe(500)
     expect(safelyParseSchema(tools.session_events?.args.tail, 101).success).toBe(false)

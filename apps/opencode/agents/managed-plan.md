@@ -23,6 +23,7 @@ permission:
   brain_spawn: deny
   brain_status: deny
   brain_collect: deny
+  brain_cancel: deny
   brain_integrate: deny
   brain_discard: deny
 ---

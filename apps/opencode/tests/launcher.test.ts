@@ -78,7 +78,7 @@ describe("oc budget profiles", () => {
         steps: 60,
       },
       "managed-worker": { steps: 48 },
-      "managed-reviewer": { steps: 32 },
+      "managed-reviewer": { steps: 12 },
       "managed-plan": { steps: 32 },
     })
     expect(result.capture).toContain("--session\nsession-1\n")
@@ -92,7 +92,7 @@ describe("oc budget profiles", () => {
     expect(JSON.parse(content ?? "{}").agent).toEqual({
       managed: { steps: 400 },
       "managed-worker": { steps: 200 },
-      "managed-reviewer": { steps: 96 },
+      "managed-reviewer": { steps: 36 },
       "managed-plan": { steps: 96 },
     })
     expect(result.capture).not.toContain("--budget")
@@ -146,7 +146,7 @@ describe("oc budget profiles", () => {
         steps: 60,
       },
       "managed-worker": { steps: 48 },
-      "managed-reviewer": { steps: 32 },
+      "managed-reviewer": { steps: 12 },
       "managed-plan": { steps: 32 },
     })
 
@@ -168,7 +168,7 @@ describe("oc budget profiles", () => {
       agent: {
         managed: { temperature: 0.2, steps: 400 },
         "managed-worker": { steps: 200 },
-        "managed-reviewer": { steps: 96 },
+      "managed-reviewer": { steps: 36 },
         "managed-plan": { steps: 96 },
       },
     })

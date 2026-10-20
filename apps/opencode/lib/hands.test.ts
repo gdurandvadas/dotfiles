@@ -39,7 +39,8 @@ describe("local hands", () => {
         options: {
           cwd: realpathSync(spec.workspace),
           outputLimitCharacters: 50_000,
-          timeoutMs: 900_000,
+          signal: undefined,
+          timeoutMs: 300_000,
         },
       },
     ])
@@ -96,7 +97,7 @@ describe("local hands", () => {
       ready: true,
       mode: "primary",
       budget: "standard",
-      commandTimeoutSeconds: 900,
+      commandTimeoutSeconds: 300,
       outputLimitCharacters: 80_000,
     })
   })

@@ -39,7 +39,7 @@ export const ManagedAgentsPlugin: Plugin = async ({ client, worktree }) => {
     }
     if (context.agent === "managed-reviewer") {
       return {
-        workspace: worktree,
+        workspace: await brains.ensureReviewer(context.sessionID),
         hand: resolvedHand,
         mode: "reviewer",
       }
@@ -86,6 +86,7 @@ export const ManagedAgentsPlugin: Plugin = async ({ client, worktree }) => {
     event: async ({ event }) => {
       if (event.type !== "session.deleted") return
       await brains.removeWorker(event.properties.info.id).catch(() => undefined)
+      await brains.removeReviewer(event.properties.info.id).catch(() => undefined)
     },
     tool: {
       session_events: tool({
@@ -146,12 +147,17 @@ export const ManagedAgentsPlugin: Plugin = async ({ client, worktree }) => {
       hand_run: tool({
         description:
           "Run a shell command in the hand workspace using OpenCode's local environment. " +
-          "The default deadline is 15 minutes; use up to 60 minutes only when the repository " +
-          "contract requires it. Non-zero exits are returned without automatic retry.",
+          "The default deadline is 5 minutes; use up to 60 minutes only when the repository " +
+          "contract requires it. Declare named resources for commands that share Docker, a test " +
+          "database, or another external mutable resource. Non-zero exits are never retried automatically.",
         args: {
           command: tool.schema.string().min(1),
           hand: tool.schema.string().default("default"),
-          timeoutSeconds: tool.schema.number().int().min(1).max(3600).default(900),
+          timeoutSeconds: tool.schema.number().int().min(1).max(3600).default(300),
+          resources: tool.schema.array(
+            tool.schema.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(64),
+          ).max(8).optional(),
+          lockTimeoutSeconds: tool.schema.number().int().min(1).max(3600).default(60),
         },
         async execute(args, context) {
           context.metadata({ title: `Run (${args.timeoutSeconds}s deadline)` })
@@ -159,6 +165,8 @@ export const ManagedAgentsPlugin: Plugin = async ({ client, worktree }) => {
             name: "run",
             command: args.command,
             timeoutSeconds: args.timeoutSeconds,
+            resources: args.resources,
+            lockTimeoutSeconds: args.lockTimeoutSeconds,
           }, context.abort)
         },
       }),
@@ -317,6 +325,18 @@ export const ManagedAgentsPlugin: Plugin = async ({ client, worktree }) => {
             null,
             2,
           )
+        },
+      }),
+      brain_cancel: tool({
+        description:
+          "Cancel a direct child brain. Reviewer snapshots are removed after cancellation; worker " +
+          "worktrees are retained for explicit inspection, integration, or discard.",
+        args: {
+          child: tool.schema.string().min(1),
+        },
+        async execute(args, context) {
+          primary(context.agent)
+          return JSON.stringify(await brains.cancel(context.sessionID, args.child))
         },
       }),
       brain_integrate: tool({

@@ -10,7 +10,7 @@ source of truth; hands are logical tool interfaces that execute directly in Open
   `brain_spawn`. Brain-local memory is never durable state.
 - **Hands:** every repository read, search, edit, and command uses `hand_*`. Native host tools are
   denied so orchestration stays explicit. Hands require no provisioning or lifecycle management.
-  Commands are cancellable, default to a 15-minute deadline, and return a bounded head and tail;
+  Commands are cancellable, default to a five-minute deadline, and return a bounded head and tail;
   searches and recursive listings skip generated dependency trees unless explicitly requested.
 - **Session:** OpenCode persists messages and tool results. `session_events` reads positional
   slices without changing history and offers a server-limited `tail` for efficient recovery;
@@ -47,8 +47,20 @@ contract before its first state-changing operation.
 - Reviewers receive only structured read, search, and list tools; local shell execution is denied.
 - Workers require a clean primary Git checkout and receive detached worktrees under the OpenCode
   managed state directory.
-- The primary brain checks child status and output before calling `brain_integrate`.
+- The primary brain checks child status and output before calling `brain_integrate`, and uses
+  `brain_cancel` to stop obsolete child work.
 - Integration checks a complete binary patch before applying it as unstaged changes. On conflict,
   neither workspace is changed.
 - Integration and discard remove only the exact worker worktree. Child session history remains
   durable.
+
+## Review consistency and shared resources
+
+- Final reviewers run only after implementation and deterministic validation are complete. They
+  audit an immutable workspace generation; a changed primary generation makes their result stale.
+- Do not mutate the primary workspace while a final review is active. If a change is necessary,
+  cancel or ignore the stale review and respawn it once the patch is stable.
+- Keep final reviews narrow: specify files or a diff, properties to inspect, and stop after the
+  first merge blocker rather than auditing the whole repository.
+- Commands sharing Docker, a test database, a compiler target, or another mutable external resource
+  must declare the same named resource lock through `hand_run`.
