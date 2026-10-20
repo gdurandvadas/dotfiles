@@ -10,10 +10,14 @@ async function launch(args: string[], environment: Record<string, string> = {}) 
   const bin = join(root, "bin")
   const config = join(root, ".config", "opencode-personal")
   const capture = join(root, "capture")
+  mkdirSync(join(config, "node_modules", "opencode-darwin-arm64", "bin"), { recursive: true })
   mkdirSync(join(config, "node_modules", ".bin"), { recursive: true })
   mkdirSync(bin, { recursive: true })
   writeFileSync(join(config, "profile.jsonc"), "{}")
-  const localCLI = join(config, "node_modules", ".bin", "opencode")
+  const localCLI = join(config, "node_modules", "opencode-darwin-arm64", "bin", "opencode")
+  const placeholder = join(config, "node_modules", ".bin", "opencode")
+  writeFileSync(placeholder, '#!/bin/sh\necho "postinstall script was not run" >&2\nexit 1\n')
+  chmodSync(placeholder, 0o755)
   writeFileSync(
     localCLI,
     '#!/bin/sh\nprintf "%s\\n%s\\n%s\\n" "$OPENCODE_MANAGED_BUDGET" "$OPENCODE_CONFIG" "$OPENCODE_CONFIG_CONTENT" > "$CAPTURE"\nprintf "%s\\n" "$@" >> "$CAPTURE"\n',
@@ -108,7 +112,7 @@ describe("oc budget profiles", () => {
     expect(result.capture).toBe("")
   })
 
-  test("reconciles the frozen runtime even when installed and ignores PATH OpenCode", async () => {
+  test("uses the native CLI despite an executable postinstall placeholder and PATH OpenCode", async () => {
     const result = await launch(["--budget", "long"])
     expect(result.exitCode).toBe(0)
     expect(result.install).toBe(`${result.config}\ninstall\n--frozen-lockfile\n--production\n`)
@@ -125,10 +129,10 @@ describe("oc budget profiles", () => {
 
   test("pins the CLI and plugin to the same exact release", () => {
     const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
-    const version = manifest.dependencies["opencode-ai"]
+    const version = manifest.dependencies["opencode-darwin-arm64"]
     expect(version).toMatch(/^\d+\.\d+\.\d+$/)
     expect(version).toBe(manifest.dependencies["@opencode-ai/plugin"])
-    expect(manifest.trustedDependencies).toContain("opencode-ai")
+    expect(manifest.dependencies["opencode-ai"]).toBeUndefined()
   })
 
   test("uses a project environment default and lets the CLI override it", async () => {

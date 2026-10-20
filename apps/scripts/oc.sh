@@ -84,7 +84,9 @@ fi
 
 # Never resolve OpenCode through PATH: Homebrew, mise, and project-local versions
 # can update independently of this profile's plugin API.
-opencode_bin="$CONFIG_DIR/node_modules/.bin/opencode"
+# Use the native Apple Silicon package directly. The opencode-ai wrapper ships
+# a placeholder executable that relies on postinstall and can survive a no-op install.
+opencode_bin="$CONFIG_DIR/node_modules/opencode-darwin-arm64/bin/opencode"
 if [[ ! -x "$opencode_bin" ]]; then
   echo "oc: the locked OpenCode executable is missing: $opencode_bin" >&2
   exit 1
