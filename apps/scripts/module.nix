@@ -14,8 +14,9 @@ let
   c = pkgs.writeShellScriptBin "c" (builtins.readFile ./c.sh);
   cl = pkgs.writeShellScriptBin "cl" (builtins.readFile ./cl.sh);
   oc = pkgs.writeShellScriptBin "oc" (builtins.readFile ./oc.sh);
+  git-update-all = pkgs.writeShellScriptBin "git-update-all" (builtins.readFile ./git-update-all.sh);
 in {
-  home.packages = [ dotfiles-apply dotfiles z c cl oc ];
+  home.packages = [ dotfiles-apply dotfiles z c cl oc git-update-all ];
 
   home.file.".zsh/theme-switch.zsh".source = ./theme-switch.zsh;
   home.file.".zsh/mise.zsh".source         = ./mise.zsh;
