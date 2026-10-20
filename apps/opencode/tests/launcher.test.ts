@@ -66,21 +66,12 @@ function exists(path: string) {
 }
 
 describe("oc budget profiles", () => {
-  test("uses the small profile by default and preserves OpenCode arguments", async () => {
+  test("uses the sustained standard profile by default and preserves OpenCode arguments", async () => {
     const result = await launch(["--session", "session-1"])
     expect(result.exitCode).toBe(0)
-    expect(result.capture).toContain(`small\n${result.profile}\n`)
+    expect(result.capture).toContain(`standard\n${result.profile}\n`)
     const [, , content] = result.capture.split("\n")
-    expect(JSON.parse(content ?? "{}").agent).toEqual({
-      managed: {
-        model: "openai/gpt-5.6-terra",
-        reasoningEffort: "medium",
-        steps: 60,
-      },
-      "managed-worker": { steps: 48 },
-      "managed-reviewer": { steps: 12 },
-      "managed-plan": { steps: 32 },
-    })
+    expect(content).toBe("")
     expect(result.capture).toContain("--session\nsession-1\n")
   })
 
@@ -90,7 +81,7 @@ describe("oc budget profiles", () => {
     expect(result.capture).toContain("long\n")
     const [, , content] = result.capture.split("\n")
     expect(JSON.parse(content ?? "{}").agent).toEqual({
-      managed: { steps: 400 },
+      managed: { steps: 800 },
       "managed-worker": { steps: 200 },
       "managed-reviewer": { steps: 36 },
       "managed-plan": { steps: 96 },
@@ -143,7 +134,7 @@ describe("oc budget profiles", () => {
       managed: {
         model: "openai/gpt-5.6-terra",
         reasoningEffort: "medium",
-        steps: 60,
+        steps: 120,
       },
       "managed-worker": { steps: 48 },
       "managed-reviewer": { steps: 12 },
@@ -154,7 +145,7 @@ describe("oc budget profiles", () => {
       OPENCODE_MANAGED_BUDGET: "small",
     })
     expect(overridden.capture).toContain("long\n")
-    expect(overridden.capture).toContain('"managed":{"steps":400}')
+    expect(overridden.capture).toContain('"managed":{"steps":800}')
   })
 
   test("deep-merges a budget with an existing inline configuration", async () => {
@@ -166,7 +157,7 @@ describe("oc budget profiles", () => {
     expect(JSON.parse(content ?? "{}")).toEqual({
       snapshot: true,
       agent: {
-        managed: { temperature: 0.2, steps: 400 },
+        managed: { temperature: 0.2, steps: 800 },
         "managed-worker": { steps: 200 },
       "managed-reviewer": { steps: 36 },
         "managed-plan": { steps: 96 },

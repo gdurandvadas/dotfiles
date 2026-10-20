@@ -59,7 +59,7 @@
       "model": "openai/gpt-5.6-sol",
       "reasoningEffort": "high",
       "temperature": 0.1,
-      "steps": 200,
+      "steps": 400,
     },
     "managed-worker": {
       "model": "openai/gpt-5.6-terra",

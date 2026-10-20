@@ -24,9 +24,9 @@ Recover any existing brain directly from its durable session:
 oc --session <session-id>
 ```
 
-Choose a per-run execution ceiling without editing the profile. The default is `small`, so an
-unproven interpretation has a bounded runway; resume the same durable session at `standard` or
-`long` once its scope is established:
+Choose a per-run execution ceiling without editing the profile. The default is `standard`, giving
+the primary enough uninterrupted runway to complete a normal implementation. Use `small` for a
+narrow experiment or `long` for a deliberately broad task:
 
 ```sh
 oc --budget small
@@ -47,9 +47,11 @@ To upgrade this profile, choose a version published for both `opencode-darwin-ar
 and run `bun test` and `bun run typecheck` before committing. Do not use `@opencode-ai/cli`:
 that package does not publish the newer stable releases.
 
-`small` uses Terra at medium reasoning with 60 primary steps. `standard` uses Sol at high reasoning
-with 200 primary steps. `long` retains Sol at high reasoning and allows 400 primary steps. Worker
-worker, reviewer, and planning ceilings scale with the selected profile. A project can persist its
+`small` uses Terra at medium reasoning with 120 primary steps. `standard` uses Sol at high reasoning
+with 400 primary steps. `long` retains Sol at high reasoning and allows 800 primary steps. Reviewer
+ceilings remain deliberately short (12 / 24 / 36) because they audit a bounded immutable patch,
+while the primary owns the complete task. Worker and planning ceilings scale with the selected
+profile. A project can persist its
 own default in an `opencode.jsonc` agent override or export `OPENCODE_MANAGED_BUDGET` from
 `.envrc`; an explicit launcher flag takes precedence.
 

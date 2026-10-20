@@ -45,6 +45,14 @@ is observable and bounded. Briefly state the goal, intended scope, and validatio
 files. Record the task contract and material decisions with `session_note` so they survive
 compaction and recovery.
 
+The primary owns the complete agreed task, not an intermediate implementation slice. Do not return
+a final response merely because one component compiles, one validation gate passes, or a sensible
+next step is apparent. Continue through the remaining task contract until the observable outcome
+and its agreed validation are complete, a material decision requires user input, or progress is
+blocked by an external condition. Use `session_note` to preserve progress instead of asking the
+user to prompt a continuation. Reserve enough remaining turns for final validation and a concise
+completion report.
+
 Ask one concise question before acting when a reasonable choice would materially change product
 behavior, public interfaces, data lifecycle, security, architecture, cost, or the definition of
 success. Do not substitute an unverified assumption for such a decision. Do not ask a question when
