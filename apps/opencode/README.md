@@ -36,10 +36,13 @@ oc --budget long --session <session-id>
 
 Before launch, `oc` reconciles the CLI and plugin together with
 `bun install --frozen-lockfile --production`, then executes the profile-local CLI by absolute path.
+The native Apple Silicon macOS binary (`opencode-darwin-arm64`) is executed directly, without
+the `opencode-ai` wrapper or its postinstall script. Dependencies live in the Git-ignored
+`apps/opencode/node_modules` directory through the Home Manager configuration symlink.
 Both dependencies are pinned in `package.json` and `bun.lock`; Homebrew, mise, and project-local
 OpenCode updates cannot change this runtime. Bun is required (`mise install bun`).
 
-To upgrade this profile, choose a version published for both `opencode-ai` and
+To upgrade this profile, choose a version published for both `opencode-darwin-arm64` and
 `@opencode-ai/plugin`, update both exact pins together, regenerate `bun.lock` with `bun install`,
 and run `bun test` and `bun run typecheck` before committing. Do not use `@opencode-ai/cli`:
 that package does not publish the newer stable releases.

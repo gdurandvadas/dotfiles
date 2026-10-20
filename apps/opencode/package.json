@@ -8,13 +8,10 @@
   },
   "dependencies": {
     "@opencode-ai/plugin": "1.18.32",
-    "opencode-ai": "1.18.32"
+    "opencode-darwin-arm64": "1.18.32"
   },
   "devDependencies": {
     "@types/bun": "^1.2.0",
     "typescript": "^5.9.0"
-  },
-  "trustedDependencies": [
-    "opencode-ai"
-  ]
+  }
 }
