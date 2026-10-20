@@ -1,9 +1,17 @@
 import { afterEach, describe, expect, test } from "bun:test"
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs"
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { PluginInput } from "@opencode-ai/plugin"
-import { ManagedBrains, workerPath } from "./brain.ts"
+import { ManagedBrains, reviewerPath, workerPath } from "./brain.ts"
 import { BunCommandRunner } from "./process.ts"
 
 const originalState = process.env.OPENCODE_MANAGED_STATE_DIR
@@ -101,5 +109,63 @@ describe("isolated worker integration", () => {
     expect(readFileSync(join(root, "tracked.txt"), "utf8")).toBe("primary\n")
     expect(readFileSync(join(workspace, "tracked.txt"), "utf8")).toBe("worker\n")
     rmSync(root, { recursive: true, force: true })
+  })
+
+  test("binds reviewers to immutable snapshots and reports primary drift", async () => {
+    const root = await repository()
+    const child = "reviewer-child"
+    const client = {
+      session: {
+        create: async () => ({ data: { id: child, title: "Review" } }),
+        promptAsync: async () => ({}),
+        status: async () => ({ data: { [child]: { type: "busy" } } }),
+        children: async () => ({ data: [{ id: child, title: "Review" }] }),
+      },
+    } as unknown as PluginInput["client"]
+    const brains = new ManagedBrains(client, new BunCommandRunner(), root)
+    writeFileSync(join(root, "tracked.txt"), "review this\n")
+    writeFileSync(join(root, "untracked.txt"), "snapshot this too\n")
+    await brains.spawn("parent", "reviewer", "Review tracked.txt")
+
+    const snapshot = reviewerPath(root, child)
+    expect(readFileSync(join(snapshot, "tracked.txt"), "utf8")).toBe("review this\n")
+    expect(readFileSync(join(snapshot, "untracked.txt"), "utf8")).toBe("snapshot this too\n")
+    writeFileSync(join(root, "tracked.txt"), "changed after review started\n")
+
+    const [status] = await brains.status("parent", child)
+    expect(status).toMatchObject({
+      role: "reviewer",
+      reviewerWorkspace: true,
+      stale: true,
+    })
+    expect(readFileSync(join(snapshot, "tracked.txt"), "utf8")).toBe("review this\n")
+    await brains.removeReviewer(child)
+  })
+
+  test("cancels a reviewer and removes only its snapshot", async () => {
+    const root = await repository()
+    const child = "reviewer-child"
+    let aborted = false
+    const client = {
+      session: {
+        create: async () => ({ data: { id: child, title: "Review" } }),
+        promptAsync: async () => ({}),
+        get: async () => ({ data: { id: child, parentID: "parent" } }),
+        abort: async () => {
+          aborted = true
+          return {}
+        },
+      },
+    } as unknown as PluginInput["client"]
+    const brains = new ManagedBrains(client, new BunCommandRunner(), root)
+    await brains.spawn("parent", "reviewer", "Review tracked.txt")
+    expect(existsSync(reviewerPath(root, child))).toBe(true)
+
+    await expect(brains.cancel("parent", child)).resolves.toMatchObject({
+      cancelled: true,
+      reviewerWorkspaceRemoved: true,
+    })
+    expect(aborted).toBe(true)
+    expect(existsSync(reviewerPath(root, child))).toBe(false)
   })
 })

@@ -23,6 +23,7 @@ permission:
   brain_spawn: allow
   brain_status: allow
   brain_collect: allow
+  brain_cancel: allow
   brain_integrate: allow
   brain_discard: allow
 ---
@@ -57,14 +58,28 @@ contract.
 All repository reads, searches, edits, and commands must go through `hand_*` tools. Hands execute
 directly in OpenCode's environment with their workspace as the working directory. Commands are
 never retried automatically; inspect a failure before deciding whether another execution is safe.
+Use the five-minute default command deadline for ordinary work. Request a longer deadline only for
+a named repository gate such as an image build. When commands share mutable external state, declare
+the same `resources` value on every competing command (for example `docker-daemon`,
+`cargo-target`, or `integration-db`) so the runtime serializes them.
 
 You may work directly through the primary hand or delegate bounded tasks with `brain_spawn`:
 
 - Use a `reviewer` for read-only investigation, planning, or audit.
 - Use a `worker` for implementation only when the primary Git checkout is clean. Each worker owns
   an isolated worktree.
-- Poll with `brain_status`, collect evidence with `brain_collect`, inspect the result, and integrate
-  only complete work with `brain_integrate`. Integration leaves changes unstaged for user review.
+- Poll with `brain_status`, collect evidence with `brain_collect`, cancel obsolete children with
+  `brain_cancel`, inspect the result, and integrate only complete work with `brain_integrate`.
+  Integration leaves changes unstaged for user review.
+
+## Review consistency
+
+- Spawn final reviewers only after implementation and deterministic validation are complete.
+- A reviewer audits one immutable workspace generation. Do not modify the primary workspace while
+  the review is active. If the current generation differs from the review target, treat the report
+  as stale and respawn a narrowly scoped review after the workspace stabilizes.
+- Final reviews must name the relevant files or diff and requested properties. Stop after the first
+  merge blocker; do not turn a bounded patch review into a repository audit.
 
 Do not ask child brains to commit, push, fetch credentials, or modify Git metadata. Keep the number
 of brains and hands proportional to the task rather than treating parallelism as a goal.

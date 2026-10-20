@@ -1,5 +1,17 @@
 import type { PluginInput } from "@opencode-ai/plugin"
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs"
+import {
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readlinkSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { managedStateDirectory, stableHash } from "./managed.ts"
@@ -16,6 +28,27 @@ export function workerPath(projectRoot: string, sessionID: string) {
     stableHash(projectRoot),
     sessionID,
   )
+}
+
+export function reviewerPath(projectRoot: string, sessionID: string) {
+  return join(
+    managedStateDirectory(),
+    "reviews",
+    stableHash(projectRoot),
+    sessionID,
+  )
+}
+
+type UntrackedFile = {
+  path: string
+  mode: number
+  hash: string
+  link?: string
+}
+
+type ReviewSnapshot = {
+  createdAt: string
+  generation: string
 }
 
 async function gitOutput(runner: CommandRunner, root: string, args: string[]) {
@@ -53,6 +86,81 @@ export class ManagedBrains {
     return path
   }
 
+  private async reviewState() {
+    const head = await gitOutput(this.runner, this.projectRoot, ["rev-parse", "HEAD"])
+    const patch = await gitOutput(this.runner, this.projectRoot, ["diff", "--binary", "HEAD"])
+    const untracked = await gitOutput(this.runner, this.projectRoot, [
+      "ls-files",
+      "--others",
+      "--exclude-standard",
+      "-z",
+    ])
+    const files: UntrackedFile[] = []
+    for (const path of untracked.stdout.split("\0").filter(Boolean).sort()) {
+      if (path.startsWith("../") || path === "..") throw new Error(`untracked path escapes project: ${path}`)
+      const source = join(this.projectRoot, path)
+      const stat = lstatSync(source)
+      // Git reports nested repositories as directory entries. They cannot be represented by an
+      // ordinary patch or copied safely as part of a review snapshot.
+      if (stat.isDirectory()) continue
+      const link = stat.isSymbolicLink() ? readlinkSync(source) : undefined
+      const data = link === undefined ? readFileSync(source) : Buffer.from(link)
+      files.push({
+        path,
+        mode: stat.mode,
+        hash: stableHash(data.toString("base64")),
+        ...(link === undefined ? {} : { link }),
+      })
+    }
+    return {
+      generation: stableHash(head.stdout.trim(), patch.stdout, JSON.stringify(files)),
+      patch: patch.stdout,
+      files,
+    }
+  }
+
+  private copyUntracked(snapshot: string, files: UntrackedFile[]) {
+    for (const file of files) {
+      const source = join(this.projectRoot, file.path)
+      const destination = join(snapshot, file.path)
+      mkdirSync(dirname(destination), { recursive: true })
+      if (file.link !== undefined) symlinkSync(file.link, destination)
+      else copyFileSync(source, destination)
+      if (file.link === undefined) chmodSync(destination, file.mode)
+    }
+  }
+
+  async createReviewer(sessionID: string) {
+    const path = reviewerPath(this.projectRoot, sessionID)
+    if (existsSync(path)) return path
+    const state = await this.reviewState()
+    mkdirSync(dirname(path), { recursive: true })
+    await gitOutput(this.runner, this.projectRoot, ["worktree", "add", "--detach", path, "HEAD"])
+    try {
+      if (state.patch.trim()) {
+        await checked(this.runner, ["git", "-C", path, "apply", "--binary", "-"], {
+          stdin: state.patch,
+        })
+      }
+      this.copyUntracked(path, state.files)
+      const snapshot: ReviewSnapshot = {
+        createdAt: new Date().toISOString(),
+        generation: state.generation,
+      }
+      writeFileSync(join(path, ".opencode-review-snapshot.json"), JSON.stringify(snapshot))
+      return path
+    } catch (error) {
+      await this.removeReviewer(sessionID).catch(() => undefined)
+      throw error
+    }
+  }
+
+  async ensureReviewer(sessionID: string) {
+    const path = reviewerPath(this.projectRoot, sessionID)
+    if (!existsSync(path)) throw new Error(`review snapshot does not exist for ${sessionID}`)
+    return path
+  }
+
   async spawn(parentID: string, role: BrainRole, task: string, title?: string) {
     if (role === "worker") await this.assertClean()
     const created = await this.client.session.create({
@@ -64,6 +172,7 @@ export class ManagedBrains {
 
     try {
       if (role === "worker") await this.ensureWorker(child.id, true)
+      else await this.createReviewer(child.id)
       const prompted = await this.client.session.promptAsync({
         path: { id: child.id },
         query: { directory: this.projectRoot },
@@ -76,6 +185,7 @@ export class ManagedBrains {
       return child
     } catch (error) {
       if (role === "worker") await this.removeWorker(child.id).catch(() => undefined)
+      else await this.removeReviewer(child.id).catch(() => undefined)
       throw error
     }
   }
@@ -104,11 +214,31 @@ export class ManagedBrains {
       ? children.data.filter((child) => child.id === childID)
       : children.data
     if (childID && selected.length === 0) throw new Error(`${childID} is not a direct child`)
-    return selected.map((child) => ({
-      id: child.id,
-      title: child.title,
-      status: statuses.data?.[child.id]?.type ?? "idle",
-      workerWorkspace: existsSync(workerPath(this.projectRoot, child.id)),
+    let currentGeneration: Promise<string> | undefined
+    return Promise.all(selected.map(async (child) => {
+      const workerWorkspace = existsSync(workerPath(this.projectRoot, child.id))
+      const reviewWorkspace = existsSync(reviewerPath(this.projectRoot, child.id))
+      const result: Record<string, unknown> = {
+        id: child.id,
+        title: child.title,
+        status: statuses.data?.[child.id]?.type ?? "idle",
+        role: workerWorkspace ? "worker" : "reviewer",
+        workerWorkspace,
+        reviewerWorkspace: reviewWorkspace,
+      }
+      if (reviewWorkspace) {
+        const snapshot = JSON.parse(
+          readFileSync(join(reviewerPath(this.projectRoot, child.id), ".opencode-review-snapshot.json"), "utf8"),
+        ) as ReviewSnapshot
+        currentGeneration ??= this.reviewState().then((state) => state.generation)
+        const current = await currentGeneration
+        result.targetGeneration = snapshot.generation
+        result.currentGeneration = current
+        result.stale = snapshot.generation !== current
+        result.startedAt = snapshot.createdAt
+        result.elapsedSeconds = Math.floor((Date.now() - Date.parse(snapshot.createdAt)) / 1000)
+      }
+      return result
     }))
   }
 
@@ -120,6 +250,18 @@ export class ManagedBrains {
       this.projectRoot,
       tail,
     )
+  }
+
+  async cancel(parentID: string, childID: string) {
+    await this.child(parentID, childID)
+    const cancelled = await this.client.session.abort({
+      path: { id: childID },
+      query: { directory: this.projectRoot },
+    })
+    if (cancelled.error) throw new Error(`unable to cancel ${childID}: ${JSON.stringify(cancelled.error)}`)
+    const reviewerWorkspace = existsSync(reviewerPath(this.projectRoot, childID))
+    if (reviewerWorkspace) await this.removeReviewer(childID)
+    return { cancelled: true, reviewerWorkspaceRemoved: reviewerWorkspace }
   }
 
   private async assertIdle(childID: string) {
@@ -190,6 +332,21 @@ export class ManagedBrains {
 
   async removeWorker(childID: string) {
     const path = workerPath(this.projectRoot, childID)
+    if (!existsSync(path)) return
+    await checked(this.runner, [
+      "git",
+      "-C",
+      this.projectRoot,
+      "worktree",
+      "remove",
+      "--force",
+      path,
+    ])
+    await this.runner.run(["git", "-C", this.projectRoot, "worktree", "prune"])
+  }
+
+  async removeReviewer(childID: string) {
+    const path = reviewerPath(this.projectRoot, childID)
     if (!existsSync(path)) return
     await checked(this.runner, [
       "git",
