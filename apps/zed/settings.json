@@ -18,12 +18,6 @@
   },
   "agent": {
     "dock": "right",
-    "default_model": {
-      "effort": "high",
-      "provider": "copilot_chat",
-      "model": "gpt-5.4",
-    },
-    "model_parameters": [],
   },
   "terminal": {
     "font_family": "FiraCode Nerd Font Propo",
@@ -48,7 +42,6 @@
     "catppuccin": true,
     "dockerfile": true,
     "catppuccin-icons": true,
-    "claude-agent": true,
   },
   // Theming
   "theme": {
