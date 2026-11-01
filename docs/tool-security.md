@@ -18,7 +18,7 @@ For example, review mise itself rather than the Go version it installs. This is 
 review, not a binary scan or proof that a tool has no vulnerabilities. Missing advisories and
 unpublished vulnerabilities remain coverage gaps.
 
-## Findings requiring action
+## Findings at the start of the review
 
 | Tool | Observed version | Finding | Minimum remediation |
 | --- | --- | --- | --- |
@@ -74,7 +74,7 @@ Sources and applicability:
 | Zed | 1.26.2 | Beyond affected ranges in all 12 [published Zed advisories](https://github.com/zed-industries/zed/security/advisories) |
 | Brave | 1.98.63 | Matches the [current stable release](https://github.com/brave/brave-browser/releases/tag/v1.98.63); includes Chromium security updates |
 | 1Password for Mac | 8.12.40 | Current stable is 8.12.42; no matching app vulnerability established from [vendor release notes](https://releases.1password.com/mac/stable/); update through the app |
-| ChatGPT | 26.1016.51333 | Vendor-managed desktop application; release freshness alone cannot establish absence of vulnerabilities |
+| ChatGPT | 26.1016.51333 | Vendor-managed desktop application; reviewed [Axios notice](https://openai.com/index/axios-developer-tool-compromise/) and [TanStack notice](https://openai.com/index/our-response-to-the-tanstack-npm-supply-chain-attack/); release freshness alone cannot establish absence of vulnerabilities |
 | ripgrep | 15.2.0 | No published repository advisories in [reviewed source](https://github.com/BurntSushi/ripgrep/security/advisories) |
 | fd | 10.4.2 | No published repository advisories in [reviewed source](https://github.com/sharkdp/fd/security/advisories) |
 | bat | 0.26.1 | No published repository advisories in [reviewed source](https://github.com/sharkdp/bat/security/advisories) |
@@ -102,3 +102,29 @@ sudo determinate-nixd upgrade
 Update GUI applications through their own updaters. Verify CLI versions after updating and
 repeat the advisory comparison; an outdated-package check alone is not a vulnerability scan.
 Homebrew's `brew audit` checks formula/cask definitions and is not a CVE scanner.
+
+## Remediation outcome
+
+- Updated and verified mise **2026.10.25**, GitHub CLI **2.103.3**, fzf **0.74.5**,
+  Starship **1.27.0**, and 1Password CLI **2.41.1**. These meet the reviewed fixed versions.
+  No mise-managed toolchains were upgraded.
+- Removed the installed Claude Code, Antigravity CLI, Cursor CLI, OpenCode, and Crush binaries.
+  Removed the old repository profiles and launchers. Home Manager activation succeeded and
+  removed its obsolete configuration links. User histories and credentials were retained.
+- **Still pending: Determinate Nix upgrade.** The official command was attempted, but sudo
+  requires an interactive password. Run `sudo determinate-nixd upgrade` in a terminal, verify
+  `nix --version`, and compare the result with the vendor security releases. The confirmed
+  critical vulnerability remains until this succeeds.
+- **Still pending: Cursor.app removal.** Homebrew could not delete the root-owned application
+  without a sudo password. Run `brew uninstall --cask cursor` in an interactive terminal.
+- ChatGPT is running from its existing standalone installation and is retained under its own
+  updater. It is not added to Homebrew, avoiding a second installation owning the same app.
+- GitHub reports a moderate Dependabot alert for the old Claude task server's
+  `@modelcontextprotocol/sdk` dependency (GHSA-6prh-2h8m-c8cw). Its manifest and implementation
+  are deleted in this change. The default-branch alert may remain open until the PR merges.
+
+Both the Home Manager activation package and nix-darwin system built successfully. Home Manager
+activation passed; full nix-darwin activation was not run because it requires sudo. `flake.lock`
+was unchanged, and the repository contains no CI workflow or remaining application lockfiles.
+Stale-reference searches and `git diff --check` passed. The sync-references Kotlin helper was
+unavailable because Kotlin is not installed; equivalent targeted searches were performed with rg.

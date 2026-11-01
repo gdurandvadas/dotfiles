@@ -69,5 +69,6 @@ Use `mise` — edit `apps/mise/config.toml` and run `mise install`. No rebuild n
 - **Zed:** Downloaded from the upstream binary on each `dotfiles apply` if a newer version is available.
 - **Language servers:** installed via Home Manager in `apps/language-servers/module.nix`.
   Zed also manages its own language integrations automatically.
-- **ChatGPT and Codex CLI:** installed through Homebrew casks.
+- **Codex CLI:** installed through a Homebrew cask. ChatGPT uses its existing standalone
+  installation and app updater.
 - **Security review:** see [tool-security.md](tool-security.md) for scope, findings, and update steps.

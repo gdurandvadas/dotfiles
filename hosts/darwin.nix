@@ -62,7 +62,6 @@
       "brave-browser"
       "1password"
       "1password-cli"
-      "chatgpt"
       "codex"
       "alacritty"
       "font-fira-code-nerd-font"
