@@ -5,11 +5,12 @@
 | Layer | Tool | Manages |
 | ----- | ---- | ------- |
 | Binaries & apps | **Homebrew** | CLIs, GUI apps, casks, fonts |
-| Runtimes & npm CLIs | **mise** | Node, Go, Rust, Python, OpenCode v1, etc. |
+| Runtimes & npm CLIs | **mise** | Node, Go, Rust, Python, infrastructure tools |
 | Config files | **Home Manager / Nix** | dotfiles, symlinks, `.zshrc`, git config |
 | System defaults | **nix-darwin** | macOS settings, Homebrew orchestration |
 
-Nix never installs a runtime binary. Homebrew never writes a config file.
+Homebrew installs the apps and baseline CLIs. Mise installs toolchains. Home Manager installs
+language servers and custom commands, and manages configuration files.
 
 ## Daily use
 
@@ -19,10 +20,8 @@ Nix never installs a runtime binary. Homebrew never writes a config file.
 | `dotfiles apply`                           | Apply Home Manager config only (no brew changes)                      |
 | `dotfiles update [--darwin]`               | Update flake inputs, then apply; `--darwin` also runs darwin-rebuild  |
 | `direnv allow`                             | Activate a project-local Nix dev environment (`.envrc`)               |
+| `codex` | Launch Codex CLI |
 | `z <project>`                              | Open a project in Zed                                                 |
-| `c <project>`                              | Open a project in Cursor                                              |
-| `oc`                                       | Launch OpenCode v1 with Waveboard milestone orchestration              |
-| `cl`                                       | Launch Claude Code with the work ADE and configured MCP servers       |
 
 > **When to use which apply command:**
 > - `dotfiles workstation apply` — canonical. Installs/upgrades brew packages AND applies config. Use this after adding a new brew package.
@@ -68,9 +67,8 @@ Use `mise` — edit `apps/mise/config.toml` and run `mise install`. No rebuild n
 
 - **dioxus-cli (`dx`):** No brew formula yet. Install with `curl -fsSL https://dioxuslabs.com/install.sh | bash` or `cargo binstall dioxus-cli`.
 - **Zed:** Downloaded from the upstream binary on each `dotfiles apply` if a newer version is available.
-- **LSP servers** (Zed/Cursor): managed automatically by the IDE when opening a file.
-- **OpenCode v1:** pinned through Mise; `oc` loads the document-driven milestone workflow and its
-  native Waveboard TUI. Start with `/milestone-plan <outcome>` and open Waveboard with
-  `<leader>w` or `/waves`; see `apps/opencode/README.md`.
-- **LSP servers** (OpenCode personal): installed via Home Manager in `apps/opencode/module.nix`.
-  Apply with `dotfiles apply` (or `dotfiles workstation apply`).
+- **Language servers:** installed via Home Manager in `apps/language-servers/module.nix`.
+  Zed also manages its own language integrations automatically.
+- **Codex CLI:** installed through a Homebrew cask. ChatGPT uses its existing standalone
+  installation and app updater.
+- **Security review:** see [tool-security.md](tool-security.md) for scope, findings, and update steps.

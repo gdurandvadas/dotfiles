@@ -11,7 +11,6 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 ├── Makefile               # Bootstrap and switch targets
 ├── flake.nix              # Entry point — defines the personal profile
 ├── default.nix            # Shared module imports
-├── unfree-packages.nix    # Single source of unfree package names (base + darwinExtra)
 ├── hosts/
 │   ├── personal.nix       # Host config
 │   ├── darwin.nix         # nix-darwin system config (workstation flake)
@@ -23,30 +22,13 @@ This is a **Home Manager** dotfiles repository for macOS (Apple Silicon, `aarch6
 │   ├── shell/
 │   │   └── module.nix     # Zsh, direnv, git, shell defaults, baseline CLI utilities
 │   ├── tools/
-│   │   └── module.nix     # Unfree/extra tools (1Password CLI, Brave, gh, claude-code, etc.)
-│   ├── opencode/
-│   │   ├── module.nix     # OpenCode package + Home Manager wiring
-│   │   ├── profile.jsonc  # Personal OpenCode v1 configuration
-│   │   ├── tui.json       # Waveboard TUI configuration
-│   │   ├── agents/        # Plan, orchestration, build, and audit roles
-│   │   ├── commands/      # Milestone workflow commands
-│   │   ├── lib/           # Deterministic DAG and file-contract logic
-│   │   ├── plugins/       # Role-gated contract/checkpoint tools
-│   │   └── tui/           # Native milestone dashboard
-│   ├── claude/
-│   │   ├── module.nix     # Claude Code Home Manager wiring
-│   │   ├── CLAUDE.md      # Work ADE instructions
-│   │   ├── agents/        # Work task subagents
-│   │   ├── commands/      # Work task slash commands
-│   │   ├── mcp/           # Local task MCP server
-│   │   └── mcp.json       # Env-configured MCP servers
+│   │   └── module.nix     # Reserved for config-only tool additions
+│   ├── language-servers/
+│   │   └── module.nix     # Home Manager-managed language servers
 │   ├── scripts/
 │   │   ├── module.nix     # Custom scripts as Nix packages
 │   │   ├── dotfiles.sh    # Unified home-manager / darwin switch script
-│   │   ├── cl.sh          # Launch Claude Code with work MCP configuration
-│   │   ├── oc.sh          # Launch OpenCode v2 with personal ADE config
 │   │   ├── z.sh           # Open project in Zed
-│   │   ├── c.sh           # Open project in Cursor
 │   │   └── *.zsh          # Zsh helper scripts sourced at shell startup
 │   ├── zed/
 │   │   ├── module.nix     # Zed editor + language servers

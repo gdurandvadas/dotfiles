@@ -62,11 +62,7 @@
       "brave-browser"
       "1password"
       "1password-cli"
-      "cursor"
-      "cursor-cli"
-      "claude-code"
       "codex"
-      "antigravity-cli"
       "alacritty"
       "font-fira-code-nerd-font"
     ];

@@ -9,8 +9,7 @@
     ./apps/zed/module.nix
     ./apps/mise/module.nix
     ./apps/tools/module.nix
-    ./apps/opencode/module.nix
-    ./apps/claude/module.nix
+    ./apps/language-servers/module.nix
   ];
 
   programs.home-manager.enable = true;
