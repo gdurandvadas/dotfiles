@@ -15,6 +15,7 @@ node      = "lts"
 python    = "latest"
 uv        = "latest"
 gradle    = "latest"
+godot     = "latest"
 java      = "21"
 
 [settings.npm]
